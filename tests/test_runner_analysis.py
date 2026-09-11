@@ -26,7 +26,8 @@ def test_expected_episode_counts_match_the_plan():
     assert counts["placebo"] == 200
     assert counts["ablation_payoff"] + counts["ablation_ratio"] == 240
     assert counts["scale"] == 40
-    assert counts["total"] == 1080
+    assert counts["perturbation"] == 320
+    assert counts["total"] == 1400
 
 
 def test_grid_expansion_covers_every_cell(pool, library):

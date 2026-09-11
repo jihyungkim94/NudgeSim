@@ -10,8 +10,9 @@ Monte Carlo protocol:
     ablation 1 payoff visibility off, 20 cells x 3 seeds            60 episodes
     ablation 2 beta/gamma in {0.5, 1, 3}, 20 cells x 3 seeds       180 episodes
     scale      N = 50, 2 timing x 2 tone, 1 backbone x 10 seeds     40 episodes
+    perturb    20 cells x 2 defector kinds x 8 seeds               320 episodes
                                                                  ------------
-                                                                1080 episodes
+                                                                1400 episodes
 
 Claims and topologies are randomised across episodes from a seeded stream;
 conditions are assigned by grid. Every episode is written as one JSONL line and
@@ -43,6 +44,7 @@ from nudgesim.agents.persona import (
 from nudgesim.data.claims import ClaimPool
 from nudgesim.data.topology import MotifLibrary
 from nudgesim.env.episode import EpisodeConfig, EpisodeResult, run_episode
+from nudgesim.game.actions import Action
 from nudgesim.game.payoff import PayoffParams
 from nudgesim.intervention.scheduler import Timing
 from nudgesim.intervention.tone import Tone
@@ -53,6 +55,7 @@ from nudgesim.oasis import ScaleCheckSpec, build_scale_library, scale_check_back
 
 DEFAULT_BACKBONES: tuple[str, ...] = tuple(SURROGATE_PROFILES)
 ABLATION_RATIOS: tuple[float, ...] = (0.5, 1.0, 3.0)
+PERTURBATIONS: tuple[str, ...] = ("amplifier", "free_rider")
 
 
 @dataclass
@@ -64,13 +67,19 @@ class GridSpec:
     ablation_payoff_seeds: int = 3
     ablation_ratio_seeds: int = 3
     scale_seeds: int = 10
+    perturbation_seeds: int = 8
     backbones: tuple[str, ...] = DEFAULT_BACKBONES
     # Maps a backbone name to a backend spec. Empty means the analytic surrogate.
     backend_specs: dict[str, dict[str, Any]] = field(default_factory=dict)
     horizon: int = 12
+    # The round a perturbed citizen defects: half-way, so the norm has had time
+    # to establish and half the episode remains to show whether it holds.
+    perturbation_round: int = 6
     min_intervener_reach: int = 1
     trigger_mode: str = "fixed"
-    include_arms: tuple[str, ...] = ("core", "placebo", "ablation", "scale")
+    include_arms: tuple[str, ...] = (
+        "core", "placebo", "ablation", "scale", "perturbation",
+    )
 
     def expected_episodes(self) -> dict[str, int]:
         cells = 5 * len(self.backbones)  # control + 2 timings x 2 tones, per backbone
@@ -80,6 +89,7 @@ class GridSpec:
             "ablation_payoff": cells * self.ablation_payoff_seeds,
             "ablation_ratio": cells * len(ABLATION_RATIOS) * self.ablation_ratio_seeds,
             "scale": 4 * self.scale_seeds,
+            "perturbation": cells * len(PERTURBATIONS) * self.perturbation_seeds,
         }
         out = {k: v for k, v in out.items() if _arm_family(k) in self.include_arms}
         out["total"] = sum(out.values())
@@ -195,6 +205,7 @@ def expand_grid(
         payoff_params: PayoffParams,
         payoff_visible: bool,
         tag_extra: str = "",
+        perturbation: str | None = None,
         meta: dict[str, Any] | None = None,
     ) -> None:
         tag = f"{arm}|{timing.value}|{tone.value if tone else 'none'}|{backbone}{tag_extra}"
@@ -223,6 +234,8 @@ def expand_grid(
                     backbone=backbone,
                     payoff_visible=payoff_visible,
                     arm=arm,
+                    perturbation=perturbation,
+                    perturbation_round=spec.perturbation_round,
                     trigger_mode=spec.trigger_mode,
                     norms=norms,
                     backend_spec=spec.backend_specs.get(backbone),
@@ -249,6 +262,13 @@ def expand_grid(
                              payoff_params=payoff.with_ratio(ratio),
                              payoff_visible=True, tag_extra=f"|r{ratio}",
                              meta={"ablation": "incentive_ratio", "beta_gamma_ratio": ratio})
+            if "perturbation" in spec.include_arms:
+                for kind in PERTURBATIONS:
+                    add_cell("perturbation", timing, tone, backbone,
+                             spec.perturbation_seeds, placebo=False,
+                             payoff_params=payoff, payoff_visible=True,
+                             tag_extra=f"|{kind}", perturbation=kind,
+                             meta={"perturbation_kind": kind})
 
     if "scale" in spec.include_arms:
         scale_spec = ScaleCheckSpec(seeds=spec.scale_seeds, horizon=spec.horizon)
@@ -299,6 +319,15 @@ def summarise_episode(result: EpisodeResult) -> dict[str, Any]:
     )
     citizens = set(cfg.society.citizen_ids)
     citizen_records = [r for r in result.records if r.agent_id in citizens]
+
+    # Rates over the citizens who are NOT the perturbation seat, computed for
+    # every arm so perturbed and unperturbed episodes are measured the same way.
+    # A free-riding defector stops challenging by construction; what the
+    # robustness question actually asks is whether its peers change.
+    peers = [r for r in citizen_records if r.agent_id != cfg.perturbed_agent]
+    n_peers = len(peers) or 1
+    epc_peers = sum(1 for r in peers if r.action is Action.CHALLENGE) / n_peers
+    fpr_peers = sum(1 for r in peers if r.action.is_propagating) / n_peers
     classifier = KeywordTraceClassifier()
     composition = trace_composition(
         [classifier.classify(r.reasoning_trace).label for r in citizen_records]
@@ -320,6 +349,9 @@ def summarise_episode(result: EpisodeResult) -> dict[str, Any]:
         "tone": cfg.tone.value if cfg.tone else "none",
         "backbone": cfg.backbone,
         "backbone_kind": "llm" if cfg.backend_spec else "surrogate",
+        "perturbation": cfg.perturbation or "none",
+        "epc_peers": epc_peers,
+        "fpr_peers": fpr_peers,
         "treated": cfg.timing is not Timing.NONE,
         "payoff_visible": cfg.payoff_visible,
         "beta_gamma_ratio": cfg.payoff.engagement_accuracy_ratio,

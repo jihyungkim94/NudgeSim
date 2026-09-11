@@ -122,3 +122,84 @@ class IntervenerPolicy:
                 "payload_id": message.payload_id,
             },
         )
+
+
+_AMPLIFIER_LINES = (
+    "This keeps checking out for me. {claim}",
+    "Nobody has actually refuted this yet. {claim}",
+    "I will keep saying it until it lands: {claim}",
+    "Whatever the pushback, the substance stands. {claim}",
+    "Adding my name to this one. {claim}",
+    "The people denying it have not looked. {claim}",
+)
+
+_FREE_RIDER_LINES = (
+    "Not my fight, but I am reading along.",
+    "I will let the others sort this one out.",
+    "Someone else is better placed to push back here.",
+    "I would rather not spend anything on this.",
+    "Staying out of the argument, personally.",
+    "Happy to leave the checking to whoever has time.",
+)
+
+
+class PerturbationPolicy:
+    """A norm-robustness probe: one citizen defects partway through (GovSim 3.3).
+
+    GovSim tests whether a cooperative equilibrium survives a selfish newcomer
+    inserted into an established community. The society here is sized by the
+    topology motif, so the closest faithful analogue is to let one seat behave
+    normally while the norm establishes, then have its occupant switch:
+
+      ``amplifier``   backs the false claim every round and never challenges,
+                      which is first-order defection -- polluting the commons.
+      ``free_rider``  keeps posting but never pays the challenge cost again,
+                      which is the second-order free-riding the design is
+                      actually about: enjoying the correction others fund.
+
+    Before ``entry_round`` the inner policy decides, so the pre-perturbation
+    stretch is a genuine baseline rather than a different agent.
+    """
+
+    backbone_kind = "fixed"
+    KINDS = ("amplifier", "free_rider")
+
+    def __init__(self, inner, kind: str, *, entry_round: int, seed: int = 0) -> None:
+        if kind not in self.KINDS:
+            raise ValueError(f"unknown perturbation {kind!r}; have {self.KINDS}")
+        self.inner = inner
+        self.kind = kind
+        self.entry_round = entry_round
+        self.backbone = getattr(inner, "backbone", "fixed-perturbation")
+        self._rng = random.Random(seed)
+        self._line = 0
+
+    async def decide(self, observation: Observation) -> Decision:
+        decision = await self.inner.decide(observation)
+        if observation.round_index < self.entry_round:
+            return decision
+
+        self._line += 1
+        if self.kind == "amplifier":
+            lines = _AMPLIFIER_LINES
+            action = Action.ENDORSE
+            utterance = lines[self._line % len(lines)].format(
+                claim=observation.claim.text
+            )
+        else:
+            # Free-riding is only visible when the agent would have challenged;
+            # otherwise it behaves exactly as it would have.
+            if decision.action is not Action.CHALLENGE:
+                decision.meta["perturbed"] = self.kind
+                return decision
+            lines = _FREE_RIDER_LINES
+            action = Action.IGNORE
+            utterance = lines[self._line % len(lines)]
+
+        return Decision(
+            action=action,
+            reasoning=f"perturbation policy ({self.kind}) from round {self.entry_round}",
+            utterance="" if action is Action.IGNORE else utterance,
+            credence=decision.credence,
+            meta={**decision.meta, "perturbed": self.kind},
+        )

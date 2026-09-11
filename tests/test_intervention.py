@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+import asyncio
+
+import pytest
+
 from nudgesim.data.claims import ClaimPool
-from nudgesim.game.actions import Stance
+from nudgesim.env.episode import EpisodeConfig, run_episode
+from nudgesim.game.actions import Action, Stance
 from nudgesim.intervention.scheduler import InterventionSchedule, Timing
 from nudgesim.intervention.tone import (
     TONE_STIMULUS,
@@ -96,3 +101,54 @@ def test_majority_trigger_still_enters_when_no_majority_forms():
     entries = [schedule.update(r, quiet) for r in range(12)]
     assert any(entries)
     assert schedule.realised_entry_round is not None
+
+
+# --------------------------------------------------- norm robustness (GovSim 3.3)
+
+
+def _perturbed_config(pool, library, kind, **kw):
+    return EpisodeConfig(
+        episode_id=f"perturb-{kind}",
+        claim=pool.false_claims[0],
+        motif=library.motifs[0],
+        timing=Timing.NONE,
+        tone=None,
+        seed=7,
+        arm="perturbation",
+        perturbation=kind,
+        perturbation_round=kw.pop("perturbation_round", 6),
+        **kw,
+    )
+
+
+def test_perturbation_leaves_the_early_rounds_to_the_inner_policy(pool, library):
+    result = asyncio.run(run_episode(_perturbed_config(pool, library, "amplifier")))
+    early = [
+        r for r in result.records
+        if r.agent_id == "B2" and r.round_index < 6
+    ]
+    assert early
+    assert all("perturbed" not in r.meta for r in early)
+
+
+def test_amplifier_backs_the_claim_every_round_after_entry(pool, library):
+    result = asyncio.run(run_episode(_perturbed_config(pool, library, "amplifier")))
+    late = [r for r in result.records if r.agent_id == "B2" and r.round_index >= 6]
+    assert late
+    assert all(r.action is Action.ENDORSE for r in late)
+    assert all(r.meta.get("perturbed") == "amplifier" for r in late)
+
+
+def test_free_rider_never_pays_the_challenge_cost_after_entry(pool, library):
+    result = asyncio.run(run_episode(_perturbed_config(pool, library, "free_rider")))
+    late = [r for r in result.records if r.agent_id == "B2" and r.round_index >= 6]
+    assert late
+    assert all(r.action is not Action.CHALLENGE for r in late)
+    # A free rider that would have challenged goes silent rather than switching
+    # to a cheap endorsement, so its withdrawal is visible in the action log.
+    assert any(r.meta.get("perturbed") == "free_rider" for r in late)
+
+
+def test_unknown_perturbation_is_rejected(pool, library):
+    with pytest.raises(ValueError):
+        asyncio.run(run_episode(_perturbed_config(pool, library, "saboteur")))
