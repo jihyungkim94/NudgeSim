@@ -1,0 +1,22 @@
+# Declared data-generating process for the analytic surrogate.
+#
+# These are ASSUMPTIONS, not findings. They are declared here so that any result
+# produced by the surrogate can be read as a property of this parameter vector
+# rather than as evidence about LLM behaviour. The shipped runs use two settings
+# so the analysis can be shown to detect an effect that is present and to return
+# a null when it is absent.
+
+declared:
+  omega_demo_peer: 0.70       # a peer correcting demonstrates the norm
+  omega_demo_external: 0.15   # an outsider doing it demonstrates less
+  omega_crowd_base: 0.25      # any enforcer displaces some responsibility
+  omega_crowd_tone: 0.85      # extra displacement per unit of face threat  <- encodes H3
+  salience_decay: 0.80
+  novelty_engagement: 0.45    # Vosoughi channel; required by the calibration gate
+
+null_tone_crowding:           # false-positive check: the H3 channel set to zero
+  omega_crowd_tone: 0.0
+  omega_crowd_base: 0.25
+
+no_novelty:                   # demonstrates the calibration gate has teeth
+  novelty_engagement: 0.0

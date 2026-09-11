@@ -1,0 +1,25 @@
+# Citizen backbones (plan factor F3).
+#
+# `live` is the configuration used for reported model results. Fill in the four
+# model families and the judge, set the API keys, and run with --liar-backbones.
+#
+# `surrogate` is the offline analytic policy set. It is NOT a model benchmark and
+# runs tagged backbone_kind: surrogate so no result can be mistaken for one.
+
+live:
+  citizens:
+    - {provider: openai,    model: gpt-4o-mini,                  cache: true}
+    - {provider: anthropic, model: claude-haiku-4-5-20251001,    cache: true}
+    - {provider: vllm,      model: meta-llama/Llama-3.1-8B-Instruct,
+       base_url: http://localhost:8000/v1, cache: true}
+    - {provider: vllm,      model: Qwen/Qwen2.5-7B-Instruct,
+       base_url: http://localhost:8000/v1, cache: true}
+  # The judge must not be any citizen backbone -- no model grades its own output
+  # (plan section 7).
+  judge: {provider: anthropic, model: claude-opus-5, cache: true}
+  decoding:
+    citizen_temperature: 0.7
+    judge_temperature: 0.2
+
+surrogate:
+  profiles: [surrogate-cautious, surrogate-conformist, surrogate-defiant, surrogate-cost-averse]

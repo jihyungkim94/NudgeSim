@@ -1,0 +1,45 @@
+{
+  "gate": "face-validity calibration (plan section 5.7)",
+  "verdict": "GO",
+  "n_false_episodes": 60,
+  "n_true_episodes": 60,
+  "simulated_shape": {
+    "depth_ratio": 0.342529,
+    "breadth_ratio": 0.643678,
+    "virality_ratio": 0.394713
+  },
+  "reference_shape": {
+    "depth_ratio": 0.19097,
+    "breadth_ratio": 0.422398,
+    "virality_ratio": 0.154192
+  },
+  "shape_deltas": {
+    "depth_ratio": 0.151559,
+    "breadth_ratio": 0.22128,
+    "virality_ratio": 0.24052
+  },
+  "shape_passes": {
+    "depth_ratio": true,
+    "breadth_ratio": true,
+    "virality_ratio": true
+  },
+  "asymmetry": {
+    "false_propagation_rate": 0.721111,
+    "true_propagation_rate": 0.586111,
+    "propagation_margin": 0.135,
+    "false_cascade_size": 3.866667,
+    "true_cascade_size": 3.466667,
+    "cascade_size_margin": 0.4
+  },
+  "asymmetry_passes": true,
+  "tolerance": {
+    "depth_ratio_tol": 0.35,
+    "breadth_ratio_tol": 0.35,
+    "virality_ratio_tol": 0.4,
+    "min_asymmetry_margin": 0.02
+  },
+  "notes": [],
+  "dgp_label": "declared-crowding (H3 effect present at declared size)",
+  "claim_provenance": "SYNTHETIC-SURROGATE (no LIAR data present; not a LIAR result)",
+  "motif_provenance": "SYNTHETIC-SURROGATE topology (no PHEME data present; not a PHEME result)"
+}

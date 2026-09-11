@@ -1,0 +1,30 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.cache/
+data/raw/
+*.ipynb_checkpoints
+
+# Run outputs: keep the small, reviewable artefacts (manifests, analysis JSON,
+# cell-mean tables, figures) and ignore the bulk logs, which any run regenerates
+# in seconds via ./reproduce.sh.
+runs/**
+!runs/.gitkeep
+!runs/main/
+!runs/main/manifest.json
+!runs/main/analysis/
+!runs/main/analysis/**
+!runs/main/figures/
+!runs/main/figures/**
+!runs/calibration/
+!runs/calibration/calibration.json
+!runs/checks/
+!runs/checks/checks.json
+!runs/highpower/
+!runs/highpower/analysis/
+!runs/highpower/analysis/analysis.json
+!runs/null_highpower/
+!runs/null_highpower/analysis/
+!runs/null_highpower/analysis/analysis.json
