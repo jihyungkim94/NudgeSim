@@ -11,12 +11,11 @@ episodes) executed against a declared analytic data-generating process. These
 numbers are properties of that DGP. They are **not evidence about LLM
 behaviour**.
 
-**Data status.** Claims are the **real LIAR corpus** (Wang, 2017 — all 12,836
-statements, de-identified). Topologies are the surrogate cascade generator:
-PHEME sits behind figshare, which this environment's egress policy blocks, so it
-must be fetched by hand (`nudgesim fetch-data --corpus pheme`). Every artefact
-records which. `runs/main` uses the surrogate claim pool, `runs/liar_main` uses
-real LIAR; the two agree closely, and the LIAR run is quoted below.
+**Data status.** Both corpora are now real: the **LIAR corpus** (Wang, 2017 —
+all 12,836 statements, de-identified) and **PHEME-9** (Kochkina et al., 2018 —
+all 6,425 threads, derived topology only). `runs/real_main` is the real-data
+run. Earlier runs on surrogate data are kept for comparison, and every artefact
+records its provenance.
 
 ---
 
@@ -132,6 +131,71 @@ intervener cannot push through.
 the control arm's peak), or replace survival analysis with area-under-FPR. **As
 specified, H2 cannot be tested.**
 
+### 5. Real PHEME topologies cannot carry the study's mechanism
+
+This one only appeared when the actual corpus arrived, and it is the most
+serious of the five.
+
+Plan §5.2 samples a connected 7-node motif from a PHEME reply tree and maps the
+Disseminator to the cascade root. Run against the real release, that procedure
+produces a **broadcast star** 69% of the time — a source tweet with six direct
+replies and no other edges. Real PHEME cascades are broad and shallow (mean
+branching 4.46, mean depth 3.59), so a 7-node neighbourhood of the root is
+almost always the root plus six leaves.
+
+In a star rooted at the Disseminator, every citizen's only neighbour is the
+Disseminator. The consequences are fatal to the design, not merely inconvenient:
+
+| | surrogate topology | **real PHEME** |
+|---|---:|---:|
+| Motifs where the intervener reaches no citizen | 8 / 201 | **138 / 201 (69%)** |
+| Motifs where no citizen can see any other citizen | 64 / 201 | **178 / 201 (89%)** |
+| Mean intervener reach in the run | 2.18 | **1.09** |
+| Distinct motifs usable after the reach filter | 113 | **63** |
+
+With no citizen-to-citizen edge there is **no local majority** to form among the
+five citizens, and **no citizen can ever observe another paying the correction
+cost** — which is the demonstration channel EPC exists to measure. The study's
+central mechanism is structurally absent from 89% of the real topologies.
+
+The run still completes, and effects survive in attenuated form (intervention →
+EPC d = 0.69 against 0.80; control FPR 0.753 against 0.657; EPC roughly a third
+lower throughout), but on a motif set that has had 69% of itself discarded and
+is not representative of what remains.
+
+**Neither existing gate catches this.** The §5.7 calibration gate passes
+comfortably on real PHEME — better than on surrogate topology, since the
+simulated cascades are now being compared against the very threads they were
+drawn from (depth-ratio delta 0.027 against 0.199). The gate tests cascade
+*shape* and *diffusion asymmetry*; neither is sensitive to whether the agents
+can see one another. The intervener-reach filter catches only the intervener's
+half of the problem and says nothing about citizen-to-citizen visibility.
+
+*Root cause.* `structure.json` is a **reply tree**, not a **visibility graph**.
+It records who replied to whom. The plan needs who can *see* whom, and in a real
+conversation thread everyone reading it sees the sibling replies too. Treating
+the reply tree as the visibility graph is the error.
+
+*This is a design decision for the author, not an implementation detail*, so the
+options are recorded rather than chosen:
+
+1. **Add sibling visibility.** Replies to the same parent are mutually visible,
+   which is what a threaded conversation view actually shows. Minimal change,
+   well motivated, and turns stars into the dense neighbourhoods the design
+   assumes — arguably too dense.
+2. **Do not root motifs at the cascade root.** Sample a connected subgraph
+   anywhere in the thread and map the Disseminator to its highest-degree node.
+   Keeps the reply tree as the visibility graph but abandons §5.2's "Disseminator
+   at the root".
+3. **Declare the constraint and filter on it.** Keep the design and require a
+   minimum citizen-to-citizen edge count at sampling time, reporting how much of
+   PHEME that discards. Honest, but 89% attrition makes the surviving sample hard
+   to defend.
+
+`nudgesim check` now reports citizen-to-citizen visibility alongside intervener
+reach, so whichever way this is resolved, the property is visible before a grid
+runs rather than after.
+
 ### Smaller, but worth fixing
 
 - **Intervener network reach is an uncontrolled moderator.** The Devil's Advocate
@@ -149,6 +213,9 @@ specified, H2 cannot be tested.**
 
 Recorded because each one silently produced plausible-looking results:
 
+0. **The intervener's reach and the citizens' visibility were never measured.**
+   The topology looked fine by every statistic the pipeline computed, while 89%
+   of motifs made the study's mechanism impossible. See finding 5.
 1. **Every episode in the grid ran on a `pants-fire` claim.** The §5.9 severity
    stratification is implemented as a cursor over strata, and the runner drew one
    claim per episode — so it returned stratum 0 every time. The grid looked

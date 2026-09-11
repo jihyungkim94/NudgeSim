@@ -98,6 +98,30 @@ def cmd_fetch_data(args: argparse.Namespace) -> int:
     return 0
 
 
+def _citizen_visibility(library) -> dict[str, object]:
+    """How many citizens can see each other, per motif.
+
+    A motif with no citizen-to-citizen edge is one where every citizen sees only
+    the Disseminator: no local majority can form among the five, and no citizen
+    can observe another paying the correction cost. Both are mechanisms the
+    study measures, so a topology source that yields mostly such motifs cannot
+    answer the research questions -- and neither the calibration gate nor the
+    intervener-reach filter detects it.
+    """
+    counts: dict[int, int] = {}
+    for motif in library.motifs:
+        assignment = motif.assign_roles(DEFAULT_SOCIETY.all_ids)
+        node_of = {role: node for node, role in assignment.items()}
+        citizens = {node_of[c] for c in DEFAULT_SOCIETY.citizen_ids}
+        edges = sum(1 for u, v in motif.graph.edges if u in citizens and v in citizens)
+        counts[edges] = counts.get(edges, 0) + 1
+    total = sum(counts.values()) or 1
+    return {
+        "citizen_to_citizen_edges_per_motif": dict(sorted(counts.items())),
+        "share_with_no_citizen_visibility": round(counts.get(0, 0) / total, 4),
+    }
+
+
 def cmd_check(args: argparse.Namespace) -> int:
     pool, library = _load_data(args)
     payoff = _payoff(args)
@@ -117,6 +141,7 @@ def cmd_check(args: argparse.Namespace) -> int:
         "intervener_reach_distribution": {
             str(k): v for k, v in library.reach_distribution(DEFAULT_SOCIETY.all_ids).items()
         },
+        "citizen_visibility": _citizen_visibility(library),
         "stage_game_reference": stage_game_reference(5, payoff),
     }
     out = Path(args.out)
