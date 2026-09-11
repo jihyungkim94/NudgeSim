@@ -22,6 +22,7 @@ the run is aggregated into a versioned Parquet table.
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import platform
 import subprocess
@@ -171,6 +172,20 @@ def _git_commit() -> str:
         return "unknown"
 
 
+def _episode_seed(tag: str, replication: int) -> int:
+    """A stable per-episode seed.
+
+    Not ``hash((tag, replication))``: CPython salts string hashing per process,
+    so that expression returns a different value every time the program runs.
+    Every episode in this project was therefore drawing a fresh random stream on
+    each invocation while the manifest recorded the seeds as pinned -- two runs
+    of the same grid agreed on their configs and disagreed on 79% of their
+    outcomes. A digest is stable across processes, releases and platforms.
+    """
+    digest = hashlib.blake2b(f"{tag}|{replication}".encode("utf-8"), digest_size=8)
+    return int.from_bytes(digest.digest(), "big") % (2**31)
+
+
 def expand_grid(
     spec: GridSpec,
     pool: ClaimPool,
@@ -229,7 +244,7 @@ def expand_grid(
                     motif=motif,
                     timing=timing,
                     tone=tone,
-                    seed=hash((tag, s)) % (2**31),
+                    seed=_episode_seed(tag, s),
                     payoff=payoff_params,
                     backbone=backbone,
                     payoff_visible=payoff_visible,
@@ -288,7 +303,7 @@ def expand_grid(
                         motif=scale_library.sample(rng),
                         timing=timing,
                         tone=tone,
-                        seed=hash((tag, s)) % (2**31),
+                        seed=_episode_seed(tag, s),
                         payoff=payoff,
                         backbone=scale_spec.backbone,
                         arm="scale",

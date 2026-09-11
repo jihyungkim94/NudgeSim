@@ -113,3 +113,36 @@ def test_a_surrogate_run_is_never_labelled_an_llm_result(tmp_path, pool, library
     written = json.loads(open(write_run(tmp_path, manifest, rows, raw)["manifest"]).read())
     assert written["backbone_kind"] == "surrogate"
     assert "SYNTHETIC" in written["claim_provenance"]
+
+
+def test_episode_seeds_are_stable_across_processes():
+    """A pinned seed that changes every run is not pinned.
+
+    hash() on a tuple containing a string is salted per interpreter, so the
+    value below is the regression guard: if it ever changes, reproducibility
+    has silently broken again and every archived run stops being replayable.
+    """
+    from nudgesim.runner import _episode_seed
+
+    assert _episode_seed("core|early|empathetic_nudge|surrogate-cautious", 0) == 1786611501
+    assert _episode_seed("core|early|empathetic_nudge|surrogate-cautious", 1) != _episode_seed(
+        "core|early|empathetic_nudge|surrogate-cautious", 0
+    )
+
+
+def test_the_same_grid_twice_produces_the_same_episodes(pool, library):
+    first = expand_grid(
+        GridSpec(core_seeds=2, include_arms=("core",)), pool, library,
+        payoff=PayoffParams(), norms=NormParams(), seed=3,
+    )
+    second = expand_grid(
+        GridSpec(core_seeds=2, include_arms=("core",)), pool, library,
+        payoff=PayoffParams(), norms=NormParams(), seed=3,
+    )
+    assert [c.seed for c in first] == [c.seed for c in second]
+
+    rows_a, _ = asyncio.run(run_grid(first, concurrency=4))
+    rows_b, _ = asyncio.run(run_grid(second, concurrency=4))
+    by_id_a = {r["episode_id"]: r["cumulative_epc"] for r in rows_a}
+    by_id_b = {r["episode_id"]: r["cumulative_epc"] for r in rows_b}
+    assert by_id_a == by_id_b
