@@ -242,6 +242,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         ablation_payoff_seeds=args.ablation_payoff_seeds,
         ablation_ratio_seeds=args.ablation_ratio_seeds,
         scale_seeds=args.scale_seeds,
+        perturbation_seeds=args.perturbation_seeds,
         horizon=args.horizon,
         include_arms=tuple(args.arms.split(",")),
     )
@@ -458,7 +459,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--ablation-payoff-seeds", type=int, default=3)
     p_run.add_argument("--ablation-ratio-seeds", type=int, default=3)
     p_run.add_argument("--scale-seeds", type=int, default=10)
-    p_run.add_argument("--arms", default="core,placebo,ablation,scale")
+    p_run.add_argument("--perturbation-seeds", type=int, default=8)
+    p_run.add_argument("--arms", default="core,placebo,ablation,scale,perturbation")
     p_run.add_argument("--concurrency", type=int, default=16)
     p_run.set_defaults(func=cmd_run)
 
@@ -484,7 +486,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_rep.add_argument("--ablation-payoff-seeds", type=int, default=3)
     p_rep.add_argument("--ablation-ratio-seeds", type=int, default=3)
     p_rep.add_argument("--scale-seeds", type=int, default=10)
-    p_rep.add_argument("--arms", default="core,placebo,ablation,scale")
+    p_rep.add_argument("--perturbation-seeds", type=int, default=8)
+    p_rep.add_argument("--arms", default="core,placebo,ablation,scale,perturbation")
     p_rep.add_argument("--concurrency", type=int, default=16)
     p_rep.add_argument("--alpha", type=float, default=0.05)
     p_rep.set_defaults(func=cmd_reproduce)

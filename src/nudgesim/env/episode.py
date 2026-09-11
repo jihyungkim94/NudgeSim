@@ -23,7 +23,7 @@ from nudgesim.agents.bounded_rational import (
     NormParams,
     SURROGATE_PROFILES,
 )
-from nudgesim.agents.fixed import DisseminatorPolicy, IntervenerPolicy
+from nudgesim.agents.fixed import DisseminatorPolicy, IntervenerPolicy, PerturbationPolicy
 from nudgesim.agents.llm_policy import LLMCitizenPolicy
 from nudgesim.agents.persona import (
     CITIZEN_ROLES,
@@ -64,7 +64,12 @@ class EpisodeConfig:
     payoff: PayoffParams = field(default_factory=PayoffParams)
     backbone: str = "surrogate-cautious"
     payoff_visible: bool = True
-    arm: str = "core"                    # core | placebo | ablation | scale
+    arm: str = "core"                    # core | placebo | ablation | scale | perturbation
+    # Norm-robustness probe (plan section 5.8): one citizen defects from
+    # perturbation_round onward. None leaves the society unperturbed.
+    perturbation: str | None = None
+    perturbation_round: int = 6
+    perturbed_agent: str = "B2"
     memory_window: int = 3
     intervener_placement: str = "hub"
     trigger_mode: str = "fixed"
@@ -106,6 +111,7 @@ class EpisodeResult:
             "timing": cfg.timing.value,
             "tone": cfg.tone.value if cfg.tone else "none",
             "backbone": cfg.backbone,
+            "perturbation": cfg.perturbation or "none",
             "payoff_visible": cfg.payoff_visible,
             "seed": cfg.seed,
             "claim_id": cfg.claim.claim_id,
@@ -229,6 +235,14 @@ def build_episode(config: EpisodeConfig) -> tuple[dict[str, Persona], dict[str, 
     policies: dict[str, Policy] = {}
     for offset, agent_id in enumerate(config.society.citizen_ids):
         policies[agent_id] = factory(agent_id, personas[agent_id], config.seed * 1009 + offset)
+    if config.perturbation:
+        target = config.perturbed_agent
+        policies[target] = PerturbationPolicy(
+            policies[target],
+            config.perturbation,
+            entry_round=config.perturbation_round,
+            seed=config.seed,
+        )
     policies[config.society.disseminator_id] = DisseminatorPolicy(seed=config.seed)
     if config.timing is not Timing.NONE:
         tone = config.tone or Tone.EMPATHETIC

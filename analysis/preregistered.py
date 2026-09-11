@@ -37,6 +37,8 @@ import pandas as pd
 import statsmodels.formula.api as smf
 from scipy import stats
 
+from nudgesim.baselines import human_comparison
+
 from analysis.power import design_sensitivity_report
 from analysis.stats_utils import (
     bootstrap_diff,
@@ -173,6 +175,90 @@ def dunnett_vs_control(frame: pd.DataFrame, outcome: str) -> list[dict[str, Any]
         row["p_holm"] = p_adj
         row["significant_holm"] = rej
     return rows
+
+
+# ------------------------------------------------------------ factor-level ATEs
+
+FACTOR_CONTRASTS: tuple[tuple[str, str, str], ...] = (
+    ("intervention", "any intervention", "no intervention"),
+    ("timing", "late entry", "early entry"),
+    ("tone", "aggressive debunking", "empathetic nudge"),
+)
+
+
+def _contrast_frames(frame: pd.DataFrame, factor: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+    treated = frame[frame["treated"]]
+    if factor == "intervention":
+        return treated, frame[~frame["treated"]]
+    if factor == "timing":
+        return treated[treated["timing"] == "late"], treated[treated["timing"] == "early"]
+    return (
+        treated[treated["tone"] == "aggressive_debunking"],
+        treated[treated["tone"] == "empathetic_nudge"],
+    )
+
+
+def _ate_row(
+    factor: str, level: str, reference: str, stratum: str,
+    treat: pd.Series, control: pd.Series, *, alpha: float, seed: int,
+) -> dict[str, Any]:
+    est, lo, hi = bootstrap_diff(treat, control, alpha=alpha, seed=seed)
+    t_stat, p_value = stats.ttest_ind(treat, control, equal_var=False, nan_policy="omit")
+    return {
+        "factor": factor,
+        "level": level,
+        "reference": reference,
+        "stratum": stratum,
+        "n_treat": int(treat.size),
+        "n_control": int(control.size),
+        "mean_treat": float(np.mean(treat)) if treat.size else float("nan"),
+        "mean_control": float(np.mean(control)) if control.size else float("nan"),
+        "ate": est,
+        "ci_low": lo,
+        "ci_high": hi,
+        "cohens_d": cohens_d(treat, control),
+        "p_value": float(p_value),
+    }
+
+
+def factor_ates(
+    frame: pd.DataFrame, outcome: str, *, alpha: float = 0.05, seed: int = 0
+) -> dict[str, Any]:
+    """Average treatment effect per manipulated factor, with a 95% CI.
+
+    The mixed-effects model answers whether a factor matters once everything
+    else is held fixed; it does not say by how much, in the units the outcome
+    is measured in. This does, marginalising over the other factors, and
+    repeats each contrast within each backbone -- because a design effect that
+    reverses sign across models is a different finding from one that does not,
+    and a pooled coefficient hides that.
+    """
+    pooled: list[dict[str, Any]] = []
+    per_model: list[dict[str, Any]] = []
+    for factor, level, reference in FACTOR_CONTRASTS:
+        treat, control = _contrast_frames(frame, factor)
+        pooled.append(
+            _ate_row(factor, level, reference, "all models",
+                     treat[outcome], control[outcome], alpha=alpha, seed=seed)
+        )
+        for backbone in sorted(frame["backbone"].unique()):
+            per_model.append(
+                _ate_row(
+                    factor, level, reference, backbone,
+                    treat[treat["backbone"] == backbone][outcome],
+                    control[control["backbone"] == backbone][outcome],
+                    alpha=alpha, seed=seed,
+                )
+            )
+
+    # Holm within the outcome's own family of pooled contrasts; the per-model
+    # rows are descriptive breakdowns of those same three tests, not new ones.
+    adjusted, reject = holm([row["p_value"] for row in pooled])
+    for row, p_adj, rej in zip(pooled, adjusted, reject):
+        row["p_holm"] = p_adj
+        row["significant"] = bool(rej)
+
+    return {"pooled": pooled, "per_backbone": per_model}
 
 
 def headline_h3(frame: pd.DataFrame) -> dict[str, Any]:
@@ -420,6 +506,81 @@ def specificity_h5_placebo(frame: pd.DataFrame) -> dict[str, Any]:
     }
 
 
+# ------------------------------------------------------------- norm robustness
+
+ROBUSTNESS_OUTCOMES = ("epc_peers", "fpr_peers", "welfare_total")
+
+
+def norm_robustness(frame: pd.DataFrame, *, alpha: float = 0.05) -> dict[str, Any]:
+    """Does the correction norm survive a defector? (GovSim section 3.3)
+
+    GovSim drops a selfish newcomer into a community that has already reached a
+    cooperative equilibrium and reports the whole metric suite before and after.
+    The analogue here seats a defector among citizens half-way through the
+    episode, in two flavours -- one that amplifies the false claim, one that
+    simply stops paying the correction cost -- and asks what the *other*
+    citizens do about it.
+
+    Every outcome here excludes the perturbation seat in both arms, so a drop
+    means peers stood down, not that the defector's own silence was counted.
+    """
+    if "perturbation" not in frame.columns:
+        return {"error": "run predates the perturbation arm"}
+
+    baseline = frame[(frame["arm"] == "core") & (~frame["terminated_early"])]
+    perturbed = frame[(frame["arm"] == "perturbation") & (~frame["terminated_early"])]
+    if perturbed.empty:
+        return {"n_perturbed_episodes": 0, "note": "perturbation arm not run"}
+
+    out: dict[str, Any] = {
+        "n_perturbed_episodes": int(len(perturbed)),
+        "contrasts": [],
+    }
+    for kind in sorted(perturbed["perturbation"].unique()):
+        arm = perturbed[perturbed["perturbation"] == kind]
+        for outcome in ROBUSTNESS_OUTCOMES:
+            est, lo, hi = bootstrap_diff(arm[outcome], baseline[outcome], alpha=alpha)
+            _, p_value = stats.ttest_ind(
+                arm[outcome], baseline[outcome], equal_var=False, nan_policy="omit"
+            )
+            out["contrasts"].append(
+                {
+                    "perturbation": kind,
+                    "outcome": outcome,
+                    "n_perturbed": int(len(arm)),
+                    "n_baseline": int(len(baseline)),
+                    "mean_perturbed": float(arm[outcome].mean()),
+                    "mean_baseline": float(baseline[outcome].mean()),
+                    "diff": est,
+                    "ci_low": lo,
+                    "ci_high": hi,
+                    "cohens_d": cohens_d(arm[outcome], baseline[outcome]),
+                    "p_value": float(p_value),
+                }
+            )
+
+    adjusted, reject = holm([c["p_value"] for c in out["contrasts"]])
+    for contrast, p_adj, rej in zip(out["contrasts"], adjusted, reject):
+        contrast["p_holm"] = p_adj
+        contrast["significant"] = bool(rej)
+
+    # The headline reading: peers raising their correction rate against a
+    # defector is norm enforcement; leaving it flat or dropping is erosion.
+    verdicts = {}
+    for kind in sorted(perturbed["perturbation"].unique()):
+        row = next(
+            c for c in out["contrasts"]
+            if c["perturbation"] == kind and c["outcome"] == "epc_peers"
+        )
+        verdicts[kind] = (
+            "peers enforce" if row["significant"] and row["diff"] > 0
+            else "peers stand down" if row["significant"] and row["diff"] < 0
+            else "peers unchanged"
+        )
+    out["verdict"] = verdicts
+    return out
+
+
 def robustness(frame: pd.DataFrame) -> dict[str, Any]:
     """Ablations and moderators (plan section 8, Robustness)."""
     out: dict[str, Any] = {}
@@ -547,15 +708,18 @@ def run_analysis(
                 "mixed_model": mixed_model(core, outcome),
                 "partial_eta_squared": anova_effect_sizes(core, outcome),
                 "dunnett_vs_own_model_control": dunnett_vs_control(core, outcome),
+                "factor_ates": factor_ates(core, outcome, alpha=alpha),
             }
             for outcome in PRIMARY_OUTCOMES
         },
+        "human_baseline": human_comparison(core[~core["treated"]]),
         "h1_timing": timing_h1(core),
         "h2_durability": durability_h2(core),
         "h3_headline": headline_h3(core),
         "h5_model_dependence": model_dependence_h5(core),
         "rq5_specificity_placebo": specificity_h5_placebo(frame),
         "robustness": robustness(frame),
+        "norm_robustness": norm_robustness(frame, alpha=alpha),
         "design_sensitivity": design_sensitivity_report(frame, alpha=alpha),
     }
 
@@ -578,6 +742,7 @@ def run_analysis(
         "rq5_indiscriminate_skepticism": report["rq5_specificity_placebo"].get(
             "indiscriminate_skepticism"
         ),
+        "norm_robustness_verdict": report["norm_robustness"].get("verdict"),
         "h3_adequately_powered_at_30_seeds": report["design_sensitivity"]["contrasts"][
             "H3_tone_on_EPC_aggressive_vs_empathetic"
         ]["adequately_powered_at_30"],
@@ -619,6 +784,20 @@ def _write_tables(frame: pd.DataFrame, core: pd.DataFrame, out_dir: Path) -> Non
         .reset_index()
     )
     cells.to_csv(out_dir / "cell_means.csv", index=False)
+    pd.DataFrame(human_comparison(core[~core["treated"]])).to_csv(
+        out_dir / "human_baseline.csv", index=False
+    )
+    pd.DataFrame(
+        [
+            row
+            for outcome in PRIMARY_OUTCOMES
+            for key in ("pooled", "per_backbone")
+            for row in (
+                {"outcome": outcome, **r}
+                for r in factor_ates(core, outcome)[key]
+            )
+        ]
+    ).to_csv(out_dir / "factor_ates.csv", index=False)
     frame.groupby(["arm"], observed=True).size().to_frame("n_episodes").to_csv(
         out_dir / "arm_counts.csv"
     )

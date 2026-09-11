@@ -93,6 +93,8 @@ class EpisodeMetrics:
     n_citizen_actions: int
     n_challenges: int
     n_challengers: int
+    n_endorsements: int
+    n_citizens: int
     false_correction_rate: float
     welfare_total: float
     welfare_ex_sanctions: float
@@ -136,6 +138,7 @@ def compute_metrics(
 
     propagating = sum(1 for r in citizens if r.action.is_propagating)
     challenges = [r for r in citizens if r.action is Action.CHALLENGE]
+    endorsements = [r for r in citizens if r.action is Action.ENDORSE]
 
     if entry_round is None:
         pre, post = citizens, []
@@ -182,6 +185,8 @@ def compute_metrics(
         n_citizen_actions=len(citizens),
         n_challenges=len(challenges),
         n_challengers=len({r.agent_id for r in challenges}),
+        n_endorsements=len(endorsements),
+        n_citizens=len(citizen_ids) if citizen_ids else len({r.agent_id for r in citizens}),
         false_correction_rate=false_correction,
         welfare_total=welfare.get("welfare_total", float("nan")),
         welfare_ex_sanctions=welfare.get("welfare_ex_sanctions", float("nan")),
