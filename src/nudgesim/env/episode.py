@@ -70,6 +70,10 @@ class EpisodeConfig:
     trigger_mode: str = "fixed"
     society: SocietySpec = DEFAULT_SOCIETY
     norms: NormParams = field(default_factory=NormParams)
+    # When set, citizens run on a language model instead of the analytic
+    # surrogate. The dict is a backend spec (see nudgesim.backends.build_backend).
+    backend_spec: dict[str, Any] | None = None
+    citizen_temperature: float = 0.7
     policy_factory: Callable[[str, Persona, int], Policy] | None = None
     meta: dict[str, Any] = field(default_factory=dict)
 
@@ -160,6 +164,27 @@ def _surrogate_factory(
     return make
 
 
+def _llm_factory(config: EpisodeConfig) -> Callable[[str, Persona, int], Policy]:
+    """Citizens backed by a language model.
+
+    One backend instance is shared by all citizens in the episode so the
+    response cache and the provider connection pool are shared too; each citizen
+    still gets its own policy object, and therefore its own repair counter.
+    """
+    from nudgesim.backends.base import build_backend
+
+    backend = build_backend(dict(config.backend_spec or {}))
+
+    def make(agent_id: str, persona: Persona, seed: int) -> Policy:
+        return LLMCitizenPolicy(
+            backend,
+            temperature=config.citizen_temperature,
+            seed=seed,
+        )
+
+    return make
+
+
 def build_episode(config: EpisodeConfig) -> tuple[dict[str, Persona], dict[str, Policy], dict[str, str]]:
     """Instantiate the society, assign roles to motif nodes, and build policies."""
     society = build_society_for(
@@ -197,8 +222,9 @@ def build_episode(config: EpisodeConfig) -> tuple[dict[str, Persona], dict[str, 
         system_prompt="(fixed intervener policy)",
     )
 
-    factory = config.policy_factory or _surrogate_factory(
-        config.backbone, config.norms, config.payoff_visible
+    factory = config.policy_factory or (
+        _llm_factory(config) if config.backend_spec
+        else _surrogate_factory(config.backbone, config.norms, config.payoff_visible)
     )
     policies: dict[str, Policy] = {}
     for offset, agent_id in enumerate(config.society.citizen_ids):

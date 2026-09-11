@@ -65,6 +65,8 @@ class GridSpec:
     ablation_ratio_seeds: int = 3
     scale_seeds: int = 10
     backbones: tuple[str, ...] = DEFAULT_BACKBONES
+    # Maps a backbone name to a backend spec. Empty means the analytic surrogate.
+    backend_specs: dict[str, dict[str, Any]] = field(default_factory=dict)
     horizon: int = 12
     min_intervener_reach: int = 1
     trigger_mode: str = "fixed"
@@ -223,6 +225,7 @@ def expand_grid(
                     arm=arm,
                     trigger_mode=spec.trigger_mode,
                     norms=norms,
+                    backend_spec=spec.backend_specs.get(backbone),
                     meta={"cell": tag, "replication": s, **(meta or {})},
                 )
             )
@@ -270,6 +273,7 @@ def expand_grid(
                         backbone=scale_spec.backbone,
                         arm="scale",
                         society=scale_spec.society,
+                        backend_spec=spec.backend_specs.get(scale_spec.backbone),
                         trigger_mode=spec.trigger_mode,
                         norms=norms,
                         meta={"cell": tag, "replication": s, "n_agents": scale_spec.n_agents},
@@ -315,6 +319,7 @@ def summarise_episode(result: EpisodeResult) -> dict[str, Any]:
         "timing": cfg.timing.value,
         "tone": cfg.tone.value if cfg.tone else "none",
         "backbone": cfg.backbone,
+        "backbone_kind": "llm" if cfg.backend_spec else "surrogate",
         "treated": cfg.timing is not Timing.NONE,
         "payoff_visible": cfg.payoff_visible,
         "beta_gamma_ratio": cfg.payoff.engagement_accuracy_ratio,
