@@ -73,15 +73,23 @@ def pheme_root(tmp_path_factory) -> Path:
                     _write(thread, _broadcast(tid, 11))
                 else:
                     _write(thread, _mixed(tid, 4, 3))
+                # The real release's two annotation shapes, verbatim: flags are
+                # integers, and a non-rumour carries only is_rumour.
                 if kind == "rumours":
-                    # PHEME encodes veracity through these flags, not a label.
                     (thread / "annotation.json").write_text(
                         json.dumps({
                             "is_rumour": "rumour",
-                            "misinformation": "1" if i % 2 else "0",
-                            "true": "0" if i % 2 else "1",
+                            "category": "a rumour category string",
+                            "misinformation": 1 if i % 2 else 0,
+                            "true": 0 if i % 2 else 1,
+                            "links": [],
+                            "is_turnaround": 0,
                         }),
                         encoding="utf-8",
+                    )
+                else:
+                    (thread / "annotation.json").write_text(
+                        json.dumps({"is_rumour": "nonrumour"}), encoding="utf-8",
                     )
                 # Real threads ship the tweet bodies too; the loader must never
                 # read them.
@@ -150,6 +158,44 @@ def test_veracity_is_read_from_annotation_not_only_the_folder(pheme_root: Path):
     veracities = {m.source_veracity for m in lib.motifs}
     assert "non-rumour" in veracities
     assert veracities & {"true", "false"}, f"annotation.json unused: {veracities}"
+
+
+def test_non_rumour_annotation_is_not_read_as_unverified():
+    """A non-rumour carries only is_rumour; reading the flags alone mislabels it."""
+    from nudgesim.data.topology import _pheme_veracity
+
+    def verdict(tmp: Path, payload: dict | None) -> str:
+        thread = tmp / "ferguson-all-rnr-threads" / "non-rumours" / "1"
+        thread.mkdir(parents=True, exist_ok=True)
+        if payload is not None:
+            (thread / "annotation.json").write_text(json.dumps(payload), encoding="utf-8")
+        return _pheme_veracity(thread / "structure.json")
+
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as d:
+        assert verdict(Path(d), {"is_rumour": "nonrumour"}) == "non-rumour"
+
+
+@pytest.mark.parametrize(
+    "payload,expected",
+    [
+        ({"is_rumour": "nonrumour"}, "non-rumour"),
+        ({"is_rumour": "rumour", "misinformation": 0, "true": 1}, "true"),
+        ({"is_rumour": "rumour", "misinformation": 1, "true": 0}, "false"),
+        ({"is_rumour": "rumour", "misinformation": 0, "true": 0}, "unverified"),
+        ({"is_rumour": "rumour", "misinformation": 1}, "false"),
+        ({"is_rumour": "rumour", "misinformation": 0}, "unverified"),
+    ],
+)
+def test_real_annotation_shapes(tmp_path: Path, payload: dict, expected: str):
+    """Every (misinformation, true) combination present in the real release."""
+    from nudgesim.data.topology import _pheme_veracity
+
+    thread = tmp_path / "ferguson-all-rnr-threads" / "rumours" / "1"
+    thread.mkdir(parents=True)
+    (thread / "annotation.json").write_text(json.dumps(payload), encoding="utf-8")
+    assert _pheme_veracity(thread / "structure.json") == expected
 
 
 def test_tweet_ids_never_reach_the_motif(pheme_root: Path):

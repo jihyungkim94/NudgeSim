@@ -472,10 +472,15 @@ def _pheme_event(path: Path) -> str:
 def _pheme_veracity(path: Path) -> str:
     """Thread veracity from annotation.json, falling back to the folder.
 
-    PHEME does not store a veracity string. Rumour threads carry
-    ``annotation.json`` with ``misinformation`` and ``true`` flags, and a rumour
-    with neither set is unverified. Non-rumour threads have no annotation, which
-    is itself the label.
+    PHEME stores no veracity string. The real annotations come in two shapes:
+
+        non-rumour: {"is_rumour": "nonrumour"}
+        rumour:     {"is_rumour": "rumour", "misinformation": 0, "true": 1, ...}
+
+    ``is_rumour`` has to be checked first: a non-rumour annotation carries
+    neither flag, so reading the flags alone labels every non-rumour thread
+    "unverified". Flag values are integers in the release, not strings.
+    A rumour with neither flag set is genuinely unverified.
     """
     annotation = path.parent / "annotation.json"
     if annotation.exists():
@@ -483,15 +488,14 @@ def _pheme_veracity(path: Path) -> str:
             payload = json.loads(annotation.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, UnicodeDecodeError, OSError):
             payload = {}
-        if isinstance(payload, dict):
-            misinformation = str(payload.get("misinformation", "0")).strip()
-            true_flag = str(payload.get("true", "0")).strip()
-            if true_flag == "1":
+        if isinstance(payload, dict) and payload:
+            if str(payload.get("is_rumour", "")).strip().lower() in ("nonrumour", "non-rumour"):
+                return "non-rumour"
+            if str(payload.get("true", 0)).strip() == "1":
                 return "true"
-            if misinformation == "1":
+            if str(payload.get("misinformation", 0)).strip() == "1":
                 return "false"
-            if payload:
-                return "unverified"
+            return "unverified"
     if "non-rumours" in path.parts:
         return "non-rumour"
     if "rumours" in path.parts:
