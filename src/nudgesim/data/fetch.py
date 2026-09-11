@@ -102,19 +102,30 @@ def pheme_instructions(dest: str | Path = "data/raw/pheme") -> str:
 
   1. Open {PHEME_URL}
      (DOI {PHEME_DOI})
-  2. Download "PHEME_veracity.tar.bz2" (~2 GB).
-  3. Unpack it so the layout is:
+  2. Download the veracity archive (~2 GB).
+  3. You do NOT need to unpack all of it. NudgeSim reads only each thread's
+     reply tree, so extract just those (a few MB) and nothing else:
 
-       {dest}/<event>/{{rumours,non-rumours}}/<thread_id>/structure.json
+       mkdir -p {dest}
+       tar -xjf PHEME_veracity.tar.bz2 -C {dest} --wildcards \\
+           '*/structure.json' '*/annotation.json'
 
-  4. Run:  nudgesim --pheme {dest} check
+     Unpacking the whole archive also works; the loader ignores the rest.
+     The resulting layout is:
+
+       {dest}/<event>-all-rnr-threads/{{rumours,non-rumours}}/<thread>/structure.json
+
+  4. Verify:  nudgesim --pheme {dest} check
 
 Why this is not automated: the archive sits behind figshare's download
 endpoint, and the tweet content it contains is governed by platform terms.
 Fetching it is a decision the user makes, not one a script makes for them.
-NudgeSim reads only each thread's structure.json -- the reply tree -- and never
-loads tweet text; node identifiers are stripped during motif extraction, so only
-derived topology reaches any artefact.
+
+What is actually read. Only structure.json (the reply tree) and, where present,
+annotation.json (the veracity flags). Tweet bodies under source-tweets/ and
+reactions/ are never opened, and tweet ids are replaced by positional labels
+during motif extraction -- so only derived topology reaches any artefact, which
+is also what makes the release licensable (plan section 6).
 
 Without PHEME the pipeline runs on the surrogate cascade generator, and every
 artefact is labelled

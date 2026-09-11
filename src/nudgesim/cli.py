@@ -102,6 +102,15 @@ def cmd_check(args: argparse.Namespace) -> int:
     pool, library = _load_data(args)
     payoff = _payoff(args)
     report = {
+        "corpora": {
+            "claims": pool.provenance,
+            "topology": library.provenance,
+            "topology_detail": {
+                k: v for k, v in library.meta.items()
+                if k in ("n_structure_files", "n_threads_parsed",
+                         "n_threads_large_enough", "events", "n_threads")
+            },
+        },
         "manipulation_check_tone": length_match_report(pool.false_claims),
         "claim_pool": pool.summary(),
         "motif_library": library.summary(),

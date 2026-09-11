@@ -91,6 +91,7 @@ class Motif:
     source_thread: str = ""
     source_veracity: str = "unverified"
     provenance: str = ""
+    meta: dict[str, Any] = field(default_factory=dict)
 
     @property
     def size(self) -> int:
@@ -185,6 +186,7 @@ class Motif:
             "source_thread": self.source_thread,
             "source_veracity": self.source_veracity,
             "provenance": self.provenance,
+            "meta": self.meta,
             "stats": cascade_stats(nx.bfs_tree(self.graph, self.root), self.root).as_dict(),
         }
 
@@ -308,9 +310,24 @@ class MotifLibrary:
 
         Expected layout (the figshare release)::
 
-            <root>/<event>/{rumours,non-rumours}/<thread_id>/structure.json
+            <root>/<event>-all-rnr-threads/{rumours,non-rumours}/<thread>/structure.json
 
-        Only ``structure.json`` is read. Tweet text is never loaded.
+        Only ``structure.json`` and ``annotation.json`` are read. Tweet bodies
+        under ``source-tweets/`` and ``reactions/`` are never opened, and tweet
+        ids are replaced by positional labels during motif extraction, so only
+        derived topology reaches any artefact (plan section 6, licensing).
+
+        Two things this deliberately does not do:
+
+        * It does not stop parsing at ``max_motifs``. Thread statistics are the
+          calibration gate's reference distribution (section 5.7), so they are
+          computed over every thread in the release; the cap applies only to how
+          many motifs are kept for sampling.
+        * It does not take motifs in directory order. ``rglob`` yields threads
+          sorted by path, so the first 200 would all come from whichever event
+          sorts first -- the motif library would silently describe one news
+          event rather than nine. Threads are shuffled from the run seed before
+          the cap is applied.
         """
         root_dir = Path(root_dir)
         structures = sorted(root_dir.rglob("structure.json"))
@@ -318,18 +335,32 @@ class MotifLibrary:
             raise FileNotFoundError(f"no structure.json under {root_dir}")
 
         rng = random.Random(seed)
-        motifs: list[Motif] = []
+        order = list(structures)
+        rng.shuffle(order)
+
         stats: list[CascadeStats] = []
-        for path in structures:
+        candidates: list[tuple[Path, nx.DiGraph, Any]] = []
+        events: set[str] = set()
+
+        for path in order:
             try:
                 raw = json.loads(path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, UnicodeDecodeError):
+            except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+                # The release contains empty, truncated and non-UTF-8 files. One
+                # bad thread must not abort a 6,000-thread parse.
                 continue
             tree, tree_root = _tree_from_structure(raw)
-            if tree is None or tree.number_of_nodes() < motif_size:
+            if tree is None or tree.number_of_nodes() < 2:
                 continue
             stats.append(cascade_stats(tree, tree_root))
-            veracity = "rumour" if "rumours" in path.parts and "non-rumours" not in path.parts else "non-rumour"
+            events.add(_pheme_event(path))
+            if tree.number_of_nodes() >= motif_size:
+                candidates.append((path, tree, tree_root))
+
+        motifs: list[Motif] = []
+        for path, tree, tree_root in candidates:
+            if len(motifs) >= max_motifs:
+                break
             motif = _sample_motif(
                 tree,
                 tree_root,
@@ -337,13 +368,12 @@ class MotifLibrary:
                 rng,
                 motif_id=f"pheme-{path.parent.name}",
                 source_thread=path.parent.name,
-                source_veracity=veracity,
+                source_veracity=_pheme_veracity(path),
                 provenance="PHEME-9 (Kochkina et al., 2018), derived topology only",
             )
             if motif is not None:
+                motif.meta["event"] = _pheme_event(path)
                 motifs.append(motif)
-            if len(motifs) >= max_motifs:
-                break
 
         if motif_size == 7:
             # The hand-specified motif is defined at the core study's size; a
@@ -354,7 +384,14 @@ class MotifLibrary:
             motifs=motifs,
             provenance="PHEME-9 (Kochkina et al., 2018), derived topology only",
             thread_stats=stats,
-            meta={"n_structure_files": len(structures), "motif_size": motif_size},
+            meta={
+                "n_structure_files": len(structures),
+                "n_threads_parsed": len(stats),
+                "n_threads_large_enough": len(candidates),
+                "events": sorted(events),
+                "motif_size": motif_size,
+                "max_motifs": max_motifs,
+            },
         )
 
     @classmethod
@@ -416,6 +453,50 @@ class MotifLibrary:
             thread_stats=stats,
             meta={"n_threads": n_threads, "motif_size": motif_size, "seed": seed},
         )
+
+
+def _pheme_event(path: Path) -> str:
+    """Event name from a thread path, e.g. 'charliehebdo-all-rnr-threads'."""
+    for part in path.parts:
+        if part.endswith("-all-rnr-threads"):
+            return part.replace("-all-rnr-threads", "")
+    # Some redistributions flatten the '-all-rnr-threads' suffix away; fall back
+    # to the directory two levels above the thread (…/<event>/rumours/<thread>).
+    parts = path.parts
+    for i, part in enumerate(parts):
+        if part in ("rumours", "non-rumours") and i > 0:
+            return parts[i - 1]
+    return "unknown"
+
+
+def _pheme_veracity(path: Path) -> str:
+    """Thread veracity from annotation.json, falling back to the folder.
+
+    PHEME does not store a veracity string. Rumour threads carry
+    ``annotation.json`` with ``misinformation`` and ``true`` flags, and a rumour
+    with neither set is unverified. Non-rumour threads have no annotation, which
+    is itself the label.
+    """
+    annotation = path.parent / "annotation.json"
+    if annotation.exists():
+        try:
+            payload = json.loads(annotation.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError, OSError):
+            payload = {}
+        if isinstance(payload, dict):
+            misinformation = str(payload.get("misinformation", "0")).strip()
+            true_flag = str(payload.get("true", "0")).strip()
+            if true_flag == "1":
+                return "true"
+            if misinformation == "1":
+                return "false"
+            if payload:
+                return "unverified"
+    if "non-rumours" in path.parts:
+        return "non-rumour"
+    if "rumours" in path.parts:
+        return "unverified"
+    return "n/a"
 
 
 def _tree_from_structure(raw: Any) -> tuple[nx.DiGraph | None, Any]:
