@@ -289,3 +289,37 @@ def test_placebo_arm_records_whether_the_intervener_acted(pool, library):
     # With a 0.15 declared false-alarm rate the intervener should usually,
     # but not always, hold its fire on a true claim.
     assert not all(challenged)
+
+
+def test_guard_ignores_the_quoted_claim_when_judging_repetition(pool, library):
+    """Re-sharing a claim is specified behaviour, not degeneration.
+
+    The quoted claim dominates the n-gram set, so comparing raw utterances lets
+    claim length decide whether an episode is flagged -- which silently
+    truncated 30% of episodes on the real LIAR pool and none on the shorter
+    synthetic one.
+    """
+    claim = "a long de-identified statement about the health programme being cancelled outright"
+    guards = Guards(max_repeats=2)
+    for opener in ("Still no answer on this:", "People keep trying to bury this.",
+                   "Another source says the same.", "Saving this before it disappears."):
+        guards.observe("Disseminator", f"{opener} {claim}", claim)
+    assert not guards.terminated_early
+
+    # The same agent actually looping is still caught.
+    looping = Guards(max_repeats=2)
+    for _ in range(4):
+        looping.observe("A1", f"Still no answer on this: {claim}", claim)
+    assert looping.terminated_early
+
+
+def test_real_claim_lengths_do_not_truncate_episodes(pool, library):
+    """Regression: episode truncation must not depend on how long claims are."""
+    long_claim = pool.false_claims[0]
+    object.__setattr__(long_claim, "text", " ".join(
+        ["a", "long", "statement", "about", "the", "programme"] * 5))
+    flagged = 0
+    for seed in range(12):
+        result = _run(_config(pool, library, claim=long_claim, seed=seed))
+        flagged += int(result.guards.terminated_early)
+    assert flagged == 0, f"{flagged}/12 episodes truncated by claim length alone"

@@ -24,6 +24,14 @@ def _ngrams(text: str, n: int = 3) -> set[tuple[str, ...]]:
     return {tuple(words[i : i + n]) for i in range(max(0, len(words) - n + 1))}
 
 
+def _strip_claim(utterance: str, claim_text: str) -> str:
+    """Drop the quoted claim, leaving the agent's own framing."""
+    if not claim_text:
+        return utterance
+    stripped = utterance.replace(claim_text, " ")
+    return re.sub(r"\s{2,}", " ", stripped).strip()
+
+
 def ngram_overlap(a: str, b: str, n: int = 3) -> float:
     ga, gb = _ngrams(a, n), _ngrams(b, n)
     if not ga or not gb:
@@ -50,14 +58,29 @@ class Guards:
     terminated_early: bool = False
     termination_reason: str = ""
 
-    def observe(self, agent_id: str, utterance: str) -> None:
+    def observe(self, agent_id: str, utterance: str, claim_text: str = "") -> None:
+        """Record one utterance and test it for degeneration.
+
+        Repetition is judged on the agent's OWN words, with the quoted claim
+        removed. An agent that re-shares the same claim is not degenerating --
+        the Disseminator is specified to do exactly that every round -- but the
+        quoted text dominates the n-gram set, so comparing raw utterances makes
+        claim length decide the verdict. On the real LIAR pool, whose statements
+        average 18 words, that flagged 30% of episodes as degenerate; on the
+        shorter synthetic pool it flagged none.
+        """
         if not utterance.strip():
             return
         self.utterances_seen += 1
         if _META_RE.search(utterance):
             self.persona_breaks += 1
+        current = _strip_claim(utterance, claim_text)
         previous = self._last.get(agent_id)
-        if previous is not None and ngram_overlap(previous, utterance) >= self.repetition_threshold:
+        if (
+            previous is not None
+            and current
+            and ngram_overlap(previous, current) >= self.repetition_threshold
+        ):
             self._streak[agent_id] += 1
             self.repeat_events += 1
             if self._streak[agent_id] >= self.max_repeats:
@@ -65,7 +88,8 @@ class Guards:
                 self.termination_reason = f"degenerate repetition by {agent_id}"
         else:
             self._streak[agent_id] = 0
-        self._last[agent_id] = utterance
+        if current:
+            self._last[agent_id] = current
 
     @property
     def persona_break_rate(self) -> float:
