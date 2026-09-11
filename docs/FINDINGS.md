@@ -230,3 +230,21 @@ this is **circular** and proves only that the plumbing works: the surrogate's
 traces are templated, so a keyword classifier tuned to them recovers them
 perfectly. The plan's real gate — 300 human-coded LLM traces at κ ≥ 0.7 — is
 untouched by this and still has to be run.
+
+---
+
+## The revised plan
+
+[`Project_Plan_NudgeSim_v2.1.docx`](Project_Plan_NudgeSim_v2.1.docx) is the
+project plan with all four problems fixed in place. §0 of that document carries
+a revision table mapping each change to the evidence above. The substantive
+edits are in §5.2 (intervener placement and reach), §5.3 (veracity-sensitive
+intervener), §5.5 (welfare and durability measures), §5.9 (two-tier sampling
+protocol), §8 (power statement and conditional contrasts), §9 (a Week-8 power
+gate) and §12 (two new risks).
+
+The headline change to the protocol: the grid grows from 1,080 to 2,780
+episodes, but not by scaling everything 9× — the core grid stays at 30 seeds
+because that already powers what it is for, and a focused 150-seed arm covers
+only the two contrasts that need it. That is ~2.6× the compute rather than ~9×,
+with a pre-declared reduction ladder if the budget binds.
