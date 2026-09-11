@@ -1,6 +1,0 @@
-arm,n_episodes
-ablation_payoff,60
-ablation_ratio,180
-core,600
-placebo,200
-scale,40

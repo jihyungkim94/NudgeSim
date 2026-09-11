@@ -270,15 +270,23 @@ Recorded because each one silently produced plausible-looking results:
 0. **The intervener's reach and the citizens' visibility were never measured.**
    The topology looked fine by every statistic the pipeline computed, while 89%
    of motifs made the study's mechanism impossible. See finding 5.
-1. **Every episode in the grid ran on a `pants-fire` claim.** The §5.9 severity
+1. **Claim length decided whether an episode was truncated.** The degeneracy
+   guard compared whole utterances, and an utterance that quotes the claim is
+   mostly claim. On the real LIAR pool, whose statements average 18 words
+   against 13.6 in the synthetic one, that flagged 30% of episodes as
+   degenerate and silently truncated them — while flagging none on the shorter
+   pool. The Disseminator is *specified* to repost the same claim every round,
+   so the guard was firing on the behaviour the design asks for. It now judges
+   the agent's own framing with the quoted claim removed.
+2. **Every episode in the grid ran on a `pants-fire` claim.** The §5.9 severity
    stratification is implemented as a cursor over strata, and the runner drew one
    claim per episode — so it returned stratum 0 every time. The grid looked
    healthy and the numbers looked reasonable; the stratification simply never
    happened. Fixed, with a regression test asserting a balanced three-way split.
-2. **A silent endorser was never charged reputation damage.** Damage was applied
+3. **A silent endorser was never charged reputation damage.** Damage was applied
    only to agents that *acted* that round, exempting exactly the agents whose
    endorsements were most exposed — those who said their piece and went quiet.
-3. **An anti-runaway fix destroyed the effect it was protecting.** Saturating the
+4. **An anti-runaway fix destroyed the effect it was protecting.** Saturating the
    norm-salience channel stopped a genuine feedback explosion in *peer*
    correction, but applying the same transform to the *policing* channel
    compressed a three-fold difference in enforcement intensity into a few
@@ -286,11 +294,11 @@ Recorded because each one silently produced plausible-looking results:
    contrast the study exists to measure. Policing comes from one agent at one
    action per round, so exponential decay already bounds it; it needed
    normalising, not saturating.
-4. **LIAR rows were silently merging.** LIAR statements contain unbalanced double
+5. **LIAR rows were silently merging.** LIAR statements contain unbalanced double
    quotes, and Python's default CSV quoting swallowed line breaks at them,
    merging rows and bleeding later columns into statement text. `QUOTE_NONE`
    fixes it; a test now asserts all 12,836 published rows parse.
-5. **De-identification was both too weak and too strong.** The speaker column
+6. **De-identification was both too weak and too strong.** The speaker column
    alone left 5.8% of statements naming public figures (statements *about*
    people, not *by* them). Adding a surname pass fixed that but shredded the
    corpus — LIAR's speaker column is ~⅓ organisations, so "the big Wall Street
@@ -356,7 +364,7 @@ untouched by this and still has to be run.
 
 ## The revised plan
 
-[`Project_Plan_NudgeSim_v2.2.docx`](Project_Plan_NudgeSim_v2.2.docx) is the
+[`Project_Plan_NudgeSim_v2.3.docx`](Project_Plan_NudgeSim_v2.3.docx) is the
 project plan with all five problems fixed in place. §0 of that document carries
 a revision table mapping each change to the evidence above. The substantive
 edits are in §5.2 (intervener placement and reach), §5.3 (veracity-sensitive
@@ -369,3 +377,32 @@ episodes, but not by scaling everything 9× — the core grid stays at 30 seeds
 because that already powers what it is for, and a focused 150-seed arm covers
 only the two contrasts that need it. That is ~2.6× the compute rather than ~9×,
 with a pre-declared reduction ladder if the budget binds.
+
+
+---
+
+## Where this sits in the GovSim / SanctSim / MoralSim / CoopEval line
+
+Two of the findings above are not about misinformation at all. They are about
+the class of study this project belongs to, and they would apply to any design
+in it.
+
+**Backbone dominates mechanism.** Which model family the citizens run on
+accounts for roughly a third of the variance in peer correction; the
+intervention's timing and tone account for single digits. If that survives
+contact with real backbones, then in this class of study the model is not a
+nuisance parameter to average over — it is the largest effect present, and a
+mechanism result reported on a single backbone is one draw from a wide
+distribution.
+
+**Summing a payoff function is not a welfare measure.** Total payoff ranked
+every working intervention below doing nothing, because the sanction costs it
+charges are precisely what a working intervention generates. Removing sanctions
+was not enough either: conformity then dominated, and conformity is maximised by
+the arm in which nobody disagrees. Only the veracity term is stable in sign.
+Any design in this line that reports Σπ as welfare inherits the same problem.
+
+Plan §2.1 states the relationship in full: NudgeSim is an instance of that
+programme applied to information as the public good, asking the second-order
+question of an *intervention* rather than of a population — not whether agents
+sanction, but whether being sanctioned *for* changes whether they sanction.

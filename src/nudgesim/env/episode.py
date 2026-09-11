@@ -324,7 +324,7 @@ async def run_episode(config: EpisodeConfig) -> EpisodeResult:
         )
 
         for agent, decision in moves.items():
-            guards.observe(agent, decision.utterance)
+            guards.observe(agent, decision.utterance, config.claim.text)
             records.append(
                 ActionRecord(
                     episode_id=config.episode_id,
