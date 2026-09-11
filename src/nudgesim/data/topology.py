@@ -305,6 +305,7 @@ class MotifLibrary:
         motif_size: int = 7,
         max_motifs: int = 200,
         seed: int = 0,
+        sibling_window: int = 1,
     ) -> "MotifLibrary":
         """Parse a PHEME-9 release directory into motifs and thread statistics.
 
@@ -370,6 +371,7 @@ class MotifLibrary:
                 source_thread=path.parent.name,
                 source_veracity=_pheme_veracity(path),
                 provenance="PHEME-9 (Kochkina et al., 2018), derived topology only",
+                sibling_window=sibling_window,
             )
             if motif is not None:
                 motif.meta["event"] = _pheme_event(path)
@@ -391,6 +393,7 @@ class MotifLibrary:
                 "events": sorted(events),
                 "motif_size": motif_size,
                 "max_motifs": max_motifs,
+                "sibling_window": sibling_window,
             },
         )
 
@@ -403,6 +406,7 @@ class MotifLibrary:
         seed: int = 0,
         attachment_bias: float = 0.6,
         depth_bias: float = 0.45,
+        sibling_window: int = 1,
     ) -> "MotifLibrary":
         """Surrogate reply-tree generator for offline runs.
 
@@ -441,6 +445,7 @@ class MotifLibrary:
                 source_thread=f"synthetic-{t:03d}",
                 source_veracity="rumour" if t % 2 == 0 else "non-rumour",
                 provenance="SYNTHETIC-SURROGATE topology (not PHEME)",
+                sibling_window=sibling_window,
             )
             if motif is not None:
                 motifs.append(motif)
@@ -451,7 +456,8 @@ class MotifLibrary:
             motifs=motifs,
             provenance="SYNTHETIC-SURROGATE topology (no PHEME data present; not a PHEME result)",
             thread_stats=stats,
-            meta={"n_threads": n_threads, "motif_size": motif_size, "seed": seed},
+            meta={"n_threads": n_threads, "motif_size": motif_size, "seed": seed,
+                  "sibling_window": sibling_window},
         )
 
 
@@ -528,6 +534,58 @@ def _tree_from_structure(raw: Any) -> tuple[nx.DiGraph | None, Any]:
     return tree, root
 
 
+def _display_order(node: Any) -> tuple[int, str]:
+    """Thread display order. Tweet ids are snowflake ids, so numeric order is
+    chronological; anything non-numeric falls back to lexicographic."""
+    text = str(node)
+    return (0, f"{int(text):030d}") if text.isdigit() else (1, text)
+
+
+def _visibility_graph(
+    tree: nx.DiGraph, nodes: Sequence[Any], sibling_window: int
+) -> nx.Graph:
+    """Who can see whom, given who replied to whom.
+
+    ``structure.json`` is a reply tree, not a visibility graph: it records that
+    B answered A, not that B and C -- who both answered A -- can read each
+    other. Taking the reply tree as the visibility graph is what makes real
+    PHEME motifs unusable, because real cascades are broadcast stars: a source
+    tweet with many direct replies. Rooted at the disseminator, such a motif
+    gives every citizen exactly one neighbour (the disseminator), so no local
+    majority can form and no citizen can watch another pay the correction cost.
+
+    Connecting *all* siblings is the opposite failure. In a star every reply is
+    a sibling of every other, so the motif becomes the complete graph: everyone
+    sees everyone, "local" majority becomes global, and the network structure
+    the study manipulates disappears. Measured on PHEME-9, that turns 69% of
+    motifs into K7.
+
+    A thread view shows neither extreme. It is ranked and truncated, so a reader
+    sees the source plus the replies near their own. ``sibling_window`` is that
+    bounded attention: each reply is linked to the ``w`` siblings that follow it
+    in display order. At w = 1 on PHEME-9 no motif is a star, none is complete,
+    and mean density is 0.50 -- sparse enough to keep locality, dense enough for
+    a majority to form.
+    """
+    graph = tree.to_undirected().subgraph(nodes).copy()
+    if sibling_window <= 0:
+        return graph
+
+    siblings: dict[Any, list[Any]] = {}
+    present = set(nodes)
+    for node in nodes:
+        for parent in tree.predecessors(node):
+            siblings.setdefault(parent, []).append(node)
+
+    for kids in siblings.values():
+        kids = sorted(kids, key=_display_order)
+        for i, node in enumerate(kids):
+            for other in kids[i + 1 : i + 1 + sibling_window]:
+                if node in present and other in present:
+                    graph.add_edge(node, other)
+    return graph
+
+
 def _sample_motif(
     tree: nx.DiGraph,
     root: Any,
@@ -538,6 +596,7 @@ def _sample_motif(
     source_thread: str,
     source_veracity: str,
     provenance: str,
+    sibling_window: int = 1,
 ) -> Motif | None:
     """Grow a connected ``size``-node motif outward from the cascade root."""
     if tree.number_of_nodes() < size:
@@ -554,7 +613,7 @@ def _sample_motif(
     if len(chosen) < size:
         return None
 
-    sub = undirected.subgraph(chosen).copy()
+    sub = _visibility_graph(tree, chosen, sibling_window)
     relabel = {old: f"v{i}" for i, old in enumerate(chosen)}  # strips tweet ids
     sub = nx.relabel_nodes(sub, relabel)
     return Motif(
@@ -564,6 +623,7 @@ def _sample_motif(
         source_thread=source_thread,
         source_veracity=source_veracity,
         provenance=provenance,
+        meta={"sibling_window": sibling_window},
     )
 
 
