@@ -257,12 +257,25 @@ class BoundedRationalPolicy:
         Rockenbach 2003; Bowles 2008). Which of the two dominates -- and whether
         tone decides it -- is the empirical question, not an assumption baked in
         here: both weights are free parameters declared in the run config.
+
+        The two channels are bounded differently, on purpose. Peer correction is
+        a feedback loop -- each peer who corrects makes the next one more likely
+        -- so it is passed through a saturating transform; without one the
+        society collapses into universal challenging within a few rounds.
+        Policing has no such loop: it comes from a single agent acting at most
+        once per round, so the exponential decay already bounds it at
+        ``rate / (1 - decay)``. Saturating it as well would compress precisely
+        the empathetic-versus-aggressive contrast this study exists to measure,
+        squeezing a three-fold difference in enforcement intensity into a few
+        hundredths of a utility point. It is normalised back to a per-round
+        average instead.
         """
+        policing = state.policing * (1.0 - self.norms.salience_decay)
         raw = (
             1.0
             + self.norms.omega_demo_peer * self._saturate(state.peer_signal)
             + self.norms.omega_demo_external * self._saturate(state.external_signal)
-            - self._saturate(state.policing)
+            - policing
         )
         return max(self.norms.min_salience, raw)
 

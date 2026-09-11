@@ -9,13 +9,14 @@ engine, the agent society, the timing × tone intervention design, the calibrati
 gate, the preregistered analysis, and a one-command reproduction.
 
 > **Read this first.** The runs shipped in `runs/` were produced with the
-> **analytic surrogate policy**, not with LLM backbones, and on **synthetic
-> surrogate claim and topology data**, not LIAR and PHEME. They are a
-> *design-sensitivity study* of the preregistered protocol — what it can and
-> cannot detect — and are **not evidence about LLM behaviour**. Every artefact
-> carries a provenance string saying so. See [docs/FINDINGS.md](docs/FINDINGS.md)
-> for what the study did establish, including four problems in the plan as
-> written that the implementation surfaced.
+> **analytic surrogate policy**, not with LLM backbones. Claims come from the
+> **real LIAR corpus**; topologies are surrogate, because PHEME must be fetched
+> by hand (see below). These runs are a *design-sensitivity study* of the
+> preregistered protocol — what it can and cannot detect — and are **not
+> evidence about LLM behaviour**. Every artefact carries a provenance string
+> saying so. See [docs/FINDINGS.md](docs/FINDINGS.md) for what the study did
+> establish, including four problems in the plan as written and five silent bugs
+> the implementation surfaced.
 
 ---
 
@@ -31,20 +32,33 @@ Outputs land in `runs/main/`: `results.parquet` (one row per episode),
 `rounds.parquet` (per-round rates), `episodes.jsonl` (full logs),
 `analysis/analysis.json`, `analysis/cell_means.csv`, and `figures/`.
 
-### Running it for real
+### Getting the corpora
 
 ```bash
-# real corpora
-./reproduce.sh --liar data/raw/liar --pheme data/raw/pheme
-
-# real backbones: fill in configs/backbones.yaml, export keys, then
-./reproduce.sh --liar data/raw/liar --pheme data/raw/pheme --llm
+nudgesim fetch-data          # downloads and verifies LIAR; prints PHEME steps
 ```
 
-The two corpora are **not** redistributed here. LIAR comes from the original UCSB
-archive (the Hugging Face loading script is deprecated); PHEME-9 comes from
-figshare DOI `10.6084/m9.figshare.6392078`. Both loaders read the real release
-formats; if neither is present the CLI falls back to labelled surrogates.
+Neither corpus is redistributed here.
+
+- **LIAR** is fetched automatically and checked against the published release:
+  12,836 rows and the exact six-way label distribution. A mirror that does not
+  reproduce those fails loudly rather than quietly changing results.
+- **PHEME-9** is a manual download (figshare DOI `10.6084/m9.figshare.6392078`,
+  ~2 GB, covered by Twitter's content terms). Unpack it so the layout is
+  `data/raw/pheme/<event>/{rumours,non-rumours}/<thread>/structure.json`. Only
+  each thread's reply tree is read — tweet text is never loaded, and node ids are
+  stripped during motif extraction, so only derived topology reaches any artefact.
+
+The claim pool and the topology source are independent, so LIAR + surrogate
+topology is a valid, clearly-labelled intermediate configuration.
+
+```bash
+./reproduce.sh --liar data/raw/liar                        # real claims
+./reproduce.sh --liar data/raw/liar --pheme data/raw/pheme # both corpora
+./reproduce.sh --liar data/raw/liar --pheme data/raw/pheme --llm  # + real models
+```
+
+For real backbones, fill in `configs/backbones.yaml` and export the API keys.
 
 ---
 
@@ -109,13 +123,14 @@ src/nudgesim/
   cli.py         check | calibrate | run | analyze | reproduce
 analysis/        preregistered models, power analysis, figures
 configs/         payoff, design, grid, backbone and DGP configuration
-tests/           97 tests; the payoff ledger is checked against hand-computed episodes
+tests/           107 tests; the payoff ledger is checked against hand-computed episodes
 docs/            design map, findings, preregistration, ethics, data cards
 ```
 
 ## CLI
 
 ```bash
+nudgesim fetch-data  # download + verify LIAR; instructions for PHEME
 nudgesim check       # tone manipulation checks + design reference values
 nudgesim calibrate   # face-validity Go/No-Go gate (plan §5.7)
 nudgesim run         # the preregistered grid
@@ -123,8 +138,9 @@ nudgesim analyze     # mixed models, Dunnett, survival, power
 nudgesim reproduce   # all of the above
 ```
 
-Useful flags: `--dgp {declared,null,no-novelty}` selects the surrogate's declared
-data-generating process (used for the false-positive and gate-teeth controls);
+Useful flags: `--dgp {declared,strong,null,no-novelty}` selects the surrogate's
+declared data-generating process (used for the sensitivity, false-positive and
+gate-teeth controls);
 `--arms`, `--core-seeds` size the grid; `--liar`/`--pheme` point at real corpora.
 
 ## Documentation

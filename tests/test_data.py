@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import pathlib
+import random
+import re
+
 import pytest
 
 from nudgesim.agents.persona import DEFAULT_SOCIETY
@@ -111,3 +115,126 @@ def test_cascade_stats_on_a_known_tree():
 def test_assign_roles_rejects_a_size_mismatch():
     with pytest.raises(ValueError):
         canonical_motif().assign_roles(("only", "three", "roles"))
+
+
+# ------------------------------------------------ real-corpus loading (LIAR)
+
+LIAR_DIR = pathlib.Path("data/raw/liar")
+needs_liar = pytest.mark.skipif(
+    not (LIAR_DIR / "train.tsv").exists(),
+    reason="LIAR not present; run `nudgesim fetch-data`",
+)
+
+
+@pytest.fixture(scope="module")
+def liar_pool() -> ClaimPool:
+    return ClaimPool.from_liar(LIAR_DIR, max_per_label=None, seed=1)
+
+
+@needs_liar
+def test_liar_parses_every_published_row(liar_pool: ClaimPool):
+    """12,836 statements in the release; anything less means rows were merged."""
+    assert liar_pool.meta["n_rows_read"] == 12836
+    # All six labels minus the 2,638 excluded half-true statements.
+    assert len(liar_pool.claims) == 12836 - 2638
+
+
+@needs_liar
+def test_liar_statements_carry_no_embedded_field_separators(liar_pool: ClaimPool):
+    """Unbalanced quotes in LIAR merge rows unless the reader uses QUOTE_NONE."""
+    assert not [c for c in liar_pool.claims if "\t" in c.text or "\n" in c.text]
+
+
+@needs_liar
+def test_liar_label_distribution_matches_the_release(liar_pool: ClaimPool):
+    counts = liar_pool.summary()["severity_counts"]
+    assert counts == {
+        "pants-fire": 1050, "false": 2511, "barely-true": 2108,
+        "true": 2063, "mostly-true": 2466,
+    }
+
+
+@needs_liar
+def test_no_identifiable_public_figure_survives_deidentification(liar_pool: ClaimPool):
+    """Plan section 6 safeguard, enforced as a test rather than an intention."""
+    named = re.compile(
+        r"\b(Obama|Clinton|Trump|Bush|Romney|Biden|McCain|Rubio|Cruz|Sanders|"
+        r"Pelosi|Perry|Gingrich|Kerry|Reagan|Boehner|Giuliani|Palin)\b",
+        re.I,
+    )
+    leaks = [c.text for c in liar_pool.claims if named.search(c.text)]
+    assert not leaks, f"{len(leaks)} statements leak an identifiable name: {leaks[:3]}"
+
+
+@needs_liar
+def test_deidentification_does_not_shred_ordinary_noun_phrases(liar_pool: ClaimPool):
+    """Over-redaction is its own failure: agents must read claims, not boilerplate.
+
+    LIAR's speaker column is roughly a third organisations, so a naive surname
+    pass turns "the big Wall Street banks" into three stacked attributions.
+    """
+    corpus = " ".join(c.text for c in liar_pool.claims)
+    assert "Wall Street" in corpus
+    assert "Republican" in corpus and "Democrat" in corpus
+    attribution = re.compile(
+        r"a (national politician|state legislator|senior official|party spokesperson|"
+        r"congressional candidate|governor)|an advocacy group|a cable news host"
+    )
+    total = sum(len(c.text.split()) for c in liar_pool.claims)
+    replaced = sum(
+        len(m.group(0).split()) for c in liar_pool.claims for m in attribution.finditer(c.text)
+    )
+    assert replaced / total < 0.20, "de-identification is eating the corpus"
+
+
+@needs_liar
+def test_real_pool_is_labelled_as_liar(liar_pool: ClaimPool):
+    assert "LIAR" in liar_pool.provenance
+    assert "SYNTHETIC" not in liar_pool.provenance
+
+
+def test_organisation_speakers_are_excluded_from_the_surname_pass():
+    from nudgesim.data.claims import build_speaker_matcher, deidentify
+
+    matcher = build_speaker_matcher(
+        ["barack-obama", "john-mccain", "wall-street-journal", "republican-party-of-texas"]
+    )
+    out = deidentify("The big Wall Street banks backed Obama and McCain.", matcher=matcher)
+    assert "Wall Street" in out
+    assert "Obama" not in out and "McCain" not in out
+
+
+def test_surname_pass_ignores_lowercase_homographs():
+    from nudgesim.data.claims import build_speaker_matcher, deidentify
+
+    matcher = build_speaker_matcher(["sarah-stone", "mike-baker"])
+    out = deidentify("The baker sold stone fruit to Baker.", matcher=matcher)
+    assert "The baker sold stone fruit" in out
+    assert "to Baker." not in out
+
+
+def test_single_claim_draws_are_not_all_the_same_stratum(pool: ClaimPool):
+    """Drawing one claim at a time must still hit every severity stratum.
+
+    Regression test: a cursor starting at zero returns stratum 0 on every
+    one-claim call, which ran an entire 1,080-episode grid on pants-fire claims
+    without anything in the pipeline noticing.
+    """
+    seen = {pool.stratified_sample(1, random.Random(s))[0].severity for s in range(60)}
+    assert seen == set(FALSE_LABELS)
+
+
+def test_grid_cells_are_balanced_across_severity_strata(pool, library):
+    from nudgesim.agents.bounded_rational import NormParams
+    from nudgesim.game.payoff import PayoffParams
+    from nudgesim.runner import GridSpec, expand_grid
+
+    spec = GridSpec(core_seeds=30, placebo_seeds=1, ablation_payoff_seeds=1,
+                    ablation_ratio_seeds=1, scale_seeds=1, include_arms=("core",))
+    configs = expand_grid(spec, pool, library, payoff=PayoffParams(), norms=NormParams())
+    counts: dict[str, int] = {}
+    for config in configs:
+        counts[config.claim.severity] = counts.get(config.claim.severity, 0) + 1
+    assert set(counts) == set(FALSE_LABELS)
+    # Even split within tolerance of the 30-per-cell rounding.
+    assert max(counts.values()) - min(counts.values()) <= len(configs) * 0.1
