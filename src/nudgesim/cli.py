@@ -4,6 +4,7 @@
     nudgesim check      --out runs/checks          # manipulation + ledger checks
     nudgesim run        --out runs/main            # the full preregistered grid
     nudgesim analyze    --run runs/main            # plan section 8 analysis
+    nudgesim cost       --out runs/cost/cost.json  # plan section 12 budget
     nudgesim reproduce  --out runs/repro           # all of the above, one command
 """
 
@@ -302,6 +303,105 @@ def cmd_reproduce(args: argparse.Namespace) -> int:
     return cmd_analyze(analyze_args)
 
 
+def cmd_cost(args: argparse.Namespace) -> int:
+    """Meter real prompts, then price the grid (plan section 12).
+
+    Factor F3 assigns one model per episode, so the grid grows linearly in the
+    number of models benchmarked: each model needs its own replications of
+    every cell. That -- not the length of any single prompt -- is what makes a
+    multi-model backbone factor expensive, and it is what this reports.
+    """
+    from nudgesim.cost import CATALOGUE, EXEMPLAR_COMPLETION, count_tokens, estimate, meter
+
+    pool, library = _load_data(args)
+    spec = GridSpec(horizon=args.horizon, include_arms=("core",))
+    configs = expand_grid(
+        spec, pool, library, payoff=_payoff(args), norms=NormParams(), seed=args.seed
+    )
+    prof = asyncio.run(meter(configs[: args.meter_episodes], concurrency=args.concurrency))
+
+    # One model's share of the grid: the default protocol's episode count
+    # divided by the four backbones it spreads them over.
+    default = GridSpec(horizon=args.horizon)
+    n_default = len(default.backbones)
+    episodes_per_model = default.expected_episodes()["total"] / n_default
+    calls_per_model = round(prof.calls_per_episode * episodes_per_model)
+
+    exemplar = count_tokens(EXEMPLAR_COMPLETION)
+    per_model: dict[str, Any] = {}
+    for name, price in CATALOGUE.items():
+        per_model[name] = {
+            "tier": price.tier,
+            "exemplar_output": estimate(
+                prof, price, calls=calls_per_model, output_tokens=exemplar
+            ).to_json(),
+            "ceiling_output": estimate(
+                prof, price, calls=calls_per_model, output_tokens=args.max_tokens
+            ).to_json(),
+        }
+
+    def portfolio(models: list[str], key: str) -> dict[str, float]:
+        total = sum(per_model[m][key]["usd_list"] for m in models)
+        levers = sum(per_model[m][key]["usd_all_levers"] for m in models)
+        return {"models": len(models), "usd_list": round(total, 2),
+                "usd_all_levers": round(levers, 2)}
+
+    frontier = ["claude-opus-5"] * n_default
+    mixed = ["claude-opus-5", "claude-sonnet-5", "claude-sonnet-4-6", "claude-haiku-4-5"]
+    small = ["claude-haiku-4-5"] * n_default
+
+    out: dict[str, Any] = {
+        "profile": prof.to_json(),
+        "grid": {
+            "episodes_total_default": default.expected_episodes()["total"],
+            "models_in_factor_f3": n_default,
+            "episodes_per_model": round(episodes_per_model),
+            "calls_per_model": calls_per_model,
+            "note": "adding a model adds its own full set of replications",
+        },
+        "output_tokens": {"exemplar": exemplar, "ceiling_max_tokens": args.max_tokens},
+        "per_model_usd": per_model,
+        "portfolios_usd": {
+            scenario: {
+                "exemplar_output": portfolio(models, "exemplar_output"),
+                "ceiling_output": portfolio(models, "ceiling_output"),
+            }
+            for scenario, models in (
+                ("all_frontier", frontier), ("mixed_tiers", mixed), ("all_small", small)
+            )
+        },
+    }
+
+    # One grid is cheap; a project is not one grid. This inventory is what the
+    # surrogate study actually consumed, and an LLM study repeats it.
+    inventory = {
+        "calibration gate": 0.1,
+        "pilot": 0.2,
+        "main grid": 1.0,
+        "validation: effect inflated": 1.0,
+        "validation: effect zeroed": 1.0,
+        "high-power rerun at 200 seeds": 6.7,
+        "reruns after design or code fixes": 3.0,
+    }
+    grid_equivalents = round(sum(inventory.values()), 1)
+    out["programme"] = {
+        "grid_equivalents": grid_equivalents,
+        "inventory": inventory,
+        "usd": {
+            scenario: {
+                bound: round(block[bound]["usd_all_levers"] * grid_equivalents, 2)
+                for bound in ("exemplar_output", "ceiling_output")
+            }
+            for scenario, block in out["portfolios_usd"].items()
+        },
+    }
+
+    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    Path(args.out).write_text(json.dumps(out, indent=2), encoding="utf-8")
+    print(json.dumps(out, indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="nudgesim", description=__doc__)
     parser.add_argument("--seed", type=int, default=20260911)
@@ -361,6 +461,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_run.add_argument("--arms", default="core,placebo,ablation,scale")
     p_run.add_argument("--concurrency", type=int, default=16)
     p_run.set_defaults(func=cmd_run)
+
+    p_cost = sub.add_parser("cost", help="meter real prompts and price the grid")
+    p_cost.add_argument("--out", default="runs/cost/cost.json")
+    p_cost.add_argument("--meter-episodes", type=int, default=40)
+    p_cost.add_argument("--max-tokens", type=int, default=400)
+    p_cost.add_argument("--concurrency", type=int, default=16)
+    p_cost.set_defaults(func=cmd_cost)
 
     p_an = sub.add_parser("analyze", help="run the preregistered analysis")
     p_an.add_argument("--run", default="runs/main")
