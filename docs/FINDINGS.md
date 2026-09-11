@@ -30,12 +30,16 @@ contrasts.
 | Contrast | Cohen's d | n/cell for 80% power | Powered at 30? |
 |---|---:|---:|:--:|
 | Intervention vs control → EPC | +0.80 | 26 | **yes** |
-| **H1** early vs late → FPR | −0.39 | 105 | no |
-| **H3** tone → EPC *(headline)* | −0.25 | 259 | no |
-| **H2** tone → FPR | +0.11 | 1,205 | no |
+| Intervention vs control → FPR | −0.71 | 32 | marginal |
+| **H1** early vs late → FPR | −0.56 | 51 | no |
+| **H3** tone → EPC *(headline)* | −0.17 | 572 | no |
+| **H2** tone → FPR | +0.05 | 7,136 | no |
 
-The paper's central claim needs roughly **9× the preregistered sample**; H1,
-described in the plan as the most straightforward hypothesis, needs 3.5×.
+The paper's central claim needs roughly **19× the preregistered sample**; H1,
+described in the plan as the most straightforward hypothesis, needs 1.7×.
+
+*(Numbers regenerated after the seed defect below was fixed. The earlier
+figures in this table were computed from runs that could not be replayed.)*
 
 This does not say the effects are absent. It says **the grid as specified cannot
 see them** — much cheaper to learn now than in Week 14.
@@ -48,16 +52,29 @@ runs.
 **The pipeline is validated in both directions.** Five runs, identical code,
 varying only the declared DGP and the sample size:
 
-| Run | Tone→EPC channel | seeds/cell | Backbones with a significant effect (Holm) |
-|---|---|---:|:--|
-| `main` | declared | 30 | 0 of 4 — under-powered |
-| `highpower` | declared | 200 | **2 of 4** — detected where the effect is largest |
-| `strong_highpower` | inflated ×3 | 200 | **4 of 4** — detected everywhere |
-| `null_dgp` | set to zero | 30 | 0 of 4 — no false positive |
-| `null_highpower` | set to zero | 200 | 0 of 4 — no false positive |
+| Run | Tone→EPC channel | seeds/cell | Cohen's d | n/cell for 80% power |
+|---|---|---:|---:|---:|
+| `real_main` | declared | 30 | −0.166 | 572 |
+| `real_strong` | inflated ×2.9 | 30 | −0.249 | 254 |
+| `real_null` | set to zero | 30 | −0.021 | 35,321 |
+| `hp_declared` | declared | 200 | −0.061 | 4,168 |
+| `hp_strong` | inflated ×2.9 | 200 | −0.203 | 384 |
+| `hp_null` | set to zero | 200 | +0.037 | 11,412 |
 
-Sensitivity and specificity both demonstrated: the analysis finds the effect when
-it is there and there is enough data, and never invents one when it is not.
+Read at matched sample size, the ordering is correct in both blocks: inflating
+the channel enlarges the effect, zeroing it leaves nothing. That is sensitivity
+and specificity.
+
+One thing the table also shows, which is worth stating plainly: the declared
+effect is **not stable across claim draws** — −0.166 at 30 seeds per cell,
+−0.061 at 200, because a larger cell draws a different set of LIAR claims
+rather than more replications of the same ones. The H3 contrast is therefore
+under-powered in the claim dimension as well as the seed dimension, and the
+point estimate at any single sample size should not be read as the effect size.
+
+This table is also what caught the reproducibility defect below. Before the
+fix, the inflated arm appeared to *shrink* the effect it inflates — an ordering
+no parameterisation can produce, and therefore a bug rather than a result.
 
 ### 2. "Epistemic welfare = Σπ" ranks every working intervention below doing nothing
 
@@ -298,7 +315,18 @@ Recorded because each one silently produced plausible-looking results:
    quotes, and Python's default CSV quoting swallowed line breaks at them,
    merging rows and bleeding later columns into statement text. `QUOTE_NONE`
    fixes it; a test now asserts all 12,836 published rows parse.
-6. **De-identification was both too weak and too strong.** The speaker column
+6. **No run could be replayed.** Episode seeds came from `hash((tag, seed))`,
+   and CPython salts string hashing per process — so every "pinned" seed in
+   every manifest was a different number on every invocation. Two runs of the
+   same grid produced identical configs and disagreed on **474 of 600**
+   core-arm outcomes. The validation triad ran each arm in its own process, so
+   the declared, inflated and zeroed DGPs were being compared across different
+   draws of claims and topologies rather than the same ones; that is why
+   inflating the tone channel appeared to *shrink* the effect. Fixed with a
+   `blake2b` digest, a test pinning the value against a literal, and a test
+   that runs a grid twice and asserts the outcomes match. Everything reported
+   in this document was regenerated afterwards.
+7. **De-identification was both too weak and too strong.** The speaker column
    alone left 5.8% of statements naming public figures (statements *about*
    people, not *by* them). Adding a surname pass fixed that but shredded the
    corpus — LIAR's speaker column is ~⅓ organisations, so "the big Wall Street
@@ -309,7 +337,7 @@ Recorded because each one silently produced plausible-looking results:
 
 ## Part 2 — The design-sensitivity run
 
-`runs/liar_main`: 1,080 episodes, real LIAR claims, surrogate topology, declared
+`runs/real_main`: 1,400 episodes, real LIAR claims and real PHEME topologies, surrogate topology, declared
 DGP, surrogate backbones. **Properties of the declared DGP, not results about
 language models.**
 
@@ -372,12 +400,91 @@ intervener), §5.5 (welfare and durability measures), §5.9 (two-tier sampling
 protocol), §8 (power statement and conditional contrasts), §9 (a Week-8 power
 gate) and §12 (two new risks).
 
-The headline change to the protocol: the grid grows from 1,080 to 2,780
-episodes, but not by scaling everything 9× — the core grid stays at 30 seeds
-because that already powers what it is for, and a focused 150-seed arm covers
-only the two contrasts that need it. That is ~2.6× the compute rather than ~9×,
-with a pre-declared reduction ladder if the budget binds.
+[`Project_Plan_NudgeSim_v2.4.docx`](Project_Plan_NudgeSim_v2.4.docx) adds four
+more changes, each traceable to something measured rather than assumed: §5.9
+(seeds actually pinned, and the focused arm replaced by a measured power
+statement), §5.10 (a communication-design decision that had never been made),
+§7 (named model backbones with a selection rule), §8 (factor ATEs, a human
+baseline row, and a norm-robustness arm), and §12 (the budget, metered).
 
+The headline change to the protocol: the grid is 1,400 episodes, not the 2,780
+of v2.1. The focused arm at 150 seeds was sized against a pilot estimate of 259
+seeds per cell for H3; measured with reproducible seeds, that contrast needs
+572 — so the focused arm would have been under-powered by a factor of four
+while costing five times the core grid. It is replaced by a declared power
+statement, a perturbation arm the plan did not previously have, and one
+high-power rerun carried in the budget.
+
+
+---
+
+## What an LLM grid costs, measured
+
+The plan asserted the grid was affordable and named response caching as the
+largest lever available. Neither had been checked against a prompt the code
+assembles. `nudgesim cost` meters real episodes and prices them against the
+published rate card.
+
+| Quantity | Measured |
+|---|---:|
+| Model calls per episode | 60 (5 citizens × 12 rounds) |
+| Calls per model over the grid | 21,000 |
+| Mean input tokens per call | 620 |
+| Longest prompt | 874 |
+| Share of prompt that is the reusable persona prefix | 50.6% |
+| Duplicate prompts in 3,600 calls | **0** |
+
+Three things follow.
+
+**The response cache buys nothing.** Every prompt carries a distinct claim, a
+distinct agent and a distinct feed history, so no request is ever served from
+cache. The lever the plan leaned on does not exist in this workload. Prompt
+caching does: half of every prompt is the persona prefix, unchanged across an
+agent's twelve turns.
+
+**Cost grows linearly in models benchmarked, not in prompt length.** Factor F3
+gives each model its own replications of every cell. Prompt length is a rounding
+error next to that.
+
+**Extended thinking is the whole budget.** Reasoning tokens bill as output. One
+frontier arm at 2,000 reasoning tokens a call costs $1,151 per grid against $101
+without — and the reasoning-versus-traditional contrast is the one most worth
+running. Scheduling that arm for the main grid and one high-power rerun, rather
+than for every calibration, validation and bug-fix rerun, takes the programme
+from **$16,038 to $1,866**. That decision is worth more than every caching lever
+combined.
+
+---
+
+## Reading the society against people, and against a defector
+
+**A human row.** Following SanctSim's Table 1, results carry a row from Gürerk,
+Irlenbusch & Rockenbach (2006) on two quantities both designs define. Levels are
+not comparable between a token-contribution game and a misinformation game, so
+the comparison licenses an ordering and nothing more.
+
+| Measure | Human | Surrogate control arm |
+|---|---:|---:|
+| Take-up of costly enforcement | 0.929 | 0.167 |
+| Sanctioning per affirmation | 1.66 | 0.076 |
+
+The surrogate society barely enforces at all — which is the second-order
+free-rider problem the design exists to study, now measured rather than assumed,
+and the baseline against which an intervention has to show it moves something.
+
+**A defector.** Following GovSim §3.3, one citizen defects at the half-way
+round, either amplifying the false claim or refusing to pay the correction cost.
+Outcomes exclude the defector's own seat in both arms, so a fall means peers
+stood down rather than that the defector's silence was counted.
+
+| Defector | Peer correction rate | Change | Holm p |
+|---|---:|---:|---:|
+| none (core arm) | 0.0951 | — | — |
+| amplifier | 0.0784 | −0.017 | 0.26 |
+| free rider | 0.0807 | −0.014 | 0.34 |
+
+Peers do not change. Read against the human row above, that is coherent rather
+than surprising: a society with almost no enforcement norm has none to defend.
 
 ---
 

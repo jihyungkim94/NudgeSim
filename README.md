@@ -24,7 +24,7 @@ gate, the preregistered analysis, and a one-command reproduction.
 
 ```bash
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-PYTHON=.venv/bin/python ./reproduce.sh          # 1,080 episodes, ~15 s
+PYTHON=.venv/bin/python ./reproduce.sh          # 1,400 episodes, ~15 s
 PYTHON=.venv/bin/python ./reproduce.sh --full   # + null-DGP and high-power controls
 ```
 
@@ -121,7 +121,7 @@ paying κ *themselves*.
 
 **Design:** timing (early, round 2 · late, round 6) × tone (empathetic nudge ·
 aggressive debunking) × 4 backbones, against a no-intervener control, a matched
-true-claim placebo arm, and two ablations — 1,080 episodes.
+true-claim placebo arm, and two ablations — 1,400 episodes.
 
 **Primary outcomes,** both read straight off the action log with no LLM judge
 anywhere on the critical path:
