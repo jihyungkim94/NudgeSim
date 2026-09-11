@@ -1,0 +1,46 @@
+# NudgeSim default configuration.
+# Every value here is frozen before the main grid runs (plan section 9, Month 1-2).
+
+payoff:                      # plan section 3.2
+  beta: 1.0                  # conformity / engagement reward, immediate
+  gamma: 6.0                 # veracity reward, deferred to t = T
+  kappa: 2.0                 # verification + social-friction cost of CHALLENGE
+  delta: 3.0                 # reputation damage per landed challenge
+  horizon: 12
+  conformity_match: stance   # stance | action
+  veracity_mode: unique_claim
+  # per_challenge is the literal reading of plan section 3.2. See docs/FINDINGS.md
+  # for why the choice matters more than it looks.
+  reputation_mode: per_challenge
+
+design:                      # plan section 5.3
+  timings: [early, late]     # entry at round 2 and round 6 (one-indexed)
+  tones: [empathetic_nudge, aggressive_debunking]
+  trigger_mode: fixed        # fixed | majority
+  majority_threshold: 3      # of 5 citizens, for the majority trigger
+  intervener_placement: hub  # hub | peripheral | bfs
+  min_intervener_reach: 1    # motifs where the DA reaches no citizen are dropped
+  memory_window: 3
+
+grid:                        # plan section 5.9 -- 1,080 episodes
+  core_seeds: 30
+  placebo_seeds: 10
+  ablation_payoff_seeds: 3
+  ablation_ratio_seeds: 3
+  ablation_ratios: [0.5, 1.0, 3.0]
+  scale_seeds: 10
+  scale_n_agents: 50
+
+calibration:                 # plan section 5.7 -- hard Go/No-Go
+  episodes_per_side: 60
+  depth_ratio_tol: 0.35
+  breadth_ratio_tol: 0.35
+  virality_ratio_tol: 0.40
+  min_asymmetry_margin: 0.02
+
+analysis:
+  alpha: 0.05
+  multiple_comparisons: holm
+  bootstrap_draws: 5000
+  half_life_threshold: 0.2
+  probe_rounds: [0, 5, 11]   # zero-indexed; rounds 1, 6 and 12 in the plan's prose
