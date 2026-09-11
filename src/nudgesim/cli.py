@@ -328,50 +328,33 @@ def cmd_cost(args: argparse.Namespace) -> int:
     episodes_per_model = default.expected_episodes()["total"] / n_default
     calls_per_model = round(prof.calls_per_episode * episodes_per_model)
 
-    exemplar = count_tokens(EXEMPLAR_COMPLETION)
-    per_model: dict[str, Any] = {}
-    for name, price in CATALOGUE.items():
-        per_model[name] = {
+    # Three output-length scenarios. Extended thinking is the one that moves
+    # the budget: reasoning tokens are billed as output, and SanctSim's central
+    # finding is a reasoning-vs-traditional split, so the arm that would test it
+    # here is also the expensive one.
+    scenarios = {
+        "exemplar_output": count_tokens(EXEMPLAR_COMPLETION),
+        "ceiling_output": args.max_tokens,
+        "thinking_output": args.thinking_tokens + count_tokens(EXEMPLAR_COMPLETION),
+    }
+    per_model: dict[str, Any] = {
+        name: {
             "tier": price.tier,
-            "exemplar_output": estimate(
-                prof, price, calls=calls_per_model, output_tokens=exemplar
-            ).to_json(),
-            "ceiling_output": estimate(
-                prof, price, calls=calls_per_model, output_tokens=args.max_tokens
-            ).to_json(),
+            **{
+                scenario: estimate(
+                    prof, price, calls=calls_per_model, output_tokens=tokens
+                ).to_json()
+                for scenario, tokens in scenarios.items()
+            },
         }
+        for name, price in CATALOGUE.items()
+    }
 
     def portfolio(models: list[str], key: str) -> dict[str, float]:
         total = sum(per_model[m][key]["usd_list"] for m in models)
         levers = sum(per_model[m][key]["usd_all_levers"] for m in models)
         return {"models": len(models), "usd_list": round(total, 2),
                 "usd_all_levers": round(levers, 2)}
-
-    frontier = ["claude-opus-5"] * n_default
-    mixed = ["claude-opus-5", "claude-sonnet-5", "claude-sonnet-4-6", "claude-haiku-4-5"]
-    small = ["claude-haiku-4-5"] * n_default
-
-    out: dict[str, Any] = {
-        "profile": prof.to_json(),
-        "grid": {
-            "episodes_total_default": default.expected_episodes()["total"],
-            "models_in_factor_f3": n_default,
-            "episodes_per_model": round(episodes_per_model),
-            "calls_per_model": calls_per_model,
-            "note": "adding a model adds its own full set of replications",
-        },
-        "output_tokens": {"exemplar": exemplar, "ceiling_max_tokens": args.max_tokens},
-        "per_model_usd": per_model,
-        "portfolios_usd": {
-            scenario: {
-                "exemplar_output": portfolio(models, "exemplar_output"),
-                "ceiling_output": portfolio(models, "ceiling_output"),
-            }
-            for scenario, models in (
-                ("all_frontier", frontier), ("mixed_tiers", mixed), ("all_small", small)
-            )
-        },
-    }
 
     # One grid is cheap; a project is not one grid. This inventory is what the
     # surrogate study actually consumed, and an LLM study repeats it.
@@ -385,13 +368,72 @@ def cmd_cost(args: argparse.Namespace) -> int:
         "reruns after design or code fixes": 3.0,
     }
     grid_equivalents = round(sum(inventory.values()), 1)
+
+    frontier = ["claude-opus-5"] * n_default
+    mixed = ["claude-opus-5", "claude-sonnet-5", "claude-sonnet-4-6", "claude-haiku-4-5"]
+    small = ["claude-haiku-4-5"] * n_default
+
+    # The four F3 levels this project proposes: one capability ladder, plus the
+    # same frontier model with and without extended thinking. Holding the
+    # weights fixed across that pair is the cleanest available version of
+    # SanctSim's reasoning-versus-traditional contrast -- and the thinking arm
+    # is where the money goes, which is why only one arm carries it.
+    # The thinking arm is not rerun with the rest: it answers one contrast, so
+    # it runs in the main grid and once more at high power, and sits out the
+    # calibration, validation and bug-fix reruns. That single scheduling choice
+    # is worth more than every caching lever combined.
+    recommended = (
+        ("claude-opus-5", "thinking_output", 2.0),
+        ("claude-opus-5", "exemplar_output", grid_equivalents),
+        ("claude-sonnet-5", "exemplar_output", grid_equivalents),
+        ("claude-haiku-4-5", "exemplar_output", grid_equivalents),
+    )
+
+    out: dict[str, Any] = {
+        "profile": prof.to_json(),
+        "grid": {
+            "episodes_total_default": default.expected_episodes()["total"],
+            "models_in_factor_f3": n_default,
+            "episodes_per_model": round(episodes_per_model),
+            "calls_per_model": calls_per_model,
+            "note": "adding a model adds its own full set of replications",
+        },
+        "output_tokens": scenarios,
+        "per_model_usd": per_model,
+        "recommended_portfolio": {
+            "arms": [
+                {"model": m, "output_scenario": sc, "grid_equivalents": runs}
+                for m, sc, runs in recommended
+            ],
+            "usd_per_grid_list": round(
+                sum(per_model[m][sc]["usd_list"] for m, sc, _ in recommended), 2
+            ),
+            "usd_per_grid_all_levers": round(
+                sum(per_model[m][sc]["usd_all_levers"] for m, sc, _ in recommended), 2
+            ),
+            "usd_programme_all_levers": round(
+                sum(
+                    per_model[m][sc]["usd_all_levers"] * runs
+                    for m, sc, runs in recommended
+                ),
+                2,
+            ),
+        },
+        "portfolios_usd": {
+            label: {s: portfolio(models, s) for s in scenarios}
+            for label, models in (
+                ("all_frontier", frontier), ("mixed_tiers", mixed), ("all_small", small)
+            )
+        },
+    }
+
     out["programme"] = {
         "grid_equivalents": grid_equivalents,
         "inventory": inventory,
         "usd": {
             scenario: {
                 bound: round(block[bound]["usd_all_levers"] * grid_equivalents, 2)
-                for bound in ("exemplar_output", "ceiling_output")
+                for bound in scenarios
             }
             for scenario, block in out["portfolios_usd"].items()
         },
@@ -468,6 +510,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_cost.add_argument("--out", default="runs/cost/cost.json")
     p_cost.add_argument("--meter-episodes", type=int, default=40)
     p_cost.add_argument("--max-tokens", type=int, default=400)
+    p_cost.add_argument("--thinking-tokens", type=int, default=2000,
+                        help="reasoning tokens per call in the extended-thinking scenario")
     p_cost.add_argument("--concurrency", type=int, default=16)
     p_cost.set_defaults(func=cmd_cost)
 
