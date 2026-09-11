@@ -37,10 +37,34 @@ per-thread reply trees and veracity annotations.
 **Access.** figshare DOI `10.6084/m9.figshare.6392078`. Annotations are CC-BY;
 tweet content is governed by platform terms. **Not redistributed here.**
 
-**What is read.** Only `structure.json` — the reply tree. **Tweet text is never
-loaded.** Node identifiers are stripped and replaced with positional labels
+**What is read.** Only `structure.json` (the reply tree) and, where present,
+`annotation.json` (the veracity flags — PHEME stores no veracity string, so a
+rumour thread is read as true/false/unverified from its `true` and
+`misinformation` flags, and an absent annotation is itself the non-rumour
+label). **Tweet text is never loaded**: `source-tweets/` and `reactions/` are
+not opened. Node identifiers are stripped and replaced with positional labels
 (`v0…v6`) during motif extraction, so no tweet id survives into any artefact.
 Only *derived topology* is released.
+
+**You do not need the whole archive.** Because only two small JSON files per
+thread are read, the ~2 GB download can be extracted selectively — a few MB:
+
+```bash
+tar -xjf PHEME_veracity.tar.bz2 -C data/raw/pheme --wildcards \
+    '*/structure.json' '*/annotation.json'
+```
+
+**Two sampling properties worth knowing**, both of which only appear with a real
+release and are covered by tests in `tests/test_pheme.py`:
+
+* Threads are shuffled from the run seed before the motif cap applies. `rglob`
+  yields paths in sorted order, so taking the first N motifs would draw them all
+  from whichever event sorts first — the library would describe one news event
+  rather than nine.
+* Cascade statistics are computed over **every** thread, not just the threads
+  that became motifs. They are the calibration gate's reference distribution
+  (§5.7), so truncating them at the motif cap would compare the simulation
+  against a biased subsample of the real cascades.
 
 ## Surrogate generators (offline fallback)
 
