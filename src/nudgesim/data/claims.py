@@ -56,33 +56,130 @@ _TITLE_RE = re.compile(
     r"([A-Z][a-zA-Z.'-]+(?:\s+[A-Z][a-zA-Z.'-]+){0,2})"
 )
 
+# Surnames that are also ordinary English words or parts of fixed phrases. The
+# surname pass is case-sensitive, which removes most false positives on its own,
+# but these still fire mid-sentence ("the White House", "a Green job") and would
+# mangle the statement without protecting anybody.
+_SURNAME_STOPLIST = frozenset(
+    """white black brown green king young price rich cross long short little small
+    best gay love hope grace major minor stone wood field hill lake park west east
+    north south church bell pope sharp swift strong power justice law bill
+    frank mark sterling penny franklin jordan israel york street wall house senate
+    congress america american state states united national federal""".split()
+)
+
+# LIAR's `speaker` column is not a list of people: roughly a third of it is
+# organisations, PACs, campaigns and newspapers. Taking the last token of those
+# as a "surname" is what turns "the big Wall Street banks" into nonsense, so
+# organisation-shaped speakers are excluded from the surname pass. Their full
+# names are still replaced by the exact-match pass.
+_ORG_MARKERS = frozenset(
+    """party committee journal pac group association campaign news chain institute
+    foundation union coalition center centre organization organisation post times
+    network super council society league federation alliance project fund forum
+    department agency office bureau company corporation inc llc tv radio press
+    magazine review gazette herald tribune daily weekly action watch usa""".split()
+)
+
 
 def _stable_choice(key: str, options: Sequence[str]) -> str:
     digest = hashlib.sha256(key.encode("utf-8")).digest()
     return options[digest[0] % len(options)]
 
 
-def deidentify(text: str, speaker_vocabulary: Iterable[str] = ()) -> str:
+def build_speaker_matcher(
+    speaker_vocabulary: Iterable[str],
+) -> tuple[re.Pattern[str] | None, re.Pattern[str] | None]:
+    """Compile the two speaker passes over the vocabulary.
+
+    LIAR has ~3.3K distinct speakers and ~12.8K statements. Looping one compiled
+    pattern per name over every statement is 40M+ regex searches and takes
+    minutes; a single alternation, ordered longest-first so that "Barack Obama"
+    wins over "Obama", does the same work in one pass per statement.
+
+    Two passes are needed, not one. The ``speaker`` column holds full names, but
+    statements overwhelmingly refer to people by surname alone, and those
+    surnames belong to people *other* than the statement's own speaker -- which
+    is precisely the case the safeguard in plan section 6 exists for. The surname
+    pass is case-sensitive (real names are capitalised) and skips surnames that
+    are also ordinary words.
+    """
+    cleaned = {
+        n.strip().replace("-", " ").strip()
+        for n in speaker_vocabulary
+        if n and n.strip()
+    }
+    full = sorted((n for n in cleaned if len(n) >= 4), key=len, reverse=True)
+
+    surnames: set[str] = set()
+    for name in cleaned:
+        parts = [p for p in name.split() if p]
+        # Person-shaped only: two or three tokens, no organisation markers.
+        if not 2 <= len(parts) <= 3:
+            continue
+        if any(p.lower() in _ORG_MARKERS for p in parts):
+            continue
+        last = parts[-1]
+        if len(last) >= 4 and last.lower() not in _SURNAME_STOPLIST:
+            surnames.add(last.lower())
+
+    full_re = (
+        re.compile(r"\b(" + "|".join(re.escape(n) for n in full) + r")\b", re.IGNORECASE)
+        if full
+        else None
+    )
+    surname_re = (
+        re.compile(
+            r"\b(" + "|".join(re.escape(n) for n in sorted(surnames, key=len, reverse=True)) + r")\b",
+            re.IGNORECASE,
+        )
+        if surnames
+        else None
+    )
+    return full_re, surname_re
+
+
+def deidentify(
+    text: str,
+    speaker_vocabulary: Iterable[str] = (),
+    *,
+    matcher: tuple[re.Pattern[str] | None, re.Pattern[str] | None] | None = None,
+) -> str:
     """Replace identifiable speakers in agent-visible text with generic roles.
 
-    Two passes: an explicit vocabulary (the LIAR ``speaker`` column, which is the
-    reliable source of the names that actually recur in this corpus), then a
-    title-plus-name regex for names that appear only inside statement text.
+    Three passes, in this order:
+
+      1. title + name ("President Barack Obama" -> "a national politician"), so
+         the title goes with the name rather than being left stranded in front
+         of a generic role;
+      2. full names from the speaker vocabulary, case-insensitively;
+      3. bare surnames from that vocabulary, case-sensitively.
+
+    Pass a prebuilt ``matcher`` when de-identifying a whole corpus -- building it
+    per statement is what makes the naive version quadratic.
     """
-    out = text
-    names = sorted({n.strip() for n in speaker_vocabulary if n and n.strip()}, key=len, reverse=True)
-    for name in names:
-        pretty = name.replace("-", " ").strip()
-        if len(pretty) < 4:
-            continue
-        pattern = re.compile(rf"\b{re.escape(pretty)}\b", re.IGNORECASE)
-        if pattern.search(out):
-            out = pattern.sub(_stable_choice(pretty, _ATTRIBUTIONS), out)
+    if matcher is None:
+        matcher = build_speaker_matcher(speaker_vocabulary)
+    full_re, surname_re = matcher
 
     def _sub_title(match: re.Match[str]) -> str:
         return _stable_choice(match.group(2), _ATTRIBUTIONS)
 
-    out = _TITLE_RE.sub(_sub_title, out)
+    out = _TITLE_RE.sub(_sub_title, text)
+    if full_re is not None:
+        out = full_re.sub(lambda m: _stable_choice(m.group(1).lower(), _ATTRIBUTIONS), out)
+    if surname_re is not None:
+        # Only a capitalised occurrence is a name. Matching case-insensitively
+        # and filtering here (rather than compiling a case-sensitive pattern)
+        # keeps "McCain" and "DeLay" matchable from the lowercased vocabulary
+        # without also redacting the ordinary word "may" or "long".
+        def _sub_surname(match: re.Match[str]) -> str:
+            token = match.group(1)
+            if not token[:1].isupper():
+                return token
+            return _stable_choice(token.lower(), _ATTRIBUTIONS)
+
+        out = surname_re.sub(_sub_surname, out)
     return re.sub(r"\s{2,}", " ", out).strip()
 
 
@@ -122,13 +219,20 @@ class ClaimPool:
         return [c for c in self.claims if c.severity == severity]
 
     def stratified_sample(self, n: int, rng: random.Random) -> list[Claim]:
-        """Sample false claims balanced across severity strata (plan section 5.9)."""
+        """Sample false claims balanced across severity strata (plan section 5.9).
+
+        The stratum cursor starts at a random offset rather than at zero. Callers
+        that draw a whole cell's claims in one call get an even split either way,
+        but a caller that draws one claim at a time -- which is the natural way to
+        write an episode loop -- would otherwise receive stratum 0 on every single
+        call and silently run the entire grid on pants-fire claims.
+        """
         strata = [self.by_severity(s) for s in FALSE_LABELS]
         strata = [s for s in strata if s]
         if not strata:
             raise ValueError("pool contains no false claims to stratify")
         out: list[Claim] = []
-        i = 0
+        i = rng.randrange(len(strata))
         while len(out) < n:
             bucket = strata[i % len(strata)]
             out.append(bucket[rng.randrange(len(bucket))])
@@ -187,8 +291,14 @@ class ClaimPool:
         speakers: set[str] = set()
         for file in files:
             with file.open(newline="", encoding="utf-8") as fh:
-                for record in csv.reader(fh, delimiter="\t"):
-                    if len(record) < _LIAR_COLUMNS:
+                # QUOTE_NONE matters: LIAR statements contain unbalanced double
+                # quotes ('who believes Hurricane Katrina was God\'s punishment),
+                # and the default QUOTE_MINIMAL makes the reader swallow line
+                # breaks at those quotes, merging rows and bleeding later
+                # columns into the statement text.
+                reader = csv.reader(fh, delimiter="\t", quoting=csv.QUOTE_NONE)
+                for record in reader:
+                    if len(record) != _LIAR_COLUMNS:
                         continue
                     speakers.add(record[4])
                     rows.append(
@@ -202,12 +312,13 @@ class ClaimPool:
                     )
 
         rng = random.Random(seed)
+        matcher = build_speaker_matcher(speakers)
         buckets: dict[str, list[Claim]] = {}
         for row in rows:
             label = row["label"]
             if label in EXCLUDED_LABELS or label not in (*FALSE_LABELS, *TRUE_LABELS):
                 continue
-            text = deidentify(row["statement"], speakers)
+            text = deidentify(row["statement"], matcher=matcher)
             topic = (row["subjects"].split(",")[0] or "unspecified").strip().lower()
             claim = Claim(
                 claim_id=f"liar-{row['id'].replace('.json', '')}",

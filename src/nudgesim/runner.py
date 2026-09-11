@@ -197,8 +197,12 @@ def expand_grid(
     ) -> None:
         tag = f"{arm}|{timing.value}|{tone.value if tone else 'none'}|{backbone}{tag_extra}"
         rng = stream(tag)
+        # Draw the whole cell's claims in one stratified call, so each cell is
+        # balanced across severity strata rather than balanced only in
+        # expectation across cells.
+        drawn = pool.stratified_sample(n_seeds, rng)
         for s in range(n_seeds):
-            claim = pool.stratified_sample(1, rng)[0]
+            claim = drawn[s]
             if placebo:
                 placebo_claim = pool.placebo_for(claim)
                 if placebo_claim is None:
@@ -251,8 +255,9 @@ def expand_grid(
                 continue
             tag = f"scale|{timing.value}|{tone.value if tone else 'none'}"
             rng = stream(tag)
+            drawn = pool.stratified_sample(scale_spec.seeds, rng)
             for s in range(scale_spec.seeds):
-                claim = pool.stratified_sample(1, rng)[0]
+                claim = drawn[s]
                 configs.append(
                     EpisodeConfig(
                         episode_id=f"{tag}|s{s}".replace("|", "__"),

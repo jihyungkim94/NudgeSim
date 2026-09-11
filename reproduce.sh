@@ -24,6 +24,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ -n "${LIAR_DIR:-}" || " ${DATA_ARGS[*]-} " == *"--liar"* ]]; then :; else
+  echo "== note: no --liar given; using the labelled surrogate claim pool."
+  echo "         run 'nudgesim fetch-data' first for real LIAR claims."
+fi
+
 echo "== 0/5 tests (the payoff ledger gates everything downstream)"
 $PY -m pytest tests/ -q
 
@@ -42,7 +47,7 @@ $PY -m analysis.figures "$OUT/main"
 
 if [[ $FULL -eq 1 ]]; then
   echo "== 5/5 controls: null DGP and high-power confirmation"
-  for spec in "null:null_dgp:30" "declared:highpower:200" "null:null_highpower:200"; do
+  for spec in "null:null_dgp:30" "declared:highpower:200" "null:null_highpower:200" "strong:strong_highpower:200"; do
     IFS=: read -r dgp name seeds <<<"$spec"
     $PY -m nudgesim.cli "${DATA_ARGS[@]}" --dgp "$dgp" run \
         --out "$OUT/$name" --run-id "$name" --arms core --core-seeds "$seeds"

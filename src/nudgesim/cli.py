@@ -65,12 +65,37 @@ def _norms(args: argparse.Namespace) -> tuple[NormParams, str]:
             NormParams(omega_crowd_tone=0.0, omega_crowd_base=0.25),
             "null-tone-crowding (H3 effect set to zero; false-positive check)",
         )
+    if args.dgp == "strong":
+        return (
+            NormParams(omega_crowd_tone=2.5),
+            "strong-tone-crowding (H3 effect inflated to a detectable size; "
+            "sensitivity check for the analysis pipeline)",
+        )
     if args.dgp == "no-novelty":
         return (
             NormParams(novelty_engagement=0.0),
             "no-novelty (Vosoughi channel removed; demonstrates the calibration gate has teeth)",
         )
     return NormParams(), "declared-crowding (H3 effect present at declared size)"
+
+
+def cmd_fetch_data(args: argparse.Namespace) -> int:
+    from nudgesim.data.fetch import fetch_liar, pheme_instructions, verify_liar
+
+    if args.corpus in ("liar", "all"):
+        print(f"[nudgesim] fetching LIAR into {args.liar_dest} ...")
+        try:
+            path = fetch_liar(args.liar_dest)
+            report = verify_liar(path)
+            print(f"[nudgesim] LIAR ok: {report['n_rows']} rows, "
+                  f"{len(report['labels'])} labels, files {report['files']}")
+        except (RuntimeError, ValueError) as exc:
+            print(f"[nudgesim] LIAR FAILED: {exc}")
+            return 1
+    if args.corpus in ("pheme", "all"):
+        print()
+        print(pheme_instructions(args.pheme_dest))
+    return 0
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -101,8 +126,9 @@ def cmd_calibrate(args: argparse.Namespace) -> int:
 
     async def control_episodes(false_side: bool, n: int):
         configs = []
+        drawn = pool.stratified_sample(n, rng)
         for i in range(n):
-            claim = pool.stratified_sample(1, rng)[0]
+            claim = drawn[i]
             if not false_side:
                 placebo = pool.placebo_for(claim)
                 if placebo is None:
@@ -227,12 +253,21 @@ def build_parser() -> argparse.ArgumentParser:
                         help="record the run as LLM-backed rather than surrogate")
     parser.add_argument(
         "--dgp",
-        choices=("declared", "null", "no-novelty"),
+        choices=("declared", "null", "strong", "no-novelty"),
         default="declared",
-        help="surrogate data-generating process: 'declared' has the H3 tone effect, "
-             "'null' sets it to zero (false-positive check)",
+        help="surrogate data-generating process: 'declared' is the literature-"
+             "anchored parameterisation, 'strong' inflates the H3 tone channel to a "
+             "detectable size (sensitivity check), 'null' sets it to zero "
+             "(false-positive check), 'no-novelty' removes the Vosoughi channel "
+             "(calibration-gate check)",
     )
     sub = parser.add_subparsers(dest="command", required=True)
+
+    p_fetch = sub.add_parser("fetch-data", help="download LIAR; explain PHEME")
+    p_fetch.add_argument("--corpus", choices=("liar", "pheme", "all"), default="all")
+    p_fetch.add_argument("--liar-dest", default="data/raw/liar")
+    p_fetch.add_argument("--pheme-dest", default="data/raw/pheme")
+    p_fetch.set_defaults(func=cmd_fetch_data)
 
     p_check = sub.add_parser("check", help="manipulation checks and design references")
     p_check.add_argument("--out", default="runs/checks")

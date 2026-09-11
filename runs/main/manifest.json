@@ -1,10 +1,10 @@
 {
-  "run_id": "main-declared",
+  "run_id": "main",
   "nudgesim_version": "1.0.0",
-  "git_commit": "unknown",
+  "git_commit": "85e60a5",
   "python": "3.11.15",
   "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
-  "started_at": 1789117598.945218,
+  "started_at": 1789120374.382113,
   "prompt_suite": "v1.0.0-frozen",
   "prompt_fingerprint": "54680aa0a1bf18ce",
   "claim_provenance": "SYNTHETIC-SURROGATE (no LIAR data present; not a LIAR result)",

@@ -14,6 +14,9 @@ declared:
   salience_decay: 0.80
   novelty_engagement: 0.45    # Vosoughi channel; required by the calibration gate
 
+strong:                       # sensitivity check: the H3 channel inflated until
+  omega_crowd_tone: 2.5       # it is detectable, to show the analysis can see one
+
 null_tone_crowding:           # false-positive check: the H3 channel set to zero
   omega_crowd_tone: 0.0
   omega_crowd_base: 0.25
