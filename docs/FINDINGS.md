@@ -87,9 +87,27 @@ however they are counted.
 
 *Recommendation.* Report welfare as experimental public-goods work does (Fehr &
 Gächter, 2002): decomposed, with and without sanction costs. The engine emits
-`welfare_ex_sanctions` alongside `welfare_total`; on that measure every
-intervention arm beats control and the ordering is informative rather than
-predetermined.
+`welfare_ex_sanctions` alongside `welfare_total`.
+
+*Refinement, after finding 5.* Removing sanction costs is necessary but not
+sufficient. Once the visibility model was corrected and neighbourhoods became
+denser, the conformity term grew from ~35 to ~90 points and swamped everything
+else — and the control arm maximises conformity, because an unchallenged claim
+produces unanimity. So `accuracy + conformity` reverses and favours doing
+nothing again:
+
+| | accuracy | conformity | acc + conf |
+|---|---:|---:|---:|
+| Control | **−30.0** | 97.7 | 67.7 |
+| Early · empathetic | **−27.4** | 89.6 | 62.2 |
+
+The accuracy term is the only component whose sign is stable across both
+visibility models (intervention beats control on accuracy under each). That is
+the epistemically meaningful quantity: conformity is a private engagement
+payoff, not a measure of how well-informed the society is. **Epistemic welfare
+should be the veracity component**, with conformity and sanction costs reported
+beside it as private payoff and enforcement cost. Summing them was the original
+mistake; summing a subset of them is a smaller version of the same mistake.
 
 ### 3. The placebo arm measures nothing unless the intervener can decline to act
 
@@ -192,9 +210,45 @@ options are recorded rather than chosen:
    PHEME that discards. Honest, but 89% attrition makes the surviving sample hard
    to defend.
 
-`nudgesim check` now reports citizen-to-citizen visibility alongside intervener
-reach, so whichever way this is resolved, the property is visible before a grid
-runs rather than after.
+**Resolved: bounded attention.** Options 1 and 2 were both measured on the real
+release before either was adopted, and neither works alone:
+
+| visibility model | reach = 0 | no citizen visibility | complete graph K7 | density |
+|---|---:|---:|---:|---:|
+| Reply tree, rooted *(the plan as written)* | 68.2% | 92.3% | 0% | 0.29 |
+| Option 1 — all siblings visible | 0% | 0% | **68.3%** | 0.90 |
+| Option 2 — unrooted motifs | 54.8% | 77.0% | 0% | 0.29 |
+| Option 1 + 2 combined | 0% | 0% | **54.1%** | 0.81 |
+| **Bounded attention (w = 1)** | **0%** | **0%** | **0%** | **0.50** |
+
+Option 1 fixes visibility by destroying locality: in a star every reply is a
+sibling of every other, so the motif becomes the complete graph and "local
+majority" becomes global majority. Option 2 leaves 77% of motifs with no citizen
+visibility at all.
+
+A thread view is neither extreme. It is ranked and truncated: a reader sees the
+source plus the replies near their own, not all fifty. Modelling that — each
+reply linked to the `w` siblings following it in display order — is one
+parameter, and at `w = 1` it satisfies every criterion on the real release with
+**no thread discarded**: no motif is a star, none is complete, mean density
+0.50, and the reach filter becomes a no-op (201 of 201 motifs kept, against
+63 before).
+
+Effects strengthen accordingly, because the mechanism can now actually operate:
+
+| | reply tree | bounded attention |
+|---|---:|---:|
+| Distinct motifs used | 63 | **176** |
+| Mean intervener reach | 1.09 | **2.22** |
+| Intervention → EPC | d = 0.69 | **d = 0.93** (n = 19 suffices) |
+| H1 timing → FPR | d = −0.38 (n = 105) | **d = −0.61** (n = 43) |
+
+H1 moves from needing 3.5× the preregistered sample to needing 1.4×. H3 is
+unchanged in character (d = −0.17, n ≈ 580): its smallness is a property of the
+two opposing channels, not of the topology.
+
+`nudgesim check` reports citizen-to-citizen visibility alongside intervener
+reach, so this class of failure is visible before a grid runs rather than after.
 
 ### Smaller, but worth fixing
 
@@ -302,8 +356,8 @@ untouched by this and still has to be run.
 
 ## The revised plan
 
-[`Project_Plan_NudgeSim_v2.1.docx`](Project_Plan_NudgeSim_v2.1.docx) is the
-project plan with all four problems fixed in place. §0 of that document carries
+[`Project_Plan_NudgeSim_v2.2.docx`](Project_Plan_NudgeSim_v2.2.docx) is the
+project plan with all five problems fixed in place. §0 of that document carries
 a revision table mapping each change to the evidence above. The substantive
 edits are in §5.2 (intervener placement and reach), §5.3 (veracity-sensitive
 intervener), §5.5 (welfare and durability measures), §5.9 (two-tier sampling

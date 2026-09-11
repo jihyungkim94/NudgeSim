@@ -15,7 +15,7 @@ gate, the preregistered analysis, and a one-command reproduction.
 > preregistered protocol — what it can and cannot detect — and are **not
 > evidence about LLM behaviour**. Every artefact carries a provenance string
 > saying so. See [docs/FINDINGS.md](docs/FINDINGS.md) for what the study did
-> establish, including four problems in the plan as written and five silent bugs
+> establish, including five problems in the plan as written and six silent bugs
 > the implementation surfaced.
 
 ---
@@ -123,7 +123,7 @@ src/nudgesim/
   cli.py         check | calibrate | run | analyze | reproduce
 analysis/        preregistered models, power analysis, figures
 configs/         payoff, design, grid, backbone and DGP configuration
-tests/           107 tests; the payoff ledger is checked against hand-computed episodes
+tests/           126 tests; the payoff ledger is checked against hand-computed episodes
 docs/            design map, findings, preregistration, ethics, data cards
 ```
 

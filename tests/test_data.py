@@ -91,12 +91,52 @@ def test_role_placement_puts_the_intervener_on_a_hub():
 
 
 def test_reach_filter_removes_motifs_that_cannot_deliver_the_treatment():
-    lib = MotifLibrary.synthetic(seed=5)
+    """sibling_window=0 is the old reply-tree-as-visibility model, which produces
+    motifs where the intervener is adjacent to no citizen. The filter must drop
+    exactly those."""
+    lib = MotifLibrary.synthetic(seed=5, sibling_window=0)
     before = lib.reach_distribution(DEFAULT_SOCIETY.all_ids)
+    assert before.get(0), "expected undeliverable motifs without sibling visibility"
     filtered = lib.with_min_reach(1, DEFAULT_SOCIETY.all_ids)
-    assert 0 in before
     assert 0 not in filtered.reach_distribution(DEFAULT_SOCIETY.all_ids)
     assert filtered.meta["n_motifs_dropped_by_reach_filter"] == before[0]
+
+
+def test_bounded_attention_removes_undeliverable_motifs():
+    """The default visibility model should leave nothing for the filter to drop."""
+    lib = MotifLibrary.synthetic(seed=5)
+    assert 0 not in lib.reach_distribution(DEFAULT_SOCIETY.all_ids)
+
+
+def test_bounded_attention_does_not_collapse_a_star_into_a_clique():
+    """The real PHEME failure mode, in miniature.
+
+    A broadcast star -- one source tweet with six direct replies -- is what 69%
+    of real PHEME motifs are. Connecting every sibling makes it the complete
+    graph, so "local majority" becomes global and the topology stops varying at
+    all. A bounded window must keep it sparse while still letting the replies
+    see each other.
+    """
+    from nudgesim.data.topology import _visibility_graph
+
+    star = nx.DiGraph([("r", f"c{i}") for i in range(6)])
+    nodes = ["r", *[f"c{i}" for i in range(6)]]
+
+    reply_tree = _visibility_graph(star, nodes, sibling_window=0)
+    windowed = _visibility_graph(star, nodes, sibling_window=1)
+    clique = _visibility_graph(star, nodes, sibling_window=99)
+
+    # Reply tree alone: every citizen sees only the root.
+    assert reply_tree.number_of_edges() == 6
+    assert all(reply_tree.degree(f"c{i}") == 1 for i in range(6))
+
+    # Unbounded siblings: the complete graph on 7 nodes.
+    assert clique.number_of_edges() == 21
+
+    # Bounded: replies can see each other, and it is not complete.
+    assert 6 < windowed.number_of_edges() < 21
+    assert all(windowed.degree(f"c{i}") > 1 for i in range(6))
+    assert nx.is_connected(windowed)
 
 
 def test_scaled_library_has_no_seven_node_canonical_motif():
