@@ -58,7 +58,33 @@ topology is a valid, clearly-labelled intermediate configuration.
 ./reproduce.sh --liar data/raw/liar --pheme data/raw/pheme --llm  # + real models
 ```
 
-For real backbones, fill in `configs/backbones.yaml` and export the API keys.
+Citizens run on the analytic surrogate unless `--models` is given:
+
+```bash
+export OPENAI_API_KEY=...        # and/or ANTHROPIC_API_KEY
+nudgesim --liar data/raw/liar --pheme data/raw/pheme \
+  --models openai:gpt-4o-mini,anthropic:claude-haiku-4-5-20251001 \
+  run --out runs/llm
+
+# open weights behind vLLM, or any OpenAI-compatible endpoint
+nudgesim --models openai:Qwen/Qwen2.5-7B-Instruct \
+  --backend-url http://localhost:8000/v1 run --out runs/vllm
+```
+
+A run with `--models` is recorded as `backbone_kind: llm`; without it, as
+`surrogate`. The analysis will not describe a surrogate run as a model result.
+
+**No key? Verify the plumbing first.** `scripts/mock_llm_server.py` is a local
+OpenAI-compatible endpoint that returns deliberately messy replies (fenced JSON,
+prose, wrong-case action words). Everything except the model itself — prompt
+assembly, HTTP transport, concurrency, parsing, repair, caching, cost
+accounting — runs against it:
+
+```bash
+python scripts/mock_llm_server.py --port 8079 &
+OPENAI_API_KEY=not-needed nudgesim --models openai:mock-a --backend-url http://127.0.0.1:8079/v1 \
+  run --out runs/smoke --arms core --core-seeds 5
+```
 
 ---
 

@@ -58,6 +58,33 @@ def _payoff(args: argparse.Namespace) -> PayoffParams:
     )
 
 
+def _backend_specs(args: argparse.Namespace) -> dict[str, dict[str, object]]:
+    """Backend spec per backbone, or {} for the analytic surrogate.
+
+    --models is a comma-separated list of provider:model, e.g.
+        openai:gpt-4o-mini,anthropic:claude-haiku-4-5-20251001
+    --backend-url points every openai-provider entry at one endpoint, which is
+    how a local vLLM server or the mock server is used.
+    """
+    if not args.models:
+        return {}
+    specs: dict[str, dict[str, object]] = {}
+    for entry in args.models.split(","):
+        entry = entry.strip()
+        if not entry:
+            continue
+        provider, _, model = entry.partition(":")
+        if not model:
+            provider, model = "openai", provider
+        spec: dict[str, object] = {"provider": provider, "model": model,
+                                   "cache": not args.no_cache}
+        if args.backend_url and provider in ("openai", "vllm", "openai_compat"):
+            spec["base_url"] = args.backend_url
+            spec.setdefault("api_key_env", "OPENAI_API_KEY")
+        specs[model] = spec
+    return specs
+
+
 def _norms(args: argparse.Namespace) -> tuple[NormParams, str]:
     """Select the declared data-generating process for the surrogate run."""
     if args.dgp == "null":
@@ -205,7 +232,10 @@ def cmd_run(args: argparse.Namespace) -> int:
     pool, library = _load_data(args)
     payoff = _payoff(args)
     norms, dgp_label = _norms(args)
+    backend_specs = _backend_specs(args)
     spec = GridSpec(
+        backbones=tuple(backend_specs) or GridSpec.backbones,
+        backend_specs=backend_specs,
         core_seeds=args.core_seeds,
         placebo_seeds=args.placebo_seeds,
         ablation_payoff_seeds=args.ablation_payoff_seeds,
@@ -235,7 +265,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         payoff=payoff,
         norms=norms,
         dgp_label=dgp_label,
-        backbone_kind="surrogate" if not args.liar_backbones else "llm",
+        backbone_kind="llm" if backend_specs else "surrogate",
         scale_backend=scale_check_backend_note(),
     )
     paths = write_run(args.out, manifest, rows, raw)
@@ -283,8 +313,16 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--delta", type=float, default=3.0)
     parser.add_argument("--horizon", type=int, default=12)
     parser.add_argument("--backbone", default="surrogate-cautious")
-    parser.add_argument("--liar-backbones", action="store_true",
-                        help="record the run as LLM-backed rather than surrogate")
+    parser.add_argument(
+        "--models", default=None,
+        help="comma-separated provider:model list to run citizens on, e.g. "
+             "'openai:gpt-4o-mini,anthropic:claude-haiku-4-5-20251001'. "
+             "Omit to use the analytic surrogate.",
+    )
+    parser.add_argument("--backend-url", default=None,
+                        help="OpenAI-compatible base URL (vLLM, or the mock server)")
+    parser.add_argument("--no-cache", action="store_true",
+                        help="disable the on-disk response cache")
     parser.add_argument(
         "--dgp",
         choices=("declared", "null", "strong", "no-novelty"),
