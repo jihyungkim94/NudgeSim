@@ -209,39 +209,33 @@ topology is a valid, clearly-labelled intermediate configuration.
 
 ---
 
-## 🧩 Pipeline coverage
+## 🧩 What the pipeline covers
 
-Multi-agent LLM work is an *inference, simulation and inference-about-results*
-pipeline, not a training pipeline: the models are pretrained and reached over an
-API, so there is no architecture to design, no training loop and no checkpoint
-to save. What replaces those stages is everything between the prompt and the
-statistic. This is where NudgeSim differs from the closest prior work
-([GovSim](https://github.com/giorgiopiatti/GovSim),
-[SanctSim](https://github.com/davidguzmanp/SanctSim),
-[MoralSim](https://github.com/sbackmann/moralsim),
-[CoopEval](https://github.com/Xiao215/CoopEval)):
+This is an inference-and-analysis pipeline rather than a training one: the
+models are pretrained and reached over an API, so there is no architecture to
+design, no training loop and no checkpoint to save. The engineering lives
+between the prompt and the statistic.
 
-| Stage | The line | NudgeSim |
-|---|---|---|
-| Corpus preprocessing | one preprocessing module each; CoopEval's `data/` is run output | LIAR de-identification (tested both directions), PHEME reply-tree → visibility motifs |
-| Scenario / game spec | YAML configs | YAML configs |
-| Agent & persona construction | extensive | personas + analytic surrogate stand-in |
-| LLM interface | shared `pathfinder` submodule; per-vendor clients | one OpenAI-compatible backend + Anthropic; open weights via vLLM |
-| Structured-output parsing | CoopEval only | parse **and repair**, with the repair rate logged per episode |
-| Prompt version control | — | frozen suite with a `prompt_fingerprint` on every artefact |
-| Response caching | agent memory only | disk cache, plus a measurement showing response caching is worthless here |
-| **Cost metering** | — | `nudgesim cost`: tokens, duplicate rate, per-model and portfolio pricing |
-| Reproducible seeding | partial | digest-derived seeds, pinned by a regression test and a same-grid-twice test |
-| Degeneracy guards | — | repetition, drift and termination guards logged per episode |
-| Provenance labelling | — | `backbone_kind` and corpus provenance on every artefact |
-| **Unit tests** | — | 149, including the payoff ledger against hand-computed episodes |
-| Metrics | aggregate outcomes | outcomes read off the action log; no judge on the critical path |
-| Statistical inference | GovSim uses statsmodels; otherwise descriptive | mixed models, bootstrap CIs, Holm correction, Dunnett, survival, power |
-| Analysis validation | — | the pipeline must recover a declared effect, an inflated one, and a null |
-| Preregistration | — | frozen plan with a confirmatory/exploratory split before the grid runs |
-| Visualisation | plots / notebooks | figures regenerated from run artefacts; every paper table generated, none typed |
-| Human baseline | SanctSim Table 1 | the same Gürerk et al. row, carried in the results table |
-| Judge separation | CoopEval `llm_judge` | judge distinct from every citizen backbone |
+| Stage | In this repository |
+|---|---|
+| Corpus preprocessing | LIAR de-identification, tested in both directions; PHEME reply trees → visibility motifs |
+| Scenario and payoff spec | YAML configs, frozen before the grid runs |
+| Agents and personas | persona suites, plus an analytic surrogate that stands in for a model offline |
+| LLM interface | one OpenAI-compatible backend and one Anthropic backend; open weights through the same interface |
+| Structured-output parsing | parse **and repair** malformed replies, with the repair rate logged per episode |
+| Prompt version control | a frozen suite, with a `prompt_fingerprint` on every artefact |
+| Caching | disk cache, and a measurement of which caching lever is actually worth anything here |
+| Cost metering | `nudgesim cost`: tokens per call, duplicate rate, per-model and portfolio pricing |
+| Reproducible seeding | digest-derived seeds, pinned by a regression test and a run-the-grid-twice test |
+| Degeneracy guards | repetition, stance drift and termination guards, logged rather than suppressed |
+| Provenance labelling | `backbone_kind` and corpus provenance on every artefact |
+| Unit tests | 149, including the payoff ledger against hand-computed episodes |
+| Metrics | read off the action log; no model judge anywhere on the critical path |
+| Statistical inference | mixed models, bootstrap CIs, Holm correction, Dunnett, survival, power |
+| Analysis validation | the pipeline must recover a declared effect, an inflated one, and a null |
+| Preregistration | a frozen plan with a confirmatory/exploratory split, fixed before the grid runs |
+| Visualisation | figures regenerated from run artefacts; every paper table generated, none typed |
+| Human baseline | a published human row carried beside the model rows |
 
 ---
 
@@ -313,13 +307,5 @@ seats.
   url    = {https://github.com/jihyungkim94/NudgeSim}
 }
 ```
-
-Built in the line of [GovSim](https://github.com/giorgiopiatti/GovSim),
-[SanctSim](https://github.com/davidguzmanp/SanctSim),
-[MoralSim](https://github.com/sbackmann/moralsim) and
-[CoopEval](https://github.com/Xiao215/CoopEval) — give LLM agents an explicit
-payoff, put them in a dilemma with a known human-experimental benchmark, and
-measure what they do rather than what they say. NudgeSim applies that to the one
-public good whose collapse is already a live policy problem.
 
 MIT licensed. LIAR and PHEME are governed by their own terms — see the data cards.
