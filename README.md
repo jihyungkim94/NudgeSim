@@ -25,7 +25,15 @@ gate, the preregistered analysis, and a one-command reproduction.
 ```bash
 python -m venv .venv && .venv/bin/pip install -e ".[dev]"
 PYTHON=.venv/bin/python ./reproduce.sh          # 1,550 episodes, ~15 s
-PYTHON=.venv/bin/python ./reproduce.sh --full   # + null-DGP and high-power controls
+PYTHON=.venv/bin/python ./reproduce.sh --full   # + the validation triad and high-power controls
+```
+
+On Windows, `reproduce.ps1` is the same steps with the same run names:
+
+```powershell
+python -m venv .venv; .venv\Scripts\pip install -e ".[dev]"
+.\reproduce.ps1
+.\reproduce.ps1 -Full -Liar data\raw\liar -Pheme data\raw\pheme
 ```
 
 Outputs land in `runs/main/`: `results.parquet` (one row per episode),
