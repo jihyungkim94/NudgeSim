@@ -104,7 +104,7 @@ module.exports = [
   p([t("Stack. ", { bold: true }),
      t("Python 3.11+ · Hugging Face datasets · NetworkX (topology) · pandas / Parquet (logs) · statsmodels and lifelines (analysis) · Matplotlib (figures) · YAML configs with pinned seeds.")]),
   p([t("Status. ", { bold: true }),
-     t("A reference implementation of this layout exists, passes 144 tests including hand-computed payoff-ledger checks, and reproduces the full 1,550-episode grid with one command — including a pilot run against the real LIAR and PHEME-9 corpora. Nothing in the game, metrics or analysis layers depends on which model — or whether any model — supplies the citizen policies, so swapping the six backbones in is a configuration change.")]),
+     t("A reference implementation of this layout exists, passes 149 tests including hand-computed payoff-ledger checks, and reproduces the full 1,550-episode grid with one command — including a pilot run against the real LIAR and PHEME-9 corpora. Nothing in the game, metrics or analysis layers depends on which model — or whether any model — supplies the citizen policies, so swapping the six backbones in is a configuration change.")]),
   code([
     "nudgesim/",
     "├─ configs/          # experiment grid, seeds, payoff parameters (YAML)",

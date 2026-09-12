@@ -1,25 +1,63 @@
 # Citizen backbones (plan factor F3).
 #
-# `live` is the configuration used for reported model results. Fill in the four
-# model families and the judge, set the API keys, and run with --liar-backbones.
+# STATUS: no model run has been executed. The grid below is the declared roster
+# for the benchmark, not a record of anything that has run. Running it needs API
+# credentials for the hosted levels and a GPU (or an inference host) for the
+# open-weights ones; neither is in place yet. See README, "Status of the numbers
+# in runs/".
 #
-# `surrogate` is the offline analytic policy set. It is NOT a model benchmark and
-# runs tagged backbone_kind: surrogate so no result can be mistaken for one.
+# This file is a DECLARATION, not a loaded config: nothing in src/ reads it.
+# Backbones are selected at the command line, which is what keeps a run's
+# provenance tied to its own invocation rather than to a file that could drift:
+#
+#     nudgesim --models openai:gpt-4o,anthropic:claude-opus-5 run --out runs/llm
+#
+# Without --models the citizens run on the analytic surrogate profiles at the
+# bottom of this file, and the run is tagged backbone_kind: surrogate so no
+# result can be mistaken for a model benchmark.
 
-live:
+declared_roster:
+  # Six levels across four vendors, chosen for overlap with the reference line
+  # (GovSim / SanctSim / MoralSim / CoopEval) so a model-dependence result here
+  # can be read against theirs. Rationale per level is in the plan, section 7.
   citizens:
-    - {provider: openai,    model: gpt-4o-mini,                  cache: true}
-    - {provider: anthropic, model: claude-haiku-4-5-20251001,    cache: true}
-    - {provider: vllm,      model: meta-llama/Llama-3.1-8B-Instruct,
+    - {provider: openai,    model: gpt-4o, cache: true}
+      # The comparability anchor: the only model present in all four prior
+      # studies. Non-reasoning.
+
+    # - {provider: openai,  model: <pin a current OpenAI reasoning model>, cache: true}
+      # The reasoning contrast held within one vendor, which is the comparison
+      # SanctSim drew. Deliberately left unpinned: the model to use is whichever
+      # is current when the grid runs, and writing a guess here would be a
+      # commitment the plan has not made.
+
+    - {provider: anthropic, model: claude-opus-5, cache: true}
+      # Frontier non-reasoning, and the paired control for the row below.
+    - {provider: anthropic, model: claude-opus-5, thinking: true, cache: true}
+      # The reasoning contrast held at FIXED WEIGHTS -- the extension over
+      # SanctSim, which drew that contrast across model families and so
+      # confounded reasoning mode with everything else that differs between them.
+
+    - {provider: vllm, model: meta-llama/Llama-3.3-70B-Instruct,
        base_url: http://localhost:8000/v1, cache: true}
-    - {provider: vllm,      model: Qwen/Qwen2.5-7B-Instruct,
+      # In SanctSim and MoralSim. Served locally, so it costs GPU time not tokens.
+    - {provider: vllm, model: Qwen/Qwen3-30B-A3B,
        base_url: http://localhost:8000/v1, cache: true}
+      # In CoopEval. The bottom of the capability ladder, and the arm that shows
+      # a result was not simply bought with spend.
+
   # The judge must not be any citizen backbone -- no model grades its own output
-  # (plan section 7).
-  judge: {provider: anthropic, model: claude-opus-5, cache: true}
+  # (plan section 7). Because Claude Opus 5 is a citizen level above, the judge
+  # cannot be an Anthropic model from this roster; pin a capable model from a
+  # vendor not otherwise in the citizen seats when the grid runs.
+  judge: {provider: null, model: null, cache: true}
+
   decoding:
     citizen_temperature: 0.7
     judge_temperature: 0.2
 
 surrogate:
+  # The offline analytic policy set. NOT a model benchmark: runs using these are
+  # tagged backbone_kind: surrogate, and the analysis refuses to describe them as
+  # model results.
   profiles: [surrogate-cautious, surrogate-conformist, surrogate-defiant, surrogate-cost-averse]

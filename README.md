@@ -2,7 +2,7 @@
 
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Tests](https://img.shields.io/badge/tests-144%20passing-brightgreen.svg)
+![Tests](https://img.shields.io/badge/tests-149%20passing-brightgreen.svg)
 ![Status](https://img.shields.io/badge/model%20benchmark-pending%20run-orange.svg)
 
 ![NudgeSim: does an AI corrector build the norm, or replace it?](imgs/nudgesim_question.png)
@@ -96,17 +96,25 @@ anywhere on the critical path:
 
 ## 🚀 Running it on real models
 
+> **Not yet run.** The model benchmark needs API credentials for the hosted
+> levels and a GPU or inference host for the open-weights ones, and neither is
+> in place — that, and nothing else, is why there are no model results here. The
+> path itself is implemented and verified end to end (below), the roster is
+> declared in [`configs/backbones.yaml`](configs/backbones.yaml), and the grid
+> is priced in advance by `nudgesim cost`.
+
 Citizens run on any mix of hosted and open-weights backbones through one
 OpenAI-compatible interface:
 
 ```bash
-export ANTHROPIC_API_KEY=...        # and/or OPENAI_API_KEY
+cp .env.example .env        # then fill in the keys you have
 nudgesim --liar data/raw/liar --pheme data/raw/pheme \
-  --models anthropic:claude-haiku-4-5-20251001,openai:gpt-4o-mini \
+  --models openai:gpt-4o,anthropic:claude-opus-5 \
   run --out runs/llm
 
 # open weights behind vLLM, or any OpenAI-compatible endpoint
-nudgesim --models openai:Qwen/Qwen2.5-7B-Instruct \
+./scripts/serve_vllm.sh Qwen/Qwen3-30B-A3B
+nudgesim --models openai:Qwen/Qwen3-30B-A3B \
   --backend-url http://localhost:8000/v1 run --out runs/vllm
 ```
 
@@ -226,7 +234,7 @@ statistic. This is where NudgeSim differs from the closest prior work
 | Reproducible seeding | partial | digest-derived seeds, pinned by a regression test and a same-grid-twice test |
 | Degeneracy guards | — | repetition, drift and termination guards logged per episode |
 | Provenance labelling | — | `backbone_kind` and corpus provenance on every artefact |
-| **Unit tests** | — | 144, including the payoff ledger against hand-computed episodes |
+| **Unit tests** | — | 149, including the payoff ledger against hand-computed episodes |
 | Metrics | aggregate outcomes | outcomes read off the action log; no judge on the critical path |
 | Statistical inference | GovSim uses statsmodels; otherwise descriptive | mixed models, bootstrap CIs, Holm correction, Dunnett, survival, power |
 | Analysis validation | — | the pipeline must recover a declared effect, an inflated one, and a null |
@@ -256,7 +264,9 @@ src/nudgesim/
 analysis/        preregistered models, power analysis, figures
 configs/         payoff, design, grid, backbone and DGP configuration
 scripts/         PHEME extractor, mock LLM server, figure generation
-tests/           144 tests; the payoff ledger is checked against hand-computed episodes
+tests/           149 tests (144 without the optional [llm] extra, which skips
+                 the LLM-path module); the payoff ledger is checked against
+                 hand-computed episodes
 docs/            design map, findings, preregistration, ethics, data cards
 paper/           LaTeX manuscript; every table generated from run artefacts
 ```

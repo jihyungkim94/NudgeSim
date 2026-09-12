@@ -136,6 +136,42 @@ class RetryingBackend:
         raise BackendError(f"{self.name} failed after {self.attempts} attempts: {last}") from last
 
 
+_DOTENV_LOADED = False
+
+
+def load_dotenv(path: str | Path = ".env") -> None:
+    """Read KEY=VALUE lines from a .env file into the environment, once.
+
+    A real environment variable always wins over the file, so an explicit
+    ``ANTHROPIC_API_KEY=... nudgesim ...`` cannot be silently overridden by a
+    stale checkout. Values are never logged. Absent file is not an error: the
+    surrogate path needs no credentials at all.
+    """
+    global _DOTENV_LOADED
+    if _DOTENV_LOADED:
+        return
+    _DOTENV_LOADED = True
+
+    candidate = Path(path)
+    if not candidate.is_absolute():
+        for base in (Path.cwd(), *Path(__file__).resolve().parents):
+            if (base / candidate).is_file():
+                candidate = base / candidate
+                break
+    if not candidate.is_file():
+        return
+
+    for line in candidate.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key = key.strip()
+        value = value.strip().strip('"').strip("'")
+        if key and value and key not in os.environ:
+            os.environ[key] = value
+
+
 def build_backend(spec: dict[str, Any]) -> Backend:
     """Construct a backend from a config block.
 
@@ -146,6 +182,7 @@ def build_backend(spec: dict[str, Any]) -> Backend:
     Vendor SDKs are imported lazily so the core package installs and the offline
     test suite runs without them.
     """
+    load_dotenv()
     provider = str(spec.get("provider", "echo")).lower()
     model = str(spec.get("model", provider))
     backend: Backend
