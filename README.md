@@ -1,22 +1,77 @@
 # NudgeSim
 
-**Who pays to correct?** A payoff-instrumented multi-agent testbed for studying when
-and how an embedded AI intervener shifts an agent society from free-riding on
-unverified content toward costly peer correction.
+**Who pays to correct?** A payoff-instrumented testbed for running societies of
+LLM agents inside a public-goods dilemma, and measuring whether an embedded AI
+intervener *catalyses or crowds out* the society's own willingness to pay for
+correction.
 
-This repository is the v1.0 implementation of the NudgeSim project plan: the game
-engine, the agent society, the timing × tone intervention design, the calibration
-gate, the preregistered analysis, and a one-command reproduction.
+Seven agents act on a false claim over twelve rounds. Verifying is privately
+costly while a cleaner feed benefits everyone, so sharing unverified content is
+free-riding and publicly correcting somebody else is costly peer sanctioning —
+the second-order free-rider problem. The headline outcome is not what an agent
+says it believes; it is what it pays for.
 
-> **Read this first.** The runs shipped in `runs/` were produced with the
-> **analytic surrogate policy**, not with LLM backbones. Both corpora are real:
-> claims from **LIAR**, topologies from **PHEME-9**. These runs are a
-> *design-sensitivity study* of the preregistered protocol — what it can and
-> cannot detect — and are **not evidence about LLM behaviour**. Every artefact
-> carries a provenance string saying so. See
-> [docs/FINDINGS.md](docs/FINDINGS.md) for what the study did establish,
-> including five problems in the plan as written and seven silent bugs the
-> implementation surfaced.
+## Running it on real models
+
+Citizens run on any mix of hosted and open-weights backbones through one
+OpenAI-compatible interface:
+
+```bash
+export ANTHROPIC_API_KEY=...        # and/or OPENAI_API_KEY
+nudgesim --liar data/raw/liar --pheme data/raw/pheme \
+  --models anthropic:claude-haiku-4-5-20251001,openai:gpt-4o-mini \
+  run --out runs/llm
+
+# open weights behind vLLM, or any OpenAI-compatible endpoint
+nudgesim --models openai:Qwen/Qwen2.5-7B-Instruct \
+  --backend-url http://localhost:8000/v1 run --out runs/vllm
+```
+
+The **mixed-society arm** seats the whole roster in one episode and rotates
+which model holds which seat, so the design can ask whether one model
+free-rides on another's correction — a question a one-model-per-episode design
+cannot pose, and one that two of the four studies this work is positioned
+against treat as a headline result.
+
+`nudgesim cost` meters the prompts the engine actually assembles and prices them
+against the published rate cards: 60 calls an episode, ~613 input tokens a call,
+23,250 calls per backbone over the full grid.
+
+**The LLM path is implemented and verified end to end.** `scripts/mock_llm_server.py`
+is a local OpenAI-compatible endpoint that deliberately misbehaves the way real
+models do — prose instead of JSON, markdown fences, wrong-case action words — so
+prompt assembly, transport, concurrency, parsing, repair, caching and cost
+accounting can all be exercised without a key:
+
+```bash
+python scripts/mock_llm_server.py --port 8079 &
+OPENAI_API_KEY=not-needed nudgesim --models openai:mock-a \
+  --backend-url http://127.0.0.1:8079/v1 \
+  run --out runs/smoke --arms core --core-seeds 5
+```
+
+Against that server the pipeline repairs ~11% malformed replies without a
+single crash, and the intervener's veracity gate declines to act on a majority
+of episodes rather than challenging whatever it is shown — which is what makes
+the specificity arm able to fail rather than pass by construction.
+
+## Status of the numbers in `runs/`
+
+The model benchmark has not been run yet, so the runs committed here were
+produced with the **analytic surrogate policy** rather than LLM backbones. Both
+corpora are real — claims from **LIAR**, topologies from **PHEME-9** — and these
+runs are a *design-sensitivity study* of the preregistered protocol: what it can
+and cannot detect. They are **not evidence about LLM behaviour**. Every artefact
+carries a provenance string saying so, a run with `--models` is recorded as
+`backbone_kind: llm` and one without as `surrogate`, and the analysis refuses to
+describe a surrogate run as a model result. The paper's model sections are marked
+`[PENDING LLM RUN]` and left empty rather than estimated.
+
+That study is worth reading on its own terms: see
+[docs/FINDINGS.md](docs/FINDINGS.md) for six problems in the design that only
+surfaced by building it — including a preprocessing choice nobody reports making
+that moves the headline effect by more than a factor of two — and seven silent
+bugs the implementation exposed.
 
 ---
 
@@ -82,33 +137,9 @@ topology is a valid, clearly-labelled intermediate configuration.
 ./reproduce.sh --liar data/raw/liar --pheme data/raw/pheme --llm  # + real models
 ```
 
-Citizens run on the analytic surrogate unless `--models` is given:
-
-```bash
-export OPENAI_API_KEY=...        # and/or ANTHROPIC_API_KEY
-nudgesim --liar data/raw/liar --pheme data/raw/pheme \
-  --models openai:gpt-4o-mini,anthropic:claude-haiku-4-5-20251001 \
-  run --out runs/llm
-
-# open weights behind vLLM, or any OpenAI-compatible endpoint
-nudgesim --models openai:Qwen/Qwen2.5-7B-Instruct \
-  --backend-url http://localhost:8000/v1 run --out runs/vllm
-```
-
-A run with `--models` is recorded as `backbone_kind: llm`; without it, as
-`surrogate`. The analysis will not describe a surrogate run as a model result.
-
-**No key? Verify the plumbing first.** `scripts/mock_llm_server.py` is a local
-OpenAI-compatible endpoint that returns deliberately messy replies (fenced JSON,
-prose, wrong-case action words). Everything except the model itself — prompt
-assembly, HTTP transport, concurrency, parsing, repair, caching, cost
-accounting — runs against it:
-
-```bash
-python scripts/mock_llm_server.py --port 8079 &
-OPENAI_API_KEY=not-needed nudgesim --models openai:mock-a --backend-url http://127.0.0.1:8079/v1 \
-  run --out runs/smoke --arms core --core-seeds 5
-```
+Citizens run on the analytic surrogate unless `--models` is given; see
+[Running it on real models](#running-it-on-real-models) above for the model
+invocations and the keyless mock-server check.
 
 ---
 
