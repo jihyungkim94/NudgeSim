@@ -4,9 +4,9 @@
   "n_false_episodes": 60,
   "n_true_episodes": 60,
   "simulated_shape": {
-    "depth_ratio": 0.218056,
-    "breadth_ratio": 0.781944,
-    "virality_ratio": 0.304417
+    "depth_ratio": 0.216944,
+    "breadth_ratio": 0.783056,
+    "virality_ratio": 0.303009
   },
   "reference_shape": {
     "depth_ratio": 0.232463,
@@ -14,9 +14,9 @@
     "virality_ratio": 0.215903
   },
   "shape_deltas": {
-    "depth_ratio": -0.014408,
-    "breadth_ratio": 0.128144,
-    "virality_ratio": 0.088514
+    "depth_ratio": -0.015519,
+    "breadth_ratio": 0.129255,
+    "virality_ratio": 0.087107
   },
   "shape_passes": {
     "depth_ratio": true,
@@ -24,12 +24,12 @@
     "virality_ratio": true
   },
   "asymmetry": {
-    "false_propagation_rate": 0.783333,
-    "true_propagation_rate": 0.711667,
-    "propagation_margin": 0.071667,
-    "false_cascade_size": 5.566667,
+    "false_propagation_rate": 0.7825,
+    "true_propagation_rate": 0.713889,
+    "propagation_margin": 0.068611,
+    "false_cascade_size": 5.6,
     "true_cascade_size": 5.566667,
-    "cascade_size_margin": 0.0
+    "cascade_size_margin": 0.033333
   },
   "asymmetry_passes": true,
   "tolerance": {

@@ -289,6 +289,34 @@ def copy_figures() -> None:
         print(f"wrote figures/{name}.png")
 
 
+def table_composition() -> None:
+    comp = _analysis("main")["composition"]
+    lines = [
+        r"\begin{tabular}{lrrr}", r"\toprule",
+        r"\multicolumn{4}{l}{\emph{Inside one mixed episode: same claim, topology and intervention}} \\",
+        r"Model in the seat & EPC & FPR & seats \\", r"\midrule",
+    ]
+    for row in comp["within_mixed"]:
+        lines.append(
+            f"{row['backbone'].replace('surrogate-', '')} & {row['epc']:.3f} & "
+            f"{row['fpr']:.3f} & {row['n_seats']} \\\\"
+        )
+    lines += [
+        r"\midrule",
+        r"\multicolumn{4}{l}{\emph{Among other models vs.\ among copies of itself}} \\",
+        r"Model & among copies & among others & difference [95\% CI] \\", r"\midrule",
+    ]
+    for row in sorted(comp["mixed_vs_homogeneous"], key=lambda r: r["diff"]):
+        star = r"$^{*}$" if row["significant"] else ""
+        lines.append(
+            f"{row['backbone'].replace('surrogate-', '')} & "
+            f"{row['epc_among_copies']:.3f} & {row['epc_among_others']:.3f} & "
+            f"${row['diff']:+.3f}$ [{row['ci_low']:+.3f}, {row['ci_high']:+.3f}]{star} \\\\"
+        )
+    lines += [r"\bottomrule", r"\end{tabular}"]
+    _tex("composition", "\n".join(lines))
+
+
 def main() -> int:
     copy_figures()
     table_visibility()
@@ -298,6 +326,7 @@ def main() -> int:
     table_ate()
     table_human()
     table_cost()
+    table_composition()
     return 0
 
 

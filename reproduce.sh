@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # One-command reproduction (plan section 9, Month 4 deliverable).
 #
-#   ./reproduce.sh            offline surrogate run: 1,400 episodes, ~15s
+#   ./reproduce.sh            offline surrogate run: 1,550 episodes, ~15s
 #   ./reproduce.sh --full     also runs the null-DGP and high-power controls
 #
 # With the real corpora and real backbones:
@@ -38,7 +38,7 @@ $PY -m nudgesim.cli "${DATA_ARGS[@]}" check --out "$OUT/checks"
 echo "== 2/6 calibration gate (plan section 5.7) -- hard Go/No-Go"
 $PY -m nudgesim.cli "${DATA_ARGS[@]}" calibrate --out "$OUT/calibration"
 
-echo "== 3/6 main grid: 1,400 episodes"
+echo "== 3/6 main grid: 1,550 episodes"
 $PY -m nudgesim.cli "${DATA_ARGS[@]}" $LLM run --out "$OUT/main" --run-id main-declared
 
 echo "== 4/6 preregistered analysis"

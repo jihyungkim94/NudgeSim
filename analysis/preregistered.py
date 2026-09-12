@@ -581,6 +581,89 @@ def norm_robustness(frame: pd.DataFrame, *, alpha: float = 0.05) -> dict[str, An
     return out
 
 
+# --------------------------------------------------------- society composition
+
+
+def load_agents(run_dir: str | Path) -> pd.DataFrame | None:
+    path = Path(run_dir) / "agents.parquet"
+    return pd.read_parquet(path) if path.exists() else None
+
+
+def composition(agents: pd.DataFrame, *, alpha: float = 0.05) -> dict[str, Any]:
+    """What each model does when the other seats are held by other models.
+
+    The core grid runs monocultures: every citizen in an episode is the same
+    model. That answers whether model choice moves the aggregate, and cannot
+    answer the question the design is actually about -- whether one model
+    free-rides on another's correction -- because in a monoculture there is no
+    other model to free-ride on.
+
+    The mixed arm seats the whole roster in one society, rotating which model
+    holds which seat so position does not stand in for model. Two contrasts
+    follow. ``within_mixed`` compares models inside the same episode, holding
+    claim, topology and intervention exactly fixed. ``mixed_vs_homogeneous``
+    asks whether a model behaves differently among strangers than among copies
+    of itself, which is the crowding-out question posed between models rather
+    than between an intervener and a society.
+    """
+    usable = agents[~agents["terminated_early"] & agents["treated"]]
+    mixed = usable[usable["society"] == "mixed"]
+    homogeneous = usable[usable["society"] == "homogeneous"]
+    if mixed.empty:
+        return {"error": "no mixed-society episodes in this run"}
+
+    def rates(frame: pd.DataFrame) -> dict[str, float]:
+        actions = frame["n_actions"].sum()
+        return {
+            "epc": float(frame["n_challenges"].sum() / actions) if actions else float("nan"),
+            "fpr": float(frame["n_propagating"].sum() / actions) if actions else float("nan"),
+            "n_seats": int(len(frame)),
+        }
+
+    # Per-seat challenge rate, so the contrast has a unit of analysis with
+    # variance rather than one pooled ratio per model.
+    def per_seat(frame: pd.DataFrame) -> pd.Series:
+        return frame["n_challenges"] / frame["n_actions"].replace(0, np.nan)
+
+    within = []
+    for backbone, group in mixed.groupby("backbone", observed=True):
+        within.append({"backbone": str(backbone), **rates(group)})
+    within.sort(key=lambda r: r["epc"], reverse=True)
+
+    crossed = []
+    for backbone, group in mixed.groupby("backbone", observed=True):
+        alone = homogeneous[homogeneous["backbone"] == backbone]
+        if alone.empty:
+            continue
+        among, solo = per_seat(group), per_seat(alone)
+        est, low, high = bootstrap_diff(among, solo, alpha=alpha)
+        _, p_value = stats.ttest_ind(among, solo, equal_var=False, nan_policy="omit")
+        crossed.append({
+            "backbone": str(backbone),
+            "epc_among_others": float(among.mean()),
+            "epc_among_copies": float(solo.mean()),
+            "diff": est, "ci_low": low, "ci_high": high,
+            "cohens_d": cohens_d(among, solo),
+            "p_value": float(p_value),
+        })
+    adjusted, reject = holm([row["p_value"] for row in crossed])
+    for row, p_adj, rej in zip(crossed, adjusted, reject):
+        row["p_holm"] = p_adj
+        row["significant"] = bool(rej)
+
+    spread = [row["epc"] for row in within]
+    return {
+        "n_mixed_seats": int(len(mixed)),
+        "within_mixed": within,
+        "mixed_vs_homogeneous": crossed,
+        # How far apart the models are when nothing else differs at all. This is
+        # H5 measured within an episode instead of between episodes.
+        "within_episode_epc_ratio": (
+            float(max(spread) / min(spread)) if spread and min(spread) > 0 else float("inf")
+        ),
+    }
+
+
 def robustness(frame: pd.DataFrame) -> dict[str, Any]:
     """Ablations and moderators (plan section 8, Robustness)."""
     out: dict[str, Any] = {}
@@ -688,6 +771,7 @@ def run_analysis(
     run_dir: str | Path, *, out_dir: str | Path | None = None, alpha: float = 0.05
 ) -> dict[str, Any]:
     frame, manifest = load_run(run_dir)
+    agents = load_agents(run_dir)
     core = _core(frame)
     out_dir = Path(out_dir or run_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -720,6 +804,10 @@ def run_analysis(
         "rq5_specificity_placebo": specificity_h5_placebo(frame),
         "robustness": robustness(frame),
         "norm_robustness": norm_robustness(frame, alpha=alpha),
+        "composition": (
+            composition(agents, alpha=alpha) if agents is not None
+            else {"error": "run predates the agent-level table"}
+        ),
         "design_sensitivity": design_sensitivity_report(frame, alpha=alpha),
     }
 
@@ -743,6 +831,7 @@ def run_analysis(
             "indiscriminate_skepticism"
         ),
         "norm_robustness_verdict": report["norm_robustness"].get("verdict"),
+        "within_episode_epc_ratio": report["composition"].get("within_episode_epc_ratio"),
         "h3_adequately_powered_at_30_seeds": report["design_sensitivity"]["contrasts"][
             "H3_tone_on_EPC_aggressive_vs_empathetic"
         ]["adequately_powered_at_30"],
