@@ -29,3 +29,7 @@ runs/gate_*/
 !runs/*/figures/**
 node_modules/
 package-lock.json
+
+# Understand-Anything scratch (code-map tooling, not part of the study).
+# Kept locally because scan-result.json lets a re-run skip its scan phase.
+.ua/
