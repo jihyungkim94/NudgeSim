@@ -21,21 +21,9 @@ an agent says it believes; it is what it pays for.
 
 ## 💡 Key Discoveries
 
-**Reply trees are not visibility graphs, and the difference is the effect
-size.** Treating reply edges as visibility edges leaves 88.6% of neighbourhoods
-with no citizen able to see any other — deleting the mechanism the study
-measures. Across three translations of the same corpus on the same seeds, the
-intervention effect runs +0.041, +0.080 and +0.095.
-
-**Summing a payoff function is not a welfare measure under costly sanctioning.**
-The intervention cuts propagation and more than triples peer correction, and
-total payoff still ranks it below doing nothing — the sanction costs it charges
-are exactly what a working intervention generates.
-
-**A monoculture backbone factor cannot answer its own question.** One model per
-episode cannot measure whether one model free-rides on another's correction,
-because there is no other model present. A mixed-society arm seats the whole
-roster in one episode and rotates which model holds which seat.
+_Nothing here yet. The model benchmark has not been run — see
+[API Configuration](#-api-configuration) — and until it has, there is no
+finding to report._
 
 ## 🛠️ Installation
 
@@ -114,17 +102,15 @@ pay κ themselves.
 
 ## 📊 Output & Analysis
 
-![Measured on the analytic surrogate over real LIAR and PHEME](imgs/nudgesim_measured.png)
+_Results go here once the model benchmark has been run._
 
 Runs land in `runs/main/`: `results.parquet` (one row per episode),
 `rounds.parquet`, `episodes.jsonl`, `analysis/`, and `figures/`.
 
-The committed runs use the **analytic surrogate policy**, not LLM backbones.
-Both corpora are real, and the runs are a design-sensitivity study of the
-protocol — what it can and cannot detect. They are **not evidence about LLM
-behaviour**: every artefact carries a provenance string, a run with `--models`
-is tagged `backbone_kind: llm` and one without as `surrogate`, and the analysis
-refuses to describe a surrogate run as a model result.
+What is committed there today came from the **analytic surrogate policy**, not
+from language models. It exercises the protocol end to end and is tagged
+`backbone_kind: surrogate` on every artefact, so it cannot be read as a model
+result — and the analysis refuses to describe it as one.
 
 ```bash
 nudgesim check | calibrate | run | analyze | cost | reproduce
