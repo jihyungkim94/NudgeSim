@@ -1,0 +1,570 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage[margin=1in]{geometry}
+\usepackage[colorlinks=true,allcolors=blue!60!black]{hyperref}
+
+% A visibly marked slot for a result that requires the LLM runs. Never silently
+% empty: a placeholder that looks like prose is how unrun experiments end up
+% being reported.
+\newcommand{\pending}[1]{%
+  \par\medskip\noindent\fcolorbox{red!60!black}{red!4}{%
+    \parbox{0.97\linewidth}{\small\textbf{[PENDING LLM RUN]}~#1}}\par\medskip}
+
+\title{\textsc{NudgeSim}: Costly Peer Correction as a Public Good\\
+in Societies of LLM Agents}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Accurate information in a social network is a public good: verifying a claim is
+privately costly while a less-polluted feed benefits everyone, so sharing
+engaging but unverified content is free-riding and publicly correcting someone
+else is costly peer sanctioning. That makes counter-misinformation an instance
+of the second-order free-rider problem rather than a classification task. We
+introduce \textsc{NudgeSim}, an environment in which a seven-agent society plays
+this dilemma over real rumour-cascade topologies with human-vetted false claims,
+under an explicit per-round payoff function, and in which an embedded
+``Devil's Advocate'' intervener is manipulated along timing and tone. The
+headline outcome is not what agents say they believe but what they pay for: the
+rate at which citizens voluntarily absorb the correction cost once an intervener
+is present.
+
+Building the environment produced two findings that hold independently of which
+model runs the agents, and that apply to any study in this line. First,
+\emph{how a reply tree is turned into a visibility graph is an unstated
+researcher degree of freedom that moves the headline effect by a factor of two
+and a half}; treating the reply tree itself as the visibility graph---the
+default---leaves no citizen able to observe another in 88.6\% of real
+\textsc{Pheme} neighbourhoods, deleting the mechanism the study exists to
+measure. Second, \emph{summing a payoff function is not a welfare measure in any
+design with costly sanctioning}: total payoff ranks every working intervention
+far below doing nothing, because the sanction costs it charges are precisely
+what a working intervention generates. We report both with the environment, an
+analysis pipeline validated against declared data-generating processes, and a
+measured cost model for running the grid on language models.
+\end{abstract}
+
+%======================================================================
+\section{Introduction}
+
+Cooperation is expensive for the individual and valuable for the group, and
+human societies sustain it in part through costly sanctioning: people pay out of
+pocket to punish defectors \citep{fehr2002,guerek2006,ostrom1990}. A recent line
+of work asks whether societies of large language model agents do the same,
+placing them in common-pool resource games \citep{piatti2024govsim}, public
+goods games with institutional choice \citep{piedrahita2025sanctsim}, morally
+charged dilemmas \citep{backmann2025moralsim}, and mechanism-augmented matrix
+games \citep{tewolde2026coopeval}. The consistent finding is that model
+behaviour in these settings is neither uniform nor predictable from capability
+alone---reasoning-tuned models free-ride where their non-reasoning counterparts
+cooperate \citep{piedrahita2025sanctsim,tewolde2026coopeval}.
+
+Misinformation is a social dilemma of exactly this shape, and it has not been
+studied as one. Accurate information in a feed is a public good. Verification is
+the contribution: privately costly, socially beneficial. Sharing engaging but
+unverified content is free-riding---it collects the conformity reward
+immediately at no verification cost while the veracity penalty is deferred and
+uncertain. Publicly challenging another agent's claim is costly peer punishment,
+which reintroduces the second-order dilemma: everyone wants the network
+corrected, nobody wants to pay to correct it.
+
+\textsc{NudgeSim} places an embedded AI intervener inside this dilemma and asks
+a question the simulation literature on counter-misinformation has not: not
+whether an intervention reduces propagation, but whether it \emph{catalyses or
+crowds out} the society's own willingness to pay for correction. Crowding-out is
+a documented effect of external enforcement on human intrinsic motivation
+\citep{fehr2003,bowles2008}; whether it appears in an LLM society, and whether
+the intervener's tone decides which way it goes, is the central question.
+
+This paper reports the environment and the findings that building it produced.
+Our contributions:
+
+\begin{enumerate}
+\item \textbf{\textsc{NudgeSim}}, an environment casting counter-misinformation
+  as a public goods game with costly peer sanctioning, seeded with human-vetted
+  false claims from \textsc{Liar} \citep{wang2017liar} and wired from the reply
+  structure of real rumour cascades in \textsc{Pheme} \citep{kochkina2018pheme}
+  (6{,}425 thread structures, 5{,}741 of which parse into usable reply trees), with an explicit payoff function and outcomes read
+  directly off the action log rather than from a model judge
+  (\S\ref{sec:env}).
+
+\item \textbf{Reply trees are not visibility graphs, and the difference is the
+  effect size.} Sampling a seven-node neighbourhood from a real \textsc{Pheme}
+  cascade and treating reply edges as visibility edges leaves 88.6\% of
+  neighbourhoods with no citizen able to see any other citizen. We measure three
+  translations of the same corpus on the same seeds: the intervention's measured
+  effect on peer correction runs $+0.038$, $+0.081$ and $+0.095$ depending only
+  on which is chosen (\S\ref{sec:rq1}).
+
+\item \textbf{Total payoff is not a welfare measure under costly sanctioning.}
+  In \textsc{NudgeSim} the intervention cuts propagation and nearly quadruples
+  peer correction, and $\sum\pi$ ranks it $122$ points below doing nothing.
+  Removing sanction costs does not repair it, because the conformity term is
+  maximised by the arm in which nobody disagrees. Only the veracity term tracks
+  the good being provided (\S\ref{sec:rq2}).
+
+\item \textbf{A validated analysis pipeline and a measured budget.} The analysis
+  is run against three declared data-generating processes---effect present,
+  inflated, and set to zero---and must recover them in that order
+  (\S\ref{sec:sensitivity}). We meter the prompts the environment assembles and
+  price the grid, finding that response caching, the lever such studies usually
+  name, is worth nothing here, while the choice to enable extended thinking is
+  worth an order of magnitude (\S\ref{sec:cost}).
+\end{enumerate}
+
+The model benchmark the environment is built for is not yet run; every slot it
+fills is marked in the text and left empty rather than estimated.
+
+%======================================================================
+\section{Related Work}
+
+\paragraph{LLM agents in social dilemmas.}
+\textsc{GovSim} \citep{piatti2024govsim} places LLM agents around a regenerating
+common-pool resource and finds that most models drive it to collapse, that
+free-form communication is the largest single lever on survival, and that a
+selfish newcomer inserted into a cooperating community degrades it.
+\textsc{SanctSim} \citep{piedrahita2025sanctsim} adapts the institutional-choice
+public goods game of \citet{guerek2006} and finds that reasoning models
+free-ride where traditional models cooperate, and that LLMs reward where humans
+punish. \textsc{MoralSim} \citep{backmann2025moralsim} varies the moral framing
+of a fixed payoff structure and estimates per-factor average treatment effects.
+\textsc{CoopEval} \citep{tewolde2026coopeval} benchmarks cooperation-sustaining
+mechanisms across matrix games. \textsc{NudgeSim} is an instance of this
+programme with information as the public good, and asks the second-order
+question of an \emph{intervention} rather than of a population.
+
+\paragraph{Counter-misinformation simulation.}
+Agent-based studies of correction typically measure propagation or a
+belief-like endorsement of the false claim, with no explicit payoff and no
+equilibrium benchmark, so an intervention that reduces sharing counts as a
+success regardless of what it does to the society's own willingness to correct.
+\textsc{NudgeSim}'s headline outcome is that willingness.
+
+\paragraph{Network data for agent societies.}
+Studies in this area routinely seed agent adjacency from real cascade data.
+\S\ref{sec:visibility} shows that the step from such data to an adjacency
+matrix is neither neutral nor usually reported.
+
+%======================================================================
+\section{The \textsc{NudgeSim} Environment}
+\label{sec:env}
+
+\subsection{Economic background}
+
+Let a society of $N$ agents face a single claim of unknown veracity over $T$
+rounds. Each round every agent simultaneously chooses one action from
+$\{\textsc{Share}, \textsc{Endorse}, \textsc{Challenge}, \textsc{Ignore}\}$
+after observing what its neighbours did. \textsc{Share} and \textsc{Endorse}
+propagate the claim; \textsc{Challenge} disputes it and costs the challenger.
+
+\subsection{Environment dynamics}
+
+Agent $i$'s payoff in round $t$ is
+\begin{equation}
+\pi_{i,t} \;=\; \beta \cdot C_{i,t} \;+\; \gamma \cdot V_i
+           \;-\; \kappa \cdot \mathbf{1}[a_{i,t} = \textsc{Challenge}]
+           \;-\; \delta \cdot D_{i,t},
+\label{eq:payoff}
+\end{equation}
+where $C_{i,t}$ is the conformity reward paid immediately for agreeing with the
+local majority, $V_i$ is the veracity reward resolved only at the horizon,
+$\kappa$ is the verification and social-friction cost of challenging, and
+$D_{i,t}$ is reputation damage taken by agents publicly backing a claim that
+resolves false. The mapping is deliberate: $\beta C$ pays for engagement now,
+$\gamma V$ pays for accuracy later, and $\kappa$ is what makes correction a
+contribution nobody is individually motivated to make.
+
+Three roles occupy the society. Five \emph{citizens} are payoff-responsive and
+free. One \emph{disseminator} injects and re-frames the claim every round and is
+by construction incorrigible. One \emph{intervener}---the Devil's
+Advocate---is stipulated to absorb $\kappa$ whenever it challenges, which is
+what makes it an exogenous sanctioner rather than a participant in the dilemma.
+It first judges whether the claim is false and may decline to act, so that the
+true-claim placebo arm tests specificity rather than assuming it.
+
+\paragraph{Communication.}
+The two reference designs answer the communication question oppositely:
+\textsc{SanctSim} gives agents no natural-language channel at all, so every
+behavioural difference is attributable to the payoff structure; \textsc{GovSim}
+gives them free-form group chat and finds that removing it changes the headline
+outcome by 21 points. \textsc{NudgeSim} splits them by channel. The
+\emph{decision} channel is \textsc{SanctSim}-style: the payoff ledger in
+Eq.~\ref{eq:payoff} is a function of actions alone, so nothing an agent writes
+changes another's payoff except through the action it accompanies. The
+\emph{observable} channel is \textsc{GovSim}-style: each action carries the
+agent's own words and those words are what neighbours see. The second half is
+forced rather than chosen---intervention tone is a manipulated factor and
+language is its only carrier. A free group chat would make the intervener's tone
+one voice among many and let citizens coordinate a joint response to it, so the
+tone contrast would estimate the tone plus whatever the group negotiated about
+it, which is not the estimand.
+
+\subsection{From reply trees to visibility graphs}
+\label{sec:visibility}
+
+Agent adjacency is drawn from \textsc{Pheme} rumour threads. Each thread ships a
+\texttt{structure.json} recording \emph{who replied to whom}; the environment
+needs \emph{who can see whom}. These are not the same graph, and the step
+between them is a modelling decision.
+
+Taking the reply tree as the visibility graph and rooting the seven-node
+neighbourhood at the cascade source produces a broadcast star most of the time,
+because real \textsc{Pheme} cascades are broad and shallow (mean branching
+$4.46$, mean depth $3.59$): a seven-node neighbourhood of the root is usually
+the root plus six leaves. In a star rooted at the disseminator every citizen's
+only neighbour is the disseminator, so no local majority can form among the five
+citizens and \emph{no citizen can ever observe another paying the correction
+cost}---the demonstration channel the headline outcome measures.
+
+Two obvious repairs each fail in a different direction. Making all replies to a
+common parent mutually visible fixes the connectivity by destroying locality: in
+a star every reply is a sibling of every other, the neighbourhood becomes the
+complete graph, and ``local majority'' becomes global majority. Sampling
+neighbourhoods away from the root leaves most of them with no citizen visibility
+at all.
+
+A real thread view is neither extreme: it is ranked and truncated, so a reader
+sees the source plus the replies near their own, not all fifty. We model that
+directly---each reply is linked to the $w$ siblings following it in display
+order---which is one parameter. At $w=1$ no neighbourhood on the real release is
+a star, none is complete, mean density is $0.50$, and no thread is discarded.
+We emphasise that $w=1$ is a \emph{proposal}: its justification is that it
+produces non-degenerate neighbourhoods, which is not the same as being validated
+against how threads are actually displayed. \S\ref{sec:rq1} therefore reports
+all three translations rather than adopting one and suppressing the others.
+
+\subsection{Experimental implementation}
+
+One episode is one claim $\times$ one topology $\times$ one condition $\times$
+one seed, run for $T = 12$ rounds with simultaneous moves, a payoff ledger
+settled each round and veracity resolved at the horizon. The design crosses
+intervention timing (early vs.\ late) $\times$ tone (empathetic nudge vs.\
+aggressive debunking) $\times$ citizen backbone, against a no-intervener
+control, a true-claim placebo arm, two ablations, an $N = 50$ scale check and a
+perturbation arm, for $1{,}400$ episodes. Claims are stratified by
+\textsc{Liar} severity and de-identified; from \textsc{Pheme} only derived
+topology is used, never tweet content. Episode seeds are derived from a digest
+so that a run replays exactly; the payoff ledger is unit-tested against
+hand-computed episodes, because a silent ledger bug would invalidate every
+primary outcome.
+
+The results in \S\ref{sec:rq1}--\S\ref{sec:sensitivity} are produced with an
+\emph{analytic surrogate} citizen policy---a bounded-rational model with
+declared parameters---rather than a language model. This is deliberate for those
+questions: \S\ref{sec:rq1} measures what a topology translation does to a
+measured effect, and \S\ref{sec:rq2} measures what an accounting convention does
+to a welfare ranking. In both, a language model is a source of variance, not the
+object of study. It \emph{is} the object of study in \S\ref{sec:rq3}, which is
+why that section is empty.
+
+%======================================================================
+\section{Experimental Results}
+
+We organise results by research question.
+
+\begin{description}
+\item[RQ1] Does the reply-tree-to-visibility translation change the conclusion
+  a study of this kind reaches? (\S\ref{sec:rq1})
+\item[RQ2] Is total payoff a usable welfare measure in a design with costly
+  sanctioning? (\S\ref{sec:rq2})
+\item[RQ3] Do LLM societies catalyse or crowd out endogenous peer correction,
+  and does the intervener's tone decide which? (\S\ref{sec:rq3})
+\item[RQ4] How does LLM enforcement behaviour compare with human participants in
+  public goods games? (\S\ref{sec:rq4})
+\item[RQ5] Does an established correction norm survive a defector?
+  (\S\ref{sec:rq5})
+\end{description}
+
+\paragraph{Metrics.}
+\textbf{FPR}, the false-claim propagation rate, is the fraction of citizen
+actions that propagate the claim. \textbf{EPC}, the endogenous peer-correction
+rate, is the fraction that challenge it---that is, that voluntarily absorb
+$\kappa$. Both are read directly off the action log; no model judge sits on the
+critical path of either. Welfare is decomposed rather than summed
+(\S\ref{sec:rq2}). Effect sizes are Hedges-corrected $d$; intervals are
+bootstrap; multiplicity is Holm-corrected within each outcome family.
+
+%----------------------------------------------------------------------
+\subsection{RQ1: The visibility translation is the effect size}
+\label{sec:rq1}
+
+Table~\ref{tab:visibility} runs the identical core grid---same claims, same
+threads, same seeds, same policies---three times, varying only how the reply
+tree becomes a visibility graph.
+
+\begin{table}[t]
+\centering
+\input{tables/visibility}
+\caption{The same corpus, the same seeds, three translations of reply structure
+into visibility. The intervention's measured effect on endogenous peer
+correction varies by a factor of $2.5$ across choices that papers in this area
+do not usually report making. ``No citizen visibility'' is the share of
+neighbourhoods in which no citizen can observe any other citizen.}
+\label{tab:visibility}
+\end{table}
+
+Three things follow. First, the default---reply edges as visibility edges---is
+not a neutral baseline but the most degenerate option available: it strands
+88.6\% of neighbourhoods without any citizen-to-citizen edge, so the mechanism
+the study measures is structurally absent from almost all of its data. Second,
+the measured intervention effect is monotone in visibility density and ranges
+over a factor of $2.5$; a paper reporting any one of these numbers without
+stating the translation is reporting a quantity the reader cannot interpret.
+Third, none of the environment's own quality gates catch this. The calibration
+gate, which compares simulated cascade shape and the false-versus-true diffusion
+asymmetry \citep{vosoughi2018} against the source threads, passes
+\emph{comfortably} under the degenerate translation---it tests cascade shape,
+and shape is insensitive to whether the agents can see one another.
+
+We therefore recommend that studies seeding agent societies from cascade data
+report the translation explicitly and, where feasible, report the sensitivity of
+their headline effect to it, as here.
+
+%----------------------------------------------------------------------
+\subsection{RQ2: Summing a payoff function is not a welfare measure}
+\label{sec:rq2}
+
+\begin{table}[t]
+\centering
+\input{tables/welfare}
+\caption{Control versus treated arms on the primary outcomes and on three
+candidate welfare measures. The intervention cuts propagation and nearly
+quadruples peer correction, and total payoff ranks it $122$ points below doing
+nothing.}
+\label{tab:welfare}
+\end{table}
+
+Table~\ref{tab:welfare} shows a measure that is mechanically anti-correlated
+with its treatment. Reputation damage $\delta D$ is deadweight in the aggregate,
+and generating the challenges that cause it is precisely the intervener's
+function, so $\sum\pi$ is determined before any agent acts.
+
+The obvious repair---report welfare with and without sanction costs, as is
+standard in experimental public goods work \citep{fehr2002}---is necessary and
+not sufficient. Excluding sanctions, the control arm still leads, because the
+conformity term $\beta C$ dominates the remainder and conformity is maximised by
+the arm in which nobody disagrees. We implemented three accounting conventions
+for the ledger and all three preserve the ordering. The only component that
+tracks the good being provided is the veracity term $\gamma V$, which is the
+component we report as epistemic welfare.
+
+This is not specific to \textsc{NudgeSim}. Any design in this line that reports
+$\sum\pi$ as welfare, in a game where sanctioning is costly and the treatment
+produces sanctioning, inherits the same inversion.
+
+%----------------------------------------------------------------------
+\subsection{RQ3: Benchmarking LLM agents}
+\label{sec:rq3}
+
+\pending{This section reports the model roster of \S\ref{sec:models} on FPR,
+EPC, the welfare decomposition of Table~\ref{tab:welfare}, repair rate and
+degeneracy statistics, one row per backbone, plus the timing $\times$ tone
+interaction per backbone. It is the section for which the environment exists.
+The grid is specified, the pipeline is validated (\S\ref{sec:sensitivity}), and
+the run has not been executed; the measured cost of executing it is
+\S\ref{sec:cost}. No number is reported here until it is.}
+
+Table~\ref{tab:ate} shows the estimator that will populate it, applied to the
+surrogate run: per-factor average treatment effects with bootstrap intervals,
+following \citet{backmann2025moralsim}. Read as a property of the declared
+data-generating process, not as a result about language models.
+
+\begin{table}[t]
+\centering
+\input{tables/ate}
+\caption{Per-factor average treatment effects with bootstrap 95\% intervals,
+computed on the analytic surrogate. $^{*}$ significant after Holm correction
+within the outcome family. \textbf{These are properties of the declared
+data-generating process, not results about language models.}}
+\label{tab:ate}
+\end{table}
+
+%----------------------------------------------------------------------
+\subsection{RQ4: Comparison with human behaviour}
+\label{sec:rq4}
+
+Following \citet{piedrahita2025sanctsim}, results are read against human
+participants rather than only against each other. We take the human row from
+\citet{guerek2006} on two quantities both designs define: take-up of costly
+enforcement, and sanctioning relative to affirmation. Absolute levels are not
+comparable between a token-contribution game and a misinformation game, so the
+comparison licenses an ordering and nothing stronger.
+
+\begin{table}[t]
+\centering
+\input{tables/human}
+\caption{Human enforcement behaviour \citep{guerek2006} against the
+\textsc{NudgeSim} control arm. The surrogate society barely enforces at all,
+which is the second-order free-rider problem the environment is built to study,
+measured rather than assumed.}
+\label{tab:human}
+\end{table}
+
+\pending{The model rows of Table~\ref{tab:human}. \citet{piedrahita2025sanctsim}
+find that LLMs invert the human pattern---rewarding where humans punish. Whether
+the same inversion appears when the sanction is a public correction rather than
+a token transfer is a direct test of whether that finding is about sanctioning
+or about the specific game it was measured in.}
+
+%----------------------------------------------------------------------
+\subsection{RQ5: Norm robustness under a defector}
+\label{sec:rq5}
+
+Following \citet{piatti2024govsim}, one citizen defects at the half-way round,
+either amplifying the false claim every round or refusing to pay the correction
+cost thereafter. Because the society is sized by its topology neighbourhood, a
+seat changing behaviour is the closest faithful analogue of \textsc{GovSim}'s
+inserted newcomer. All outcomes exclude the perturbation seat in both arms, so a
+fall means peers stood down rather than that the defector's own silence was
+counted.
+
+On the surrogate run, peers do not change their correction rate under either
+defector. Read against Table~\ref{tab:human} that is coherent rather than
+surprising: a society with almost no enforcement norm has none to defend.
+
+\pending{The same contrast on LLM societies, which is where it carries
+information: \textsc{GovSim} reports substantial degradation under perturbation,
+and whether a correction norm is more or less robust than a harvesting norm is
+the question this arm exists to answer.}
+
+%----------------------------------------------------------------------
+\subsection{Design sensitivity and pipeline validation}
+\label{sec:sensitivity}
+
+An analysis that has never been shown to detect an effect it was given is not
+evidence about an effect it fails to find. We therefore run the pipeline against
+three declared data-generating processes and require it to recover them in
+order.
+
+\begin{table}[t]
+\centering
+\input{tables/validation}
+\caption{The analysis pipeline against declared data-generating processes.
+Within each block the ordering is correct: inflating the channel enlarges the
+effect, zeroing it leaves nothing.}
+\label{tab:validation}
+\end{table}
+
+\begin{table}[t]
+\centering
+\input{tables/power}
+\caption{Effect sizes and the per-cell sample each contrast needs for 80\%
+power, measured on the surrogate grid. Only the intervention contrast is
+powered at the 30 replications a conventional design allocates.}
+\label{tab:power}
+\end{table}
+
+Table~\ref{tab:validation} also carries a caution. The declared effect is not
+stable across claim draws---$-0.166$ at 30 replications per cell and $-0.061$ at
+200---because a larger cell draws a different set of \textsc{Liar} claims rather
+than more replications of the same ones. The tone contrast is under-powered in
+the claim dimension as well as the seed dimension, and no single point estimate
+should be read as its effect size.
+
+Table~\ref{tab:power} is the reason the tone hypothesis is declared exploratory
+before the grid runs rather than reinterpreted afterwards. It is also a general
+caution for this literature: the intervention contrast is comfortable at 30
+replications and the tone contrast needs nineteen times that, and nothing in the
+design announces which is which.
+
+\paragraph{A reproducibility failure worth naming.}
+Episode seeds were originally derived from a hash of a string identifier.
+Python salts string hashing per process, so two runs of the identical grid
+agreed on every configuration and disagreed on $474$ of $600$ core-arm outcomes
+while the run manifest recorded the seeds as pinned. Because each arm of
+Table~\ref{tab:validation} ran in its own process, the declared, inflated and
+zeroed processes were being compared across \emph{different} draws of claims and
+topologies, and the inflated arm appeared to shrink the effect it inflates---an
+ordering no parameterisation can produce, and therefore a bug rather than a
+result. The general lesson is that a property a manifest asserts should be
+enforced by a test, because a false assertion in a manifest is worse than no
+assertion.
+
+%----------------------------------------------------------------------
+\subsection{What the benchmark costs}
+\label{sec:cost}
+\label{sec:models}
+
+\begin{table}[t]
+\centering
+\input{tables/cost}
+\caption{Metered from the prompts the environment assembles, priced against
+published rates. Response caching---the lever such studies usually
+name---returns nothing here, because every prompt carries a distinct claim,
+agent and history.}
+\label{tab:cost}
+\end{table}
+
+\paragraph{Model roster.}
+The backbone factor has four levels: a frontier model with extended thinking
+enabled, the \emph{same weights} with it disabled, a mid-tier model and a small
+one. The paired frontier rows are the design's reason for existing:
+\citet{piedrahita2025sanctsim} report their largest split between reasoning and
+traditional models, but had to draw that contrast across different model
+families, which confounds reasoning mode with everything else that differs
+between them. Holding the weights fixed does not.
+
+\paragraph{Cost.} Table~\ref{tab:cost} reports what that costs. Reasoning tokens
+bill as output, so the thinking arm dominates: scheduling it for the main grid
+and one high-power replication rather than for every calibration, validation and
+re-run takes the programme from \$16{,}038 to \$1{,}866. That scheduling
+decision is worth more than every caching lever combined. Cross-vendor breadth
+comparable to \citet{backmann2025moralsim} or \citet{tewolde2026coopeval} is an
+access question rather than an engineering one: a backbone is one line of
+configuration, and the game, metrics and analysis layers are indifferent to
+which model, or whether any model, supplies the citizen policies.
+
+%======================================================================
+\section{Limitations and Future Work}
+
+\textbf{The model benchmark is not run.} Every claim in this paper is either
+about the environment's design or about a declared analytic process. Nothing
+here is evidence about language models, and the sections that would be are
+marked and empty.
+
+\textbf{The visibility model is a proposal, not a validated one.} Bounded
+attention at $w=1$ is justified by producing non-degenerate neighbourhoods,
+which is close to circular. What we establish is the sensitivity in
+Table~\ref{tab:visibility}; what we do not establish is which translation is
+correct. Validating $w$ against how threads are actually displayed and read is
+the obvious next step.
+
+\textbf{Seven agents.} \textsc{NudgeSim} is a controlled mechanism study with an
+explicit payoff benchmark; an $N=50$ scale check provides directional
+corroboration only, and scale dependence would be reported as a finding if it
+appears.
+
+\textbf{No negotiation channel.} The decision/observation split
+(\S\ref{sec:env}) buys clean identification of the tone manipulation at the cost
+of everything \textsc{GovSim} learns from group deliberation. Making the
+institution endogenous---citizens voting on whether a corrector should exist and
+who pays for it---is the natural follow-on and is where a deliberation channel
+belongs.
+
+%======================================================================
+\section{Conclusion}
+
+Casting counter-misinformation as a public goods game with costly peer
+sanctioning turns ``did the intervention reduce sharing'' into a sharper
+question: did it make the society more or less willing to pay for its own
+correction. Building the environment to ask that question surfaced two problems
+that are not specific to it. Turning reply structure into agent visibility is an
+unreported researcher degree of freedom worth a factor of two and a half in the
+headline effect, and the most obvious translation is the most degenerate one.
+Summing a payoff function is not a welfare measure when the treatment's function
+is to generate the costs being summed. Both apply to any study in this line, and
+both are cheap to check before a compute budget is spent rather than after.
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+\end{document}
