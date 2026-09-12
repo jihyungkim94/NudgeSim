@@ -264,7 +264,33 @@ def table_cost() -> None:
     _tex("cost", body)
 
 
+# The manuscript's figures are produced by analysis/figures.py from the same
+# runs; copied in so the paper directory is self-contained for a LaTeX build.
+FIGURES = {
+    "visibility": "fig6_visibility.png",
+    "trajectories": "fig1_trajectories.png",
+    "welfare": "fig5_welfare.png",
+    "power": "fig4_power.png",
+}
+
+
+def copy_figures() -> None:
+    import shutil
+
+    source = RUNS / "main" / "figures"
+    target = ROOT / "figures"
+    target.mkdir(parents=True, exist_ok=True)
+    for name, filename in FIGURES.items():
+        origin = source / filename
+        if not origin.exists():
+            print(f"  missing {origin} -- run analysis.figures first")
+            continue
+        shutil.copyfile(origin, target / f"{name}.png")
+        print(f"wrote figures/{name}.png")
+
+
 def main() -> int:
+    copy_figures()
     table_visibility()
     table_welfare()
     table_power()

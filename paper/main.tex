@@ -293,6 +293,16 @@ critical path of either. Welfare is decomposed rather than summed
 (\S\ref{sec:rq2}). Effect sizes are Hedges-corrected $d$; intervals are
 bootstrap; multiplicity is Holm-corrected within each outcome family.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/trajectories}
+\caption{Per-round outcomes by condition, pooled over backbones. The
+intervener's entry produces an immediate step in endogenous peer correction
+(right) and a slower divergence in propagation (left); the control arm, in
+grey, is the baseline the four treatment arms are read against.}
+\label{fig:trajectories}
+\end{figure}
+
 %----------------------------------------------------------------------
 \subsection{RQ1: The visibility translation is the effect size}
 \label{sec:rq1}
@@ -311,6 +321,17 @@ do not usually report making. ``No citizen visibility'' is the share of
 neighbourhoods in which no citizen can observe any other citizen.}
 \label{tab:visibility}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/visibility}
+\caption{The same corpus and seeds under three translations of reply structure
+into visibility. The measured intervention effect (left) and the share of
+neighbourhoods in which no citizen can observe any other (right) move together:
+the translation that strands 88.6\% of neighbourhoods is also the one that
+reports the smallest effect.}
+\label{fig:visibility}
+\end{figure}
 
 Three things follow. First, the default---reply edges as visibility edges---is
 not a neutral baseline but the most degenerate option available: it strands
@@ -347,6 +368,15 @@ Table~\ref{tab:welfare} shows a measure that is mechanically anti-correlated
 with its treatment. Reputation damage $\delta D$ is deadweight in the aggregate,
 and generating the challenges that cause it is precisely the intervener's
 function, so $\sum\pi$ is determined before any agent acts.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.86\linewidth]{figures/welfare}
+\caption{Where the payoff goes, by condition. Reputation damage is deadweight
+in the aggregate and generating it is the intervener's function, so the measure
+that sums it is determined before any agent acts.}
+\label{fig:welfare}
+\end{figure}
 
 The obvious repair---report welfare with and without sanction costs, as is
 standard in experimental public goods work \citep{fehr2002}---is necessary and
@@ -462,6 +492,15 @@ power, measured on the surrogate grid. Only the intervention contrast is
 powered at the 30 replications a conventional design allocates.}
 \label{tab:power}
 \end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.86\linewidth]{figures/power}
+\caption{What 30 replications per cell can detect. Only the intervention
+contrasts sit inside the preregistered allocation; the tone contrasts are two
+orders of magnitude outside it.}
+\label{fig:power}
+\end{figure}
 
 Table~\ref{tab:validation} also carries a caution. The declared tone effect
 needs roughly two thousand replications per cell for 80\% power, so its point
