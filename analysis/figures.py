@@ -336,6 +336,56 @@ def fig_welfare(core: pd.DataFrame, out: Path) -> Path:
     return path
 
 
+def fig_visibility(sweep: list[dict[str, Any]], out: Path) -> Path:
+    """The headline: one preprocessing choice, three answers.
+
+    Left panel is the intervention effect with its bootstrap interval; right
+    panel is the share of neighbourhoods in which no citizen can observe any
+    other, which is what makes the leftmost estimate small. Drawn together
+    because the point is that the two move as one.
+    """
+    labels = [r["label"].replace("\\emph{", "").replace("}", "").replace("\\", "")
+              for r in sweep]
+    y = np.arange(len(sweep))[::-1]
+    ate = [r["ate"] for r in sweep]
+    lo = [r["ate"] - r["ci_low"] for r in sweep]
+    hi = [r["ci_high"] - r["ate"] for r in sweep]
+    blind = [r["no_citizen_visibility"] for r in sweep]
+    # The degenerate translation is the one being warned about, so it is the
+    # only bar that takes a colour; the other two are read against it.
+    colors = ["#c2382b" if b > 0.5 else CONTROL_COLOR for b in blind]
+
+    fig, axes = plt.subplots(1, 2, figsize=(11.5, 3.2), facecolor=SURFACE,
+                             gridspec_kw={"width_ratios": [1.35, 1]})
+    ax = axes[0]
+    ax.errorbar(ate, y, xerr=[lo, hi], fmt="o", markersize=7, capsize=4,
+                linewidth=1.4, color=INK, ecolor=INK_MUTED, zorder=3)
+    for yi, value, color in zip(y, ate, colors):
+        ax.plot([value], [yi], "o", markersize=7, color=color, zorder=4)
+        ax.annotate(f"{value:+.3f}", (value, yi), textcoords="offset points",
+                    xytext=(0, 11), ha="center", fontsize=8.5, color=INK)
+    ax.set_yticks(y); ax.set_yticklabels(labels, fontsize=9)
+    ax.set_xlim(0, max(r["ci_high"] for r in sweep) * 1.22)
+    _style(ax, title="Intervention → endogenous peer correction (ATE, 95% CI)",
+           xlabel="change in share of citizen actions", ylabel="")
+
+    ax = axes[1]
+    ax.barh(y, blind, height=0.45, color=colors, zorder=3)
+    for yi, value in zip(y, blind):
+        ax.annotate(f"{value:.1%}", (value, yi), textcoords="offset points",
+                    xytext=(6, 0), va="center", fontsize=8.5, color=INK)
+    ax.set_yticks(y); ax.set_yticklabels([])
+    ax.set_xlim(0, 1.05)
+    _style(ax, title="Neighbourhoods with no citizen-to-citizen edge",
+           xlabel="share of motifs", ylabel="")
+
+    fig.tight_layout()
+    path = out / "fig6_visibility.png"
+    fig.savefig(path, dpi=180, facecolor=SURFACE)
+    plt.close(fig)
+    return path
+
+
 def generate_all(run_dir: str | Path, out_dir: str | Path | None = None) -> list[str]:
     run_dir = Path(run_dir)
     out = Path(out_dir or run_dir / "figures")
@@ -350,6 +400,9 @@ def generate_all(run_dir: str | Path, out_dir: str | Path | None = None) -> list
     rounds_path = run_dir / "rounds.parquet"
     if rounds_path.exists():
         paths.insert(0, fig_trajectories(pd.read_parquet(rounds_path), out))
+    sweep_path = run_dir.parent / "visibility" / "sweep.json"
+    if sweep_path.exists():
+        paths.append(fig_visibility(json.loads(sweep_path.read_text()), out))
     return [str(p) for p in paths]
 
 
