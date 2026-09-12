@@ -1,6 +1,6 @@
 # Project plan sources
 
-`docs/Project_Plan_NudgeSim_v2.4.docx` is generated, not hand-edited. These are
+`docs/Project_Plan_NudgeSim_v2.6.docx` is generated, not hand-edited. These are
 the sources it is generated from, so a revision to the plan is a diff rather
 than a re-upload of a binary.
 

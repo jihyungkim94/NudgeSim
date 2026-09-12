@@ -64,6 +64,7 @@ module.exports = [
     ["RQ3 (Headline)", "Does the intervener catalyse or crowd out endogenous peer correction, and does tone determine which?"],
     ["RQ4 (Models)", "Do the timing and tone effects replicate across model families, or is \"the right way to intervene\" backbone-specific?"],
     ["RQ5 (Specificity)", "Does the intervener also suppress true claims — i.e. does correction generalise into indiscriminate skepticism?"],
+    ["RQ6 (Composition)", "In a society of different models, does one model free-ride on another's correction, and do backbone effects on peer correction survive when claim, topology, intervention and seed are held fixed within the same episode?"],
   ]),
   p(""),
   table([9, 61, 30], [
@@ -73,6 +74,7 @@ module.exports = [
     ["H3", "Empathetic nudging raises the endogenous peer-correction rate above control; aggressive debunking suppresses it below control, even where it lowers propagation.", "Tier 1 — focused arm (headline)"],
     ["H4", "Timing moderates tone: aggressive debunking is relatively more viable early, before positions are publicly committed and reputation damage is at stake.", "Tier 2 — exploratory"],
     ["H5", "Effect sizes differ across model families by more than they differ across timing conditions — i.e. backbone choice dominates intervention design.", "Tier 1 — core grid"],
+    ["H6", "The between-model spread in peer-correction rate (H5) persists when measured within a single mixed-model episode — same claim, topology, intervention and seed — rather than between episodes; a model's own correction rate does not detectably depend on whether its neighbours are copies of itself.", "Tier 2 — exploratory (new arm, §5.11)"],
   ]),
   callout("v2.1 — why the hypotheses are now tiered", [
     "The reference implementation shows that at 30 seeds/cell the core grid powers exactly one primary contrast (intervention vs control on EPC, d ≈ 0.80, n ≈ 26). H1 needs ~105 seeds/cell and H3 ~259. Declaring every hypothesis confirmatory at a sample that cannot test four of them is the kind of thing reviewers catch and preregistration is supposed to prevent.",
@@ -112,7 +114,7 @@ module.exports = [
     ["Factor", "Level 1", "Level 2", "Notes"],
     ["F1 · Timing", "Early (round 2)", "Late (round 6)", "Intervener persists from entry onward. Both a fixed-round and a majority-triggered variant are implemented; the majority variant carries a latest-entry backstop so a cell where no majority forms does not silently become a second control."],
     ["F2 · Tone", "Empathetic nudge", "Aggressive debunking", "Factual payload identical and length-matched; only pragmatic framing differs."],
-    ["F3 · Backbone", "4 model families", "—", "GPT-4o-mini class, Claude Haiku class, Llama-3.1-8B-Instruct, Qwen-2.5-7B-Instruct (final list fixed at Week 4). Citizens only; judges held constant."],
+    ["F3 · Backbone", "4 model families", "—", "GPT-4o-mini class, Claude Haiku class, Llama-3.1-8B-Instruct, Qwen-2.5-7B-Instruct (final list fixed at Week 4). Citizens only; judges held constant. Run both as monocultures (core grid, below) and as a mixed society within one episode (§5.11, new in v2.6)."],
   ]),
   p("This yields a 2 × 2 × 4 grid plus a per-model control — 20 cells — flanked by:"),
   bullet([t("Placebo arm (specificity). ", { bold: true }), t("Matched true claims from LIAR run through the same conditions; the intervener should not suppress them.")]),

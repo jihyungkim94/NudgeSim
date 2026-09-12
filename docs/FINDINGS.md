@@ -6,10 +6,10 @@ Two kinds of result are reported here, and they are not interchangeable.
 established by implementing it. They hold regardless of what runs the engine,
 and they are the part of this document that matters most.
 
-**Part 2 — the design-sensitivity run.** The full preregistered grid (1,400
-episodes) executed against a declared analytic data-generating process. These
-numbers are properties of that DGP. They are **not evidence about LLM
-behaviour**.
+**Part 2 — the design-sensitivity run.** The full preregistered grid (1,550
+episodes, since the mixed-society arm in problem 6) executed against a
+declared analytic data-generating process. These numbers are properties of
+that DGP. They are **not evidence about LLM behaviour**.
 
 **Data status.** Both corpora are now real: the **LIAR corpus** (Wang, 2017 —
 all 12,836 statements, de-identified) and **PHEME-9** (Kochkina et al., 2018 —
@@ -273,6 +273,46 @@ two opposing channels, not of the topology.
 `nudgesim check` reports citizen-to-citizen visibility alongside intervener
 reach, so this class of failure is visible before a grid runs rather than after.
 
+### 6. The backbone factor is a monoculture — it cannot answer its own question
+
+F3 as specified seats one model per episode: all five citizens share a
+backbone, and the backbone changes between episodes. That design can measure
+whether model choice moves the aggregate (H5), which is why the core grid
+above keeps it. It cannot measure whether one model free-rides on another's
+correction, because in a society of identical agents there is no other model
+present to free-ride on — and both mechanisms this study is built to isolate
+(conformity to a local majority, declining to pay a cost someone else is
+already paying) are claims about how one agent responds to another. Two of
+the four reference studies already treat the heterogeneous case as a headline
+result rather than an appendix: MoralSim's RQ2 pairs every model against every
+other, and CoopEval's RQ3 runs replicator dynamics from a uniform mixture.
+
+*Fix.* A mixed arm seats the whole roster in one society per episode. Which
+model holds which seat rotates by replication, so every model occupies every
+seat equally often — enforced by a test, not left to chance, because seats
+differ in network position and a fixed assignment would let a well-connected
+seat's behaviour be misread as a property of whatever model sits in it.
+
+*Evidence, against real LIAR and PHEME-9 (surrogate policies standing in for
+models):*
+
+| | value |
+|---|---:|
+| Peer-correction rate spread across seated policies, same episode | **5.4×** (EPC 0.023 to 0.121) |
+| Largest neighbour-identity effect (own rate, copies vs. others) | −0.034 [−0.061, −0.006], not significant after Holm |
+| Added model calls versus a monoculture episode | **0** |
+
+H5 replicates *within* an episode — same claim, topology, intervention and
+seed, only the seated policy differs — which a between-episode comparison
+cannot rule out is partly a claim or topology draw. Whether a policy's
+correction rate depends on its neighbours' identity is null on the surrogate:
+an analytic policy responds to the *count* of visible correction, not to *who*
+is doing it, so there is no channel for a neighbour's identity to matter. That
+is a property of the surrogate, not a finding about models, and exactly the
+assumption a language model need not share — which is what makes this arm
+worth running on real backbones rather than the one place a monoculture
+grid could never have looked.
+
 ### Smaller, but worth fixing
 
 - **Intervener network reach is an uncontrolled moderator.** The Devil's Advocate
@@ -398,7 +438,7 @@ untouched by this and still has to be run.
 
 ## The revised plan
 
-[`Project_Plan_NudgeSim_v2.5.docx`](Project_Plan_NudgeSim_v2.5.docx) is the
+[`Project_Plan_NudgeSim_v2.6.docx`](Project_Plan_NudgeSim_v2.6.docx) is the
 project plan with all five problems fixed in place. §0 of that document carries
 a revision table mapping each change to the evidence above. The substantive
 edits are in §5.2 (intervener placement and reach), §5.3 (veracity-sensitive
@@ -414,13 +454,17 @@ statement), §5.10 (a communication-design decision that had never been made),
 ATEs, a human baseline row, and a norm-robustness arm), and §12 (the budget,
 metered).
 
-The headline change to the protocol: the grid is 1,400 episodes, not the 2,780
-of v2.1. The focused arm at 150 seeds was sized against a pilot estimate of 259
-seeds per cell for H3; measured with reproducible seeds, that contrast needs
-572 — so the focused arm would have been under-powered by a factor of four
-while costing five times the core grid. It is replaced by a declared power
-statement, a perturbation arm the plan did not previously have, and one
-high-power rerun carried in the budget.
+v2.6 adds a sixth change, for problem 6 above: §5.3 and the new §5.11 add a
+mixed-society arm, because F3 as specified is a monoculture and cannot answer
+the free-riding half of what it was built to measure. §4 gains RQ6/H6.
+
+The headline change to the protocol: the grid is 1,550 episodes (1,400 before
+the mixed-society arm), not the 2,780 of v2.1. The focused arm at 150 seeds was
+sized against a pilot estimate of 259 seeds per cell for H3; measured with
+reproducible seeds, that contrast needs 572 — so the focused arm would have
+been under-powered by a factor of four while costing five times the core grid.
+It is replaced by a declared power statement, a perturbation arm the plan did
+not previously have, and one high-power rerun carried in the budget.
 
 
 ---
@@ -435,10 +479,10 @@ published rate card.
 | Quantity | Measured |
 |---|---:|
 | Model calls per episode | 60 (5 citizens × 12 rounds) |
-| Calls per model over the grid | 21,000 |
-| Mean input tokens per call | 620 |
-| Longest prompt | 874 |
-| Share of prompt that is the reusable persona prefix | 50.6% |
+| Calls per model over the grid (1,550 episodes, incl. mixed arm) | 23,250 |
+| Mean input tokens per call | 613 |
+| Longest prompt | 877 |
+| Share of prompt that is the reusable persona prefix | 50.1% |
 | Duplicate prompts in 3,600 calls | **0** |
 
 Three things follow.

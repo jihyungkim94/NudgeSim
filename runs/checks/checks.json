@@ -41,7 +41,7 @@
       "true": 200,
       "mostly-true": 200
     },
-    "mean_placebo_length_ratio": 0.9047253448747258,
+    "mean_placebo_length_ratio": 0.9047253448747253,
     "source_files": [
       "test.tsv",
       "train.tsv",
