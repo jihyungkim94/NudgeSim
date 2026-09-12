@@ -112,6 +112,16 @@ Our contributions:
   maximised by the arm in which nobody disagrees. Only the veracity term tracks
   the good being provided (\S\ref{sec:rq2}).
 
+\item \textbf{Mixed societies, not monocultures.} The obvious design runs one
+  model per episode, which cannot answer the question the environment is built
+  for: in a society of identical agents there is no \emph{other} agent to
+  free-ride on. \textsc{NudgeSim} seats the whole roster in one society,
+  rotating which model holds which seat so a model effect cannot be a network
+  position wearing a different hat. Within a single episode---same claim, same
+  topology, same intervention, same seed---policies differ by a factor of $5.6$
+  in how often they pay the correction cost, which is H5 established under
+  control a between-episode comparison cannot achieve (\S\ref{sec:rq6}).
+
 \item \textbf{A validated analysis pipeline and a measured budget.} The analysis
   is run against three declared data-generating processes---effect present,
   inflated, and set to zero---and must recover them in that order
@@ -249,8 +259,8 @@ one seed, run for $T = 12$ rounds with simultaneous moves, a payoff ledger
 settled each round and veracity resolved at the horizon. The design crosses
 intervention timing (early vs.\ late) $\times$ tone (empathetic nudge vs.\
 aggressive debunking) $\times$ citizen backbone, against a no-intervener
-control, a true-claim placebo arm, two ablations, an $N = 50$ scale check and a
-perturbation arm, for $1{,}400$ episodes. Claims are stratified by
+control, a true-claim placebo arm, two ablations, an $N = 50$ scale check, a
+perturbation arm and a mixed-society arm, for $1{,}550$ episodes. Claims are stratified by
 \textsc{Liar} severity and de-identified; from \textsc{Pheme} only derived
 topology is used, never tweet content. Episode seeds are derived from a digest
 so that a run replays exactly; the payoff ledger is unit-tested against
@@ -282,6 +292,8 @@ We organise results by research question.
   public goods games? (\S\ref{sec:rq4})
 \item[RQ5] Does an established correction norm survive a defector?
   (\S\ref{sec:rq5})
+\item[RQ6] In a society of \emph{different} models, does one free-ride on
+  another's correction? (\S\ref{sec:rq6})
 \end{description}
 
 \paragraph{Metrics.}
@@ -467,6 +479,73 @@ and whether a correction norm is more or less robust than a harvesting norm is
 the question this arm exists to answer.}
 
 %----------------------------------------------------------------------
+\subsection{RQ6: What one model does among others}
+\label{sec:rq6}
+
+Every study in this line that varies the backbone runs \emph{monocultures}:
+one model per simulation, varied between simulations. That design answers
+whether model choice moves the aggregate. It cannot answer whether one model
+free-rides on another's contribution, because in a society of identical agents
+there is no other model to free-ride on. Two of the four reference studies
+therefore add a heterogeneous experiment---\citet{backmann2025moralsim} pair
+each model against every other in an opponent matrix, and
+\citet{tewolde2026coopeval} run replicator dynamics over an initially uniform
+mixture---and both treat it as a headline research question rather than an
+appendix.
+
+The mechanisms \textsc{NudgeSim} measures make this unavoidable rather than
+merely desirable. Conformity to a local majority, and declining to pay a cost
+somebody else is already paying, are both claims about what one agent does in
+response to \emph{another}. Under a monoculture those two agents are near
+copies, so the design cannot separate ``this model corrects'' from ``this model
+corrects when surrounded by itself''.
+
+The mixed arm seats the whole roster in one society. Which model holds which
+seat rotates by replication, so every model occupies every seat equally often:
+seats differ in network position, and a fixed assignment would confound model
+with position permanently---whatever sat in the best-connected seat would read
+as a property of that model. Two contrasts follow, and neither is available
+from the core grid.
+
+\begin{table}[t]
+\centering
+\input{tables/composition}
+\caption{Top: what each model does inside the \emph{same} episode, with claim,
+topology and intervention held exactly fixed. Bottom: the same model's
+correction rate among other models against its rate among copies of itself.
+$^{*}$ significant after Holm correction. \textbf{Properties of the declared
+data-generating process, not results about language models.}}
+\label{tab:composition}
+\end{table}
+
+\paragraph{Backbone effects survive perfect control.} The top panel of
+Table~\ref{tab:composition} is H5 measured \emph{within} an episode rather than
+between episodes. Nothing differs between these rows except which policy sits in
+the seat---not the claim, not the topology, not the intervention, not the
+seed---and the correction rate still spans a factor of $5.6$. A between-episode
+comparison cannot rule out that part of such a gap is claim or topology draw;
+this one can, and the gap is larger under the tighter control rather than
+smaller.
+
+\paragraph{Whether effort depends on who the neighbours are: a null, so far.}
+The bottom panel asks the second-order free-rider question between policies
+rather than between an intervener and a society. On the surrogate it returns
+nothing: no policy's correction rate detectably depends on whether its
+neighbours are copies of itself, every interval straddles zero, and nothing
+survives Holm correction. We report it because the contrast is the point of the
+arm and because a null here is informative about the surrogate---its policies
+respond to the \emph{count} of visible correction, not to who is doing it, so
+there is no channel by which the identity of a neighbour could matter. That is a
+property of an analytic policy, and precisely the assumption a language model
+need not satisfy.
+
+\pending{The same two panels on a mixed society of real models. This is the
+result \S\ref{sec:rq3} and this section exist to produce, and the one that
+distinguishes a benchmark of models from a study of a society made of them. The
+arm costs nothing extra to run---a mixed episode issues the same number of calls
+as a monoculture one, only spread across backbones.}
+
+%----------------------------------------------------------------------
 \subsection{Design sensitivity and pipeline validation}
 \label{sec:sensitivity}
 
@@ -649,6 +728,13 @@ the obvious next step.
 explicit payoff benchmark; an $N=50$ scale check provides directional
 corroboration only, and scale dependence would be reported as a finding if it
 appears.
+
+\textbf{One mixed composition, not a matrix.} The mixed arm seats the whole
+roster at once. \citet{backmann2025moralsim} instead vary the opponent one at a
+time, which separates ``model $A$ among strangers'' into ``$A$ facing $B$'',
+``$A$ facing $C$'' and so on. That matrix is the stronger design and is a
+straightforward extension of this one---each cell is a different seat
+assignment---but it multiplies the arm by the roster size.
 
 \textbf{No negotiation channel.} The decision/observation split
 (\S\ref{sec:env}) buys clean identification of the tone manipulation at the cost

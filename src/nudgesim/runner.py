@@ -11,8 +11,9 @@ Monte Carlo protocol:
     ablation 2 beta/gamma in {0.5, 1, 3}, 20 cells x 3 seeds       180 episodes
     scale      N = 50, 2 timing x 2 tone, 1 backbone x 10 seeds     40 episodes
     perturb    20 cells x 2 defector kinds x 8 seeds               320 episodes
+    mixed      one society holding all 4 backbones, 5 cells x 30   150 episodes
                                                                  ------------
-                                                                1400 episodes
+                                                                1550 episodes
 
 Claims and topologies are randomised across episodes from a seeded stream;
 conditions are assigned by grid. Every episode is written as one JSONL line and
@@ -59,6 +60,29 @@ ABLATION_RATIOS: tuple[float, ...] = (0.5, 1.0, 3.0)
 PERTURBATIONS: tuple[str, ...] = ("amplifier", "free_rider")
 
 
+def round_robin_seats(
+    backbones: Sequence[str], seats: Sequence[str], rotation: int = 0
+) -> dict[str, str]:
+    """Deal the roster across the citizen seats, rotating by replication.
+
+    A monoculture cannot show what the design is about. Conformity to a local
+    majority, and free-riding on somebody else's correction, are claims about
+    what one agent does in response to *another* agent -- and if every seat runs
+    the same weights those two agents are near-clones. Dealing the roster across
+    the seats puts the models in one episode, facing the same claim on the same
+    topology under the same intervention, which is also the only way to measure
+    the backbone effect within an episode rather than between them.
+
+    ``rotation`` is what makes the comparison a model comparison rather than a
+    seat comparison. Seats differ in network position, and a fixed assignment
+    would confound the two permanently: whatever the model in the best-connected
+    seat does would read as a property of that model. Rotating by replication
+    gives every model every seat equally often, so position averages out.
+    """
+    n = len(backbones)
+    return {seat: backbones[(i + rotation) % n] for i, seat in enumerate(seats)}
+
+
 @dataclass
 class GridSpec:
     """Episode counts per arm. Defaults reproduce the plan's protocol exactly."""
@@ -69,6 +93,7 @@ class GridSpec:
     ablation_ratio_seeds: int = 3
     scale_seeds: int = 10
     perturbation_seeds: int = 8
+    mixed_seeds: int = 30
     backbones: tuple[str, ...] = DEFAULT_BACKBONES
     # Maps a backbone name to a backend spec. Empty means the analytic surrogate.
     backend_specs: dict[str, dict[str, Any]] = field(default_factory=dict)
@@ -79,7 +104,7 @@ class GridSpec:
     min_intervener_reach: int = 1
     trigger_mode: str = "fixed"
     include_arms: tuple[str, ...] = (
-        "core", "placebo", "ablation", "scale", "perturbation",
+        "core", "placebo", "ablation", "scale", "perturbation", "mixed",
     )
 
     def expected_episodes(self) -> dict[str, int]:
@@ -91,6 +116,9 @@ class GridSpec:
             "ablation_ratio": cells * len(ABLATION_RATIOS) * self.ablation_ratio_seeds,
             "scale": 4 * self.scale_seeds,
             "perturbation": cells * len(PERTURBATIONS) * self.perturbation_seeds,
+            # The mixed arm has one society, not one per model, so its cell
+            # count does not scale with the roster.
+            "mixed": len(CONDITIONS) * self.mixed_seeds,
         }
         out = {k: v for k, v in out.items() if _arm_family(k) in self.include_arms}
         out["total"] = sum(out.values())
@@ -221,6 +249,7 @@ def expand_grid(
         payoff_visible: bool,
         tag_extra: str = "",
         perturbation: str | None = None,
+        seat_roster: Sequence[str] | None = None,
         meta: dict[str, Any] | None = None,
     ) -> None:
         tag = f"{arm}|{timing.value}|{tone.value if tone else 'none'}|{backbone}{tag_extra}"
@@ -249,6 +278,11 @@ def expand_grid(
                     backbone=backbone,
                     payoff_visible=payoff_visible,
                     arm=arm,
+                    seat_backbones=(
+                        round_robin_seats(seat_roster, DEFAULT_SOCIETY.citizen_ids, s)
+                        if seat_roster else None
+                    ),
+                    backend_specs=spec.backend_specs or None,
                     perturbation=perturbation,
                     perturbation_round=spec.perturbation_round,
                     trigger_mode=spec.trigger_mode,
@@ -284,6 +318,12 @@ def expand_grid(
                              payoff_params=payoff, payoff_visible=True,
                              tag_extra=f"|{kind}", perturbation=kind,
                              meta={"perturbation_kind": kind})
+
+    if "mixed" in spec.include_arms and len(spec.backbones) > 1:
+        for timing, tone in CONDITIONS:
+            add_cell("mixed", timing, tone, "mixed", spec.mixed_seeds,
+                     placebo=False, payoff_params=payoff, payoff_visible=True,
+                     seat_roster=spec.backbones, meta={"seat_roster": list(spec.backbones)})
 
     if "scale" in spec.include_arms:
         scale_spec = ScaleCheckSpec(seeds=spec.scale_seeds, horizon=spec.horizon)
@@ -354,6 +394,22 @@ def summarise_episode(result: EpisodeResult) -> dict[str, Any]:
             if r.round_index >= (entry if entry is not None else 0)
         ]
     )
+    # Per-citizen behaviour, tagged with the model that produced it. In a mixed
+    # society this is the only place the within-episode model contrast lives:
+    # the episode row averages over seats and cannot show that one model
+    # challenged while another free-rode on it.
+    agent_rows: list[dict[str, Any]] = []
+    for agent_id in cfg.society.citizen_ids:
+        acts = [r for r in citizen_records if r.agent_id == agent_id]
+        agent_rows.append({
+            "episode_id": cfg.episode_id,
+            "agent_id": agent_id,
+            "backbone": (cfg.seat_backbones or {}).get(agent_id, cfg.backbone),
+            "n_actions": len(acts),
+            "n_challenges": sum(1 for r in acts if r.action is Action.CHALLENGE),
+            "n_propagating": sum(1 for r in acts if r.action.is_propagating),
+        })
+
     episode_json = result.to_json()
 
     row: dict[str, Any] = {
@@ -365,6 +421,8 @@ def summarise_episode(result: EpisodeResult) -> dict[str, Any]:
         "backbone": cfg.backbone,
         "backbone_kind": "llm" if cfg.backend_spec else "surrogate",
         "perturbation": cfg.perturbation or "none",
+        "society": "mixed" if cfg.seat_backbones else "homogeneous",
+        "_agent_rows": agent_rows,
         "epc_peers": epc_peers,
         "fpr_peers": fpr_peers,
         "treated": cfg.timing is not Timing.NONE,
@@ -469,7 +527,26 @@ def write_run(
             )
     rounds_frame = pd.DataFrame(round_records)
     rounds_frame.to_parquet(out / "rounds.parquet", index=False)
-    frame = frame.drop(columns=["_round_rates"])
+
+    # Agent-level table: one row per citizen per episode, carrying the model in
+    # that seat. The composition analysis is a comparison between seats inside
+    # one episode, so it cannot be done from the episode table.
+    agent_records: list[dict[str, Any]] = []
+    for row in rows:
+        for entry in row.get("_agent_rows", []):
+            agent_records.append({
+                **entry,
+                "arm": row["arm"],
+                "society": row["society"],
+                "timing": row["timing"],
+                "tone": row["tone"],
+                "treated": row["treated"],
+                "terminated_early": row["terminated_early"],
+                "claim_id": row["claim_id"],
+                "motif_id": row["motif_id"],
+            })
+    pd.DataFrame(agent_records).to_parquet(out / "agents.parquet", index=False)
+    frame = frame.drop(columns=["_round_rates", "_agent_rows"])
 
     parquet_path = out / "results.parquet"
     frame.to_parquet(parquet_path, index=False)
@@ -484,6 +561,7 @@ def write_run(
     return {
         "episodes_jsonl": str(jsonl_path),
         "rounds_parquet": str(out / "rounds.parquet"),
+        "agents_parquet": str(out / "agents.parquet"),
         "results_parquet": str(parquet_path),
         "results_csv": str(csv_path),
         "manifest": str(manifest_path),

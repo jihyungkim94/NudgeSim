@@ -10,6 +10,9 @@ import pytest
 
 from nudgesim.agents.bounded_rational import NormParams
 from nudgesim.game.payoff import PayoffParams
+from nudgesim.env.episode import EpisodeConfig, run_episode
+from nudgesim.intervention.scheduler import Timing
+from nudgesim.intervention.tone import Tone
 from nudgesim.runner import (
     ABLATION_RATIOS,
     GridSpec,
@@ -27,7 +30,8 @@ def test_expected_episode_counts_match_the_plan():
     assert counts["ablation_payoff"] + counts["ablation_ratio"] == 240
     assert counts["scale"] == 40
     assert counts["perturbation"] == 320
-    assert counts["total"] == 1400
+    assert counts["mixed"] == 150
+    assert counts["total"] == 1550
 
 
 def test_grid_expansion_covers_every_cell(pool, library):
@@ -146,3 +150,73 @@ def test_the_same_grid_twice_produces_the_same_episodes(pool, library):
     by_id_a = {r["episode_id"]: r["cumulative_epc"] for r in rows_a}
     by_id_b = {r["episode_id"]: r["cumulative_epc"] for r in rows_b}
     assert by_id_a == by_id_b
+
+
+# ------------------------------------------------- mixed societies (CoopEval §RQ3)
+
+
+def test_round_robin_deals_every_model_into_every_seat():
+    from nudgesim.runner import round_robin_seats
+
+    models = ("m0", "m1", "m2", "m3")
+    seats = ("A1", "A2", "B1", "B2", "C")
+    seen = {seat: set() for seat in seats}
+    for rotation in range(len(models)):
+        for seat, model in round_robin_seats(models, seats, rotation).items():
+            seen[seat].add(model)
+    # Every seat holds every model exactly once per full rotation, so a model
+    # effect cannot be a seat effect wearing a different hat.
+    assert all(held == set(models) for held in seen.values())
+
+
+def test_a_mixed_episode_runs_each_seat_on_its_own_backbone(pool, library):
+    seats = {"A1": "surrogate-cautious", "A2": "surrogate-conformist",
+             "B1": "surrogate-defiant", "B2": "surrogate-cost-averse",
+             "C": "surrogate-cautious"}
+    config = EpisodeConfig(
+        episode_id="mixed", claim=pool.false_claims[0], motif=library.motifs[0],
+        timing=Timing.EARLY, tone=Tone.EMPATHETIC, seed=3,
+        backbone="mixed", seat_backbones=seats,
+    )
+    result = asyncio.run(run_episode(config))
+    by_agent = {r.agent_id: r.backbone for r in result.records if r.agent_id in seats}
+    assert by_agent == seats
+
+
+def test_the_mixed_arm_produces_an_agent_table_with_per_seat_models(tmp_path, pool, library):
+    spec = GridSpec(mixed_seeds=2, include_arms=("mixed",))
+    configs = expand_grid(spec, pool, library, payoff=PayoffParams(), norms=NormParams())
+    assert configs and all(c.seat_backbones for c in configs)
+
+    rows, raw = asyncio.run(run_grid(configs, concurrency=8))
+    manifest = RunManifest(
+        run_id="mixed", grid=spec, claim_provenance=pool.provenance,
+        motif_provenance=library.provenance, payoff=PayoffParams(), norms=NormParams(),
+        dgp_label="test", backbone_kind="surrogate", scale_backend="test",
+    )
+    paths = write_run(tmp_path, manifest, rows, raw)
+    agents = pd.read_parquet(paths["agents_parquet"])
+    assert set(agents["society"]) == {"mixed"}
+    # More than one model per episode is the whole point of the arm.
+    assert agents.groupby("episode_id")["backbone"].nunique().min() > 1
+
+
+def test_composition_reports_the_within_episode_model_contrast(tmp_path, pool, library):
+    from analysis.preregistered import composition, load_agents
+
+    spec = GridSpec(core_seeds=3, mixed_seeds=3, include_arms=("core", "mixed"))
+    configs = expand_grid(spec, pool, library, payoff=PayoffParams(), norms=NormParams())
+    rows, raw = asyncio.run(run_grid(configs, concurrency=8))
+    manifest = RunManifest(
+        run_id="comp", grid=spec, claim_provenance=pool.provenance,
+        motif_provenance=library.provenance, payoff=PayoffParams(), norms=NormParams(),
+        dgp_label="test", backbone_kind="surrogate", scale_backend="test",
+    )
+    write_run(tmp_path, manifest, rows, raw)
+
+    report = composition(load_agents(tmp_path))
+    assert report["n_mixed_seats"] > 0
+    assert {r["backbone"] for r in report["within_mixed"]} == set(spec.backbones)
+    # Each model is compared against itself in a monoculture, which needs the
+    # core arm present; a mixed-only run has nothing to compare against.
+    assert {r["backbone"] for r in report["mixed_vs_homogeneous"]} == set(spec.backbones)

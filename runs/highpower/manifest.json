@@ -1,10 +1,10 @@
 {
   "run_id": "highpower",
   "nudgesim_version": "1.0.0",
-  "git_commit": "26f9795",
+  "git_commit": "26fcecf",
   "python": "3.11.15",
   "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
-  "started_at": 1789180152.6909153,
+  "started_at": 1789183873.5913045,
   "prompt_suite": "v1.0.0-frozen",
   "prompt_fingerprint": "54680aa0a1bf18ce",
   "claim_provenance": "LIAR (Wang, 2017), UCSB release, de-identified",

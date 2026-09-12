@@ -78,6 +78,16 @@ class EpisodeConfig:
     # When set, citizens run on a language model instead of the analytic
     # surrogate. The dict is a backend spec (see nudgesim.backends.build_backend).
     backend_spec: dict[str, Any] | None = None
+    # Which model sits in which seat. None means a monoculture -- every citizen
+    # runs ``backbone``. A mixed society is the setting the design's mechanisms
+    # actually live in: conformity to a local majority, and free-riding on
+    # somebody else's correction, are only interesting when the somebody else
+    # is a different agent. Keyed by citizen id; seats absent fall back to
+    # ``backbone``.
+    seat_backbones: dict[str, str] | None = None
+    # Backend spec per backbone, for LLM runs of a mixed society. Falls back to
+    # ``backend_spec`` for every seat when absent.
+    backend_specs: dict[str, dict[str, Any]] | None = None
     citizen_temperature: float = 0.7
     policy_factory: Callable[[str, Persona, int], Policy] | None = None
     meta: dict[str, Any] = field(default_factory=dict)
@@ -170,16 +180,19 @@ def _surrogate_factory(
     return make
 
 
-def _llm_factory(config: EpisodeConfig) -> Callable[[str, Persona, int], Policy]:
-    """Citizens backed by a language model.
+def _llm_factory(
+    config: EpisodeConfig, spec: dict[str, Any]
+) -> Callable[[str, Persona, int], Policy]:
+    """Citizens backed by one language model.
 
-    One backend instance is shared by all citizens in the episode so the
+    One backend instance per backbone, shared by every seat holding it, so the
     response cache and the provider connection pool are shared too; each citizen
-    still gets its own policy object, and therefore its own repair counter.
+    still gets its own policy object, and therefore its own repair counter. A
+    mixed society calls this once per distinct model, not once per seat.
     """
     from nudgesim.backends.base import build_backend
 
-    backend = build_backend(dict(config.backend_spec or {}))
+    backend = build_backend(dict(spec))
 
     def make(agent_id: str, persona: Persona, seed: int) -> Policy:
         return LLMCitizenPolicy(
@@ -228,13 +241,27 @@ def build_episode(config: EpisodeConfig) -> tuple[dict[str, Persona], dict[str, 
         system_prompt="(fixed intervener policy)",
     )
 
-    factory = config.policy_factory or (
-        _llm_factory(config) if config.backend_spec
-        else _surrogate_factory(config.backbone, config.norms, config.payoff_visible)
-    )
+    # One factory per distinct backbone in the society, built once and reused
+    # so a mixed society does not open five backends where two would do.
+    factories: dict[str, Callable[[str, Persona, int], Policy]] = {}
+
+    def factory_for(agent_id: str) -> Callable[[str, Persona, int], Policy]:
+        if config.policy_factory is not None:
+            return config.policy_factory
+        backbone = (config.seat_backbones or {}).get(agent_id, config.backbone)
+        if backbone not in factories:
+            spec = (config.backend_specs or {}).get(backbone, config.backend_spec)
+            factories[backbone] = (
+                _llm_factory(config, spec) if spec
+                else _surrogate_factory(backbone, config.norms, config.payoff_visible)
+            )
+        return factories[backbone]
+
     policies: dict[str, Policy] = {}
     for offset, agent_id in enumerate(config.society.citizen_ids):
-        policies[agent_id] = factory(agent_id, personas[agent_id], config.seed * 1009 + offset)
+        policies[agent_id] = factory_for(agent_id)(
+            agent_id, personas[agent_id], config.seed * 1009 + offset
+        )
     if config.perturbation:
         target = config.perturbed_agent
         policies[target] = PerturbationPolicy(

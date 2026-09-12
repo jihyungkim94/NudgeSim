@@ -1,10 +1,10 @@
 {
   "run_id": "strong_dgp",
   "nudgesim_version": "1.0.0",
-  "git_commit": "26f9795",
+  "git_commit": "26fcecf",
   "python": "3.11.15",
   "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
-  "started_at": 1789179970.383638,
+  "started_at": 1789183691.9146733,
   "prompt_suite": "v1.0.0-frozen",
   "prompt_fingerprint": "54680aa0a1bf18ce",
   "claim_provenance": "LIAR (Wang, 2017), UCSB release, de-identified",
