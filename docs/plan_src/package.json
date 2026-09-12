@@ -3,7 +3,7 @@
   "private": true,
   "description": "Build the NudgeSim project plan document from source",
   "scripts": {
-    "build": "node build.js ../Project_Plan_NudgeSim_v2.6.docx"
+    "build": "node build.js ../Project_Plan_NudgeSim_V1.docx"
   },
   "dependencies": {
     "docx": "^9.0.0"

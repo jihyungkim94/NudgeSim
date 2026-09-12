@@ -1,6 +1,10 @@
 const H = require("./helpers.js");
 const { d, p, t, mono, h, bullet, numbered, table, callout } = H;
 
+function evidence(title, lines) {
+  return callout(title, lines, { bg: "EAF1F8", color: H.ACCENT });
+}
+
 function code(lines) {
   return new d.Table({
     columnWidths: [H.CONTENT_W],
@@ -42,8 +46,8 @@ module.exports = [
     "",
     "Defaults: β = 1, γ = 6, κ = 2, δ = 3, T = 16   (all swept in robustness; see §5.9)",
   ]),
-  p([t("Accounting conventions, made explicit in v2.1.", { bold: true }),
-     t(" Three details that §3.2 leaves implicit change the numbers materially and are now declared rather than left to the implementer: (i) C counts matching "),
+  p([t("Accounting conventions. ", { bold: true }),
+     t("Three details determine the numbers and are declared rather than left to the implementer: (i) C counts matching "),
      t("stance", { italics: true }),
      t(", so SHARE and ENDORSE are mutually conforming; (ii) V is charged once per distinct claim endorsed, not once per endorsing action; (iii) an agent that challenges a claim it previously endorsed has publicly retracted and takes no δ that round, whereas an agent that endorsed and then went "),
      t("silent", { italics: true }),
@@ -68,18 +72,18 @@ module.exports = [
   ]),
   p(""),
   table([9, 61, 30], [
-    ["H", "Statement", "Confirmatory tier (v2.1, §5.9)"],
-    ["H1", "Early intervention yields lower cumulative propagation than late intervention.", "Tier 1 — focused arm"],
+    ["H", "Statement", "Confirmatory tier (§5.9)"],
+    ["H1", "Early intervention yields lower cumulative propagation than late intervention.", "Tier 1 — powered contrast"],
     ["H2", "Aggressive debunking produces faster initial suppression; empathetic nudging produces more durable suppression. Framed as a test between competing predictions, given the contested backfire literature.", "Tier 2 — exploratory"],
-    ["H3", "Empathetic nudging raises the endogenous peer-correction rate above control; aggressive debunking suppresses it below control, even where it lowers propagation.", "Tier 1 — focused arm (headline)"],
+    ["H3", "Empathetic nudging raises the endogenous peer-correction rate above control; aggressive debunking suppresses it below control, even where it lowers propagation.", "Tier 2 — exploratory (headline direction; see power note below)"],
     ["H4", "Timing moderates tone: aggressive debunking is relatively more viable early, before positions are publicly committed and reputation damage is at stake.", "Tier 2 — exploratory"],
     ["H5", "Effect sizes differ across model families by more than they differ across timing conditions — i.e. backbone choice dominates intervention design.", "Tier 1 — core grid"],
-    ["H6", "The between-model spread in peer-correction rate (H5) persists when measured within a single mixed-model episode — same claim, topology, intervention and seed — rather than between episodes; a model's own correction rate does not detectably depend on whether its neighbours are copies of itself.", "Tier 2 — exploratory (new arm, §5.11)"],
+    ["H6", "The between-model spread in peer-correction rate (H5) persists when measured within a single mixed-model episode — same claim, topology, intervention and seed — rather than between episodes; a model's own correction rate does not detectably depend on whether its neighbours are copies of itself.", "Tier 2 — exploratory (mixed-society arm, §5.11)"],
   ]),
-  callout("v2.1 — why the hypotheses are now tiered", [
-    "The reference implementation shows that at 30 seeds/cell the core grid powers exactly one primary contrast (intervention vs control on EPC, d ≈ 0.80, n ≈ 26). H1 needs ~105 seeds/cell and H3 ~259. Declaring every hypothesis confirmatory at a sample that cannot test four of them is the kind of thing reviewers catch and preregistration is supposed to prevent.",
-    "H3 is small for a structural reason worth stating in the manuscript: tone reaches peer correction through two opposing channels. An aggressive corrector displaces responsibility (lowering EPC) and also updates beliefs harder (raising it). The net is a difference of two larger quantities — precisely the shape of effect a small design cannot resolve.",
-  ]),
+  p([t("Why the hypotheses are tiered. ", { bold: true }),
+     t("At the core grid's 30 seeds/cell, the design is powered for exactly one primary contrast (intervention vs control on EPC, d ≈ 0.80, n ≈ 26) plus the model-dependence contrast H5. H1 needs roughly 105 seeds/cell and H3 roughly 259 at the effect sizes the pilot produces; declaring every hypothesis confirmatory at a sample that cannot test them would not survive review, so tiering is set before the grid runs rather than after (§5.9, §8).")]),
+  p([t("H3 is expected to be small for a structural reason worth stating up front. ", { italics: true, color: H.MUTED }),
+     t("Tone reaches peer correction through two opposing channels: an aggressive corrector displaces responsibility (lowering EPC) and also updates beliefs harder (raising it). The net is a difference of two larger quantities — precisely the shape of effect the core grid is not sized to resolve on its own, which is why it is exploratory rather than dropped.", { italics: true, color: H.MUTED })]),
 
   h("5. Experimental Design", 1),
   h("5.1 Agent society (N = 7)", 2),
@@ -90,39 +94,31 @@ module.exports = [
     ["Citizens B1, B2", "Right-leaning personas", "Mirror of A, with the opposite congruence prior."],
     ["Citizen C", "Neutral conformist", "No ideological prior; responds to whichever signal dominates its neighbourhood."],
     ["Disseminator", "Bad actor (fixed policy)", "Injects and re-frames false claims from the LIAR pool; not payoff-responsive, so it cannot be \"corrected\" and functions as a constant adversarial pressure."],
-    [{ text: "Devil's Advocate", bg: H.NEW_BG }, { text: "AI intervener (treatment)", bg: H.NEW_BG },
-     { text: "Stipulated to absorb κ whenever it challenges. Enters per the active timing condition and remains active thereafter. Absent in control. v2.1: it first judges whether the claim is false and may decline to act — see §5.3.", bg: H.NEW_BG }],
+    ["Devil's Advocate", "AI intervener (treatment)", "Stipulated to absorb κ whenever it challenges. Enters per the active timing condition and remains active thereafter, absent in control. It first judges whether the claim is actually false and stays silent if it judges it sound (§5.3) — a corrector that challenges everything it is pointed at cannot test specificity."],
   ]),
 
-  h("5.2 Network topology", 2),
-  p("Each PHEME conversation thread ships a structure.json encoding the reply tree of a real rumour cascade. We sample connected 7-node motifs from these trees, map the Disseminator to the cascade root, and assign citizen roles to downstream nodes. Every condition is also run on one hand-specified canonical motif so that results are not an artifact of any single sampled topology."),
-  callout("v2.1 — intervener placement and reach are now declared, not left to chance", [
-    "v2.0 specifies where the Disseminator goes but not where the intervener goes. This is not a detail: the Devil's Advocate is a peer in a network, so it is visible only to its neighbours. The intervener is now placed on the highest-degree non-root node, the position a platform-embedded corrector would occupy, and its reach is logged per episode and entered as a covariate in the primary models (reach correlates with peer correction at ρ = 0.34, p < 1e-13).",
-  ]),
-  callout("v2.2 — the reply tree is not the visibility graph", [
-    "This is the change that mattered most, and it only appeared once the real PHEME release was in hand. Sampling a 7-node motif around the cascade root produces a BROADCAST STAR 69% of the time, because real PHEME cascades are broad and shallow (mean branching 4.46, mean depth 3.59). Rooted at the Disseminator, a star gives every citizen exactly one neighbour — the Disseminator. In 89% of real motifs no local majority could form among the five citizens, and no citizen could ever observe another paying the correction cost, which is the demonstration channel the headline outcome measures.",
-    "Neither existing gate detects this. The section 5.7 calibration gate passes MORE comfortably on real PHEME than on surrogate topology, because it tests cascade shape and diffusion asymmetry and neither is sensitive to whether the agents can see one another.",
-    [t("The cause is a conflation. ", { bold: true }),
-     t("structure.json is a reply tree — it records who answered whom. The design needs who can SEE whom, and a threaded conversation shows sibling replies too. Connecting every sibling is the opposite error: in a star every reply is a sibling of every other, so the motif becomes the complete graph, \"local\" majority becomes global, and the topology stops varying (measured: 68% of motifs become K7).")],
-    [t("Bounded attention. ", { bold: true }),
-     t("A thread view is ranked and truncated — a reader sees the source plus the replies near their own, not all fifty. Each reply is therefore linked to the w siblings following it in display order. At w = 1, on all 6,425 real threads: no motif is a star, none is complete, mean density 0.50, and no thread is discarded (the reach filter keeps 201 of 201 motifs, against 63 before). Effect sizes strengthen because the mechanism can operate: intervention → EPC rises from d = 0.69 to 0.93, and H1 from d = −0.38 to −0.61.")],
-  ], { bg: "EAF1F8", color: H.ACCENT }),
+  h("5.2 Network topology and visibility", 2),
+  p("Each PHEME conversation thread ships a structure.json encoding the reply tree of a real rumour cascade. We sample connected 7-node motifs from these trees, map the Disseminator to the cascade root, and assign citizen roles to downstream nodes. Every condition is also run on one hand-specified canonical motif so that results are not an artifact of any single sampled topology. The Devil's Advocate is placed on the highest-degree non-root node — the position a platform-embedded corrector would occupy — and its reach (0 to 5 citizens, depending on the sampled motif) is logged per episode and entered as a covariate in the primary models."),
+  p([t("Visibility is modelled as bounded attention, not as the raw reply tree. ", { bold: true }),
+     t("A reply tree records who answered whom; it is not the same graph as who can "),
+     t("see", { italics: true }),
+     t(" whom, and the two must not be conflated. Rooted at the Disseminator, a real PHEME cascade is broad and shallow (mean branching 4.46, mean depth 3.59), so a naive reading of the reply tree as the visibility graph gives most citizens exactly one neighbour — the Disseminator — leaving no room for a local majority to form or for one citizen to observe another paying the correction cost, which is the channel the headline outcome measures. Connecting every sibling reply instead over-corrects into a near-complete graph, collapsing \"local\" into \"global\". Bounded attention resolves this the way an actual thread view works: a reader sees the source plus the replies near their own in display order, so each reply is linked to the w siblings following it. At w = 1 the model is well-behaved on all 6,425 real PHEME-9 threads: no motif degenerates into a star or a clique, mean density is 0.50, and no thread has to be discarded.")]),
 
   h("5.3 Factors and conditions", 2),
-  p("Episodes run 16 rounds (v2.1; see §5.5 on durability). Early injects the intervener at round 2, immediately after first amplification; Late at round 6, after a local majority (≥ 3 of 5 citizens endorsing) is established. Timing thresholds are tuned and frozen in the Month-2 pilot."),
+  p("Episodes run 16 rounds. Early injects the intervener at round 2, immediately after first amplification; Late at round 6, after a local majority (≥ 3 of 5 citizens endorsing) is established. Both a fixed-round and a majority-triggered variant of Late are implemented, the latter with a latest-entry backstop so that a cell where no majority forms does not silently become a second control. Timing thresholds are tuned and frozen in the Month-2 pilot."),
   table([16, 26, 26, 32], [
     ["Factor", "Level 1", "Level 2", "Notes"],
-    ["F1 · Timing", "Early (round 2)", "Late (round 6)", "Intervener persists from entry onward. Both a fixed-round and a majority-triggered variant are implemented; the majority variant carries a latest-entry backstop so a cell where no majority forms does not silently become a second control."],
+    ["F1 · Timing", "Early (round 2)", "Late (round 6)", "Intervener persists from entry onward."],
     ["F2 · Tone", "Empathetic nudge", "Aggressive debunking", "Factual payload identical and length-matched; only pragmatic framing differs."],
-    ["F3 · Backbone", "4 model families", "—", "GPT-4o-mini class, Claude Haiku class, Llama-3.1-8B-Instruct, Qwen-2.5-7B-Instruct (final list fixed at Week 4). Citizens only; judges held constant. Run both as monocultures (core grid, below) and as a mixed society within one episode (§5.11, new in v2.6)."],
+    ["F3 · Backbone", "6 model families, 4 vendors", "—", "GPT-4o, a current OpenAI reasoning model, Claude Opus 5 (thinking on and off), Llama-3.3-70B, Qwen3-30B-A3B. Citizens only; judge held constant and distinct from every citizen backbone (§7). Run both as monocultures (core grid, below) and seated together in a mixed society within one episode (§5.11)."],
   ]),
-  p("This yields a 2 × 2 × 4 grid plus a per-model control — 20 cells — flanked by:"),
-  bullet([t("Placebo arm (specificity). ", { bold: true }), t("Matched true claims from LIAR run through the same conditions; the intervener should not suppress them.")]),
+  p("This yields a 2 × 2 × 6 grid plus a per-model control, flanked by:"),
+  bullet([t("Placebo arm (specificity). ", { bold: true }), t("Matched true claims from LIAR run through the same conditions; the intervener should not suppress them. Because the intervener can decline to act (§5.1), this arm has a real chance of failing — it does not pass by construction.")]),
   bullet([t("Ablation 1 — payoff visibility. ", { bold: true }), t("Payoffs removed from the prompt and the episode run as pure narrative. Tests whether the game structure actually drives behaviour or whether the LLM is pattern-matching social discourse regardless.")]),
   bullet([t("Ablation 2 — incentive ratio. ", { bold: true }), t("β/γ swept across {0.5, 1, 3} to model platforms that reward engagement more or less than accuracy.")]),
-  callout("v2.1 — the placebo arm needs an intervener that can decline to act", [
-    "As written, the Devil's Advocate is stipulated to challenge whatever claim it is pointed at. Run that against a true claim and it suppresses it by construction — so the specificity measure reports the wiring, not a property of the intervention, and RQ5 cannot come out any way but badly.",
-    "The intervener now judges the claim's veracity once per episode and stays silent if it judges it sound. Its sensitivity and false-alarm rate are logged as first-class quantities, because the specificity of the intervention is bounded by the specificity of the intervener. With a real backbone the model's own reading of the claim supplies this judgement; in the reference implementation they are declared parameters.",
-    "The consequence for analysis is in §8: pooled across all treated placebo episodes the contrast is null (p = 0.71), because episodes where the intervener correctly held its fire average out the ones where it did not. Conditional on it having fired, unwarranted challenges against true claims roughly double (+0.065, p = 0.002). The conditional contrast is now preregistered alongside the pooled one.",
+  bullet([t("Mixed-society arm (composition, RQ6/H6). ", { bold: true }), t("The full model roster seated together in one episode instead of one model per episode; see §5.11.")]),
+  evidence("Feasibility evidence: the placebo arm and the specificity contrast", [
+    "On the reference implementation's declared parameters, the pooled contrast across all treated placebo episodes is null (p = 0.71) — episodes where the intervener correctly held its fire average out the ones where it did not. Conditional on the intervener having actually fired, unwarranted challenges against true claims roughly double (+0.065, p = 0.002). Both the pooled and the conditional contrast are preregistered (§8), because pooling alone would have hidden the second number inside the first.",
   ]),
+
 ];
