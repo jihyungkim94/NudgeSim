@@ -117,8 +117,4 @@ module.exports = [
   bullet([t("Ablation 1 — payoff visibility. ", { bold: true }), t("Payoffs removed from the prompt and the episode run as pure narrative. Tests whether the game structure actually drives behaviour or whether the LLM is pattern-matching social discourse regardless.")]),
   bullet([t("Ablation 2 — incentive ratio. ", { bold: true }), t("β/γ swept across {0.5, 1, 3} to model platforms that reward engagement more or less than accuracy.")]),
   bullet([t("Mixed-society arm (composition, RQ6/H6). ", { bold: true }), t("The full model roster seated together in one episode instead of one model per episode; see §5.11.")]),
-  evidence("Feasibility evidence: the placebo arm and the specificity contrast", [
-    "On the reference implementation's declared parameters, the pooled contrast across all treated placebo episodes is null (p = 0.71) — episodes where the intervener correctly held its fire average out the ones where it did not. Conditional on the intervener having actually fired, unwarranted challenges against true claims roughly double (+0.065, p = 0.002). Both the pooled and the conditional contrast are preregistered (§8), because pooling alone would have hidden the second number inside the first.",
-  ]),
-
-];
+  ];

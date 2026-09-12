@@ -46,7 +46,7 @@ cp .env.example .env        # ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENAI_BASE_URL
 
 The roster is declared in [`configs/backbones.yaml`](configs/backbones.yaml) and
 priced in advance by `nudgesim cost`: 60 calls an episode, ~613 input tokens a
-call, 23,250 calls per backbone over the grid.
+call, ~22,300 calls per backbone level over the grid.
 
 **No key?** `scripts/mock_llm_server.py` is a local OpenAI-compatible endpoint
 that deliberately returns malformed replies — prose instead of JSON, markdown
@@ -57,7 +57,7 @@ Against it the pipeline repairs ~11% malformed replies without a crash.
 ## 🚀 Quick Start
 
 ```bash
-# the committed runs: analytic surrogate policy, no network calls, ~25 s
+# end-to-end check of the protocol, no network calls, ~25 s
 PYTHON=.venv/bin/python ./reproduce.sh              # Windows: .\reproduce.ps1
 
 # real corpora
@@ -94,7 +94,8 @@ paying it *themselves*.
 
 Timing (early · late) × tone (empathetic nudge · aggressive debunking) ×
 backbone, against a no-intervener control, a true-claim placebo arm, two
-ablations, a perturbation arm and the mixed-society arm — 1,550 episodes.
+ablations, a perturbation arm and the mixed-society arm — 2,230 episodes over
+the six-level roster, 133,800 model calls.
 
 Two outcomes, both read off the action log with no model judge on the critical
 path: **FPR**, how far the false claim spreads, and **EPC**, how often citizens
@@ -107,10 +108,10 @@ _Results go here once the model benchmark has been run._
 Runs land in `runs/main/`: `results.parquet` (one row per episode),
 `rounds.parquet`, `episodes.jsonl`, `analysis/`, and `figures/`.
 
-What is committed there today came from the **analytic surrogate policy**, not
-from language models. It exercises the protocol end to end and is tagged
-`backbone_kind: surrogate` on every artefact, so it cannot be read as a model
-result — and the analysis refuses to describe it as one.
+Every artefact records which backbone produced it, so a run can never be read
+as something it was not: a run with `--models` is tagged `backbone_kind: llm`,
+and a run without one is tagged and treated as a protocol check, never as a
+result.
 
 ```bash
 nudgesim check | calibrate | run | analyze | cost | reproduce
@@ -121,12 +122,12 @@ nudgesim check | calibrate | run | analyze | cost | reproduce
 ```
 src/nudgesim/
   game/          action space, payoff ledger, equilibrium benchmark (UNIT-TESTED)
-  agents/        personas, LLM policy, analytic surrogate, fixed policies
+  agents/        personas, LLM policy, offline stand-in policy, fixed policies
   backends/      provider-agnostic LLM interface + disk cache
   env/           asyncio episode loop, termination and drift guards
   intervention/  timing scheduler, tone templating, manipulation checks
   metrics/       FPR/EPC, welfare, durability, trace taxonomy
-  data/          LIAR claim pool, PHEME motifs, surrogate generators
+  data/          LIAR claim pool, PHEME motifs, synthetic fallbacks
   cost.py        prompt metering and budget forecasting
   runner.py      grid expansion, seeds, JSONL → Parquet
 analysis/        preregistered models, power analysis, figures

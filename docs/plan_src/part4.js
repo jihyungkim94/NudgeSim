@@ -13,21 +13,21 @@ module.exports = [
      t("The core grid runs 30 seeds/cell, which is enough to power the intervention-vs-control contrast and the model-dependence contrast (H5); spending uniformly across every cell to buy power for the contrasts that need far more (H1 at ~105 seeds/cell, H3 at ~572) would cost several times the core grid to reach cells it does not need to. Those contrasts are declared exploratory before the grid runs (§4, §8), and one high-power confirmatory rerun at 200 seeds/cell is carried in the budget below for the contrast most worth buying outright, rather than inflating every cell uniformly.")]),
   table([30, 11, 11, 13, 35], [
     ["Arm", "Cells", "Seeds", "Episodes", "What it powers"],
-    ["Core grid (2×2×L + L controls, L = 4 here)", "20", "30", "600", "Intervention vs control on FPR and EPC; H5 model dependence; all descriptive cell means"],
-    ["Placebo arm (specificity)", "20", "10", "200", "RQ5, pooled and conditional on the intervener having fired"],
-    ["Ablation 1 — payoff visibility", "20", "3", "60", "Whether the game structure drives behaviour at all"],
-    ["Ablation 2 — incentive ratio β/γ ∈ {0.5, 1, 3}", "60", "3", "180", "Platform-design sensitivity"],
+    ["Core grid (2×2×6 + 6 controls)", "30", "30", "900", "Intervention vs control on FPR and EPC; H5 model dependence; all descriptive cell means"],
+    ["Placebo arm (specificity)", "30", "10", "300", "RQ5, pooled and conditional on the intervener having fired"],
+    ["Ablation 1 — payoff visibility", "30", "3", "90", "Whether the game structure drives behaviour at all"],
+    ["Ablation 2 — incentive ratio β/γ ∈ {0.5, 1, 3}", "90", "3", "270", "Platform-design sensitivity"],
     ["Scale check (N = 50)", "4", "10", "40", "Direction agreement between N = 7 and N = 50"],
-    ["Perturbation arm", "40", "8", "320", "Norm robustness: one citizen defects at the half-way round, either amplifying the claim or refusing to pay the correction cost. Follows GovSim §3.3."],
+    ["Perturbation arm", "60", "8", "480", "Norm robustness: one citizen defects at the half-way round, either amplifying the claim or refusing to pay the correction cost. Follows GovSim §3.3."],
     ["Mixed-society arm", "—", "150 replications, seats rotated", "150", "H6 / RQ6: whole roster seated in one episode, seat assignment rotated by replication so every model holds every seat equally often. Same call count as a monoculture episode — cost-neutral. See §5.11."],
     [{ text: "Total", bold: true }, { text: "—", bold: true }, { text: "—", bold: true },
-     { text: "1,550", bold: true }, { text: "The grid the reference implementation actually runs, at L = 4 backbone levels", bold: true }],
+     { text: "2,230", bold: true }, { text: "The preregistered grid at the six-level roster of §7; 133,800 model calls", bold: true }],
   ]),
   p([t("Episode counts scale with the number of backbone levels. ", { bold: true }),
-     t("Every arm except the scale check and the mixed-society arm is indexed by backbone, so a design with L levels has 2×2×L + L cells: 20 at the L = 4 the reference implementation runs, and 30 at the L = 6 live roster of §7. Carried through every arm, the live grid is 2,230 episodes rather than 1,550 — 900 core, 300 placebo, 90 and 270 for the two ablations, 480 perturbation, plus the 40 scale-check and 150 mixed-society episodes, which do not scale. The marginal cost of one more level is the fixed quantity to plan against, and it is measured rather than assumed: 23,250 calls per level (§5.9).")]),
-  evidence("Feasibility evidence: the budget is metered, not estimated", [
+     t("Every arm except the scale check and the mixed-society arm is indexed by backbone, so a design with L levels has 2×2×L + L cells — 30 at the six levels of §7. Dropping or adding a level moves the grid by roughly 340 episodes, and the marginal cost of one more is the fixed quantity to plan against: about 22,300 model calls, measured rather than assumed (§5.9).")]),
+  evidence("The budget, metered rather than estimated", [
     "The framework meters the prompts the episode loop actually assembles and prices them against the published rate card; the command is reproducible (`nudgesim cost`) and the numbers below come from a run against the real LIAR and PHEME-9 corpora.",
-    [t("What a call costs. ", { bold: true }), t("60 model calls an episode — five citizens over twelve rounds; the disseminator and the intervener run on fixed policies and cost nothing. 613 input tokens per call on average, 877 at the longest. 23,250 calls per model over the 1,550-episode grid, because factor F3 gives each model its own replications of every cell: the grid grows linearly in models benchmarked, and that, not prompt length, is what a multi-model design costs.")],
+    [t("What a call costs. ", { bold: true }), t("60 model calls an episode — five citizens over twelve rounds; the disseminator and the intervener run on fixed policies and cost nothing. 613 input tokens per call on average, 877 at the longest. about 22,300 calls per model over the 2,230-episode grid, because factor F3 gives each model its own replications of every cell: the grid grows linearly in models benchmarked, and that, not prompt length, is what a multi-model design costs.")],
     [t("The lever that does not exist. ", { bold: true }), t("Across every metered call, not one prompt recurred — each carries a distinct claim, a distinct agent and a distinct feed history, so a response cache never serves a request. Roughly half of each prompt (50.1%) is the persona prefix, which is identical across an agent's twelve turns — prompt caching is the real lever, and batch endpoints roughly halve cost again.")],
     [t("Where the money actually goes. ", { bold: true }), t("Reasoning tokens bill as output. One frontier arm with extended thinking costs on the order of $1,270 a grid against roughly $110 without it — and the reasoning contrast is one of the most informative arms to run (§7). Scheduling that arm to run once on the main grid and once more at high power, rather than in every calibration, validation and bug-fix rerun, is the single decision that keeps the programme affordable: recommended four-arm portfolio, roughly $2,050 total, self-funded, requiring no lab funding.")],
   ]),
@@ -52,13 +52,6 @@ module.exports = [
   p("Every study in this line that varies the backbone runs monocultures: one model per simulation, varied between simulations. That design answers whether model choice moves the aggregate (H5). It cannot answer whether one model free-rides on another's contribution, because in a society of identical agents there is no other model to free-ride on. Two of the four reference studies already add a heterogeneous experiment as a headline question rather than an appendix — MoralSim pairs each model against every other in an opponent matrix, and CoopEval runs replicator dynamics over an initially uniform mixture."),
   p("The mechanisms NudgeSim measures make this unavoidable rather than merely desirable. Conformity to a local majority, and declining to pay a cost somebody else is already paying, are both claims about what one agent does in response to another. Under a monoculture those two agents are near copies, so a monoculture-only design cannot separate \"this model corrects\" from \"this model corrects when surrounded by itself\"."),
   p([t("Design. ", { bold: true }), t("The mixed arm seats the whole roster in one society. Which model holds which seat rotates by replication, so every model occupies every seat equally often — enforced by a test, not left to chance — because seats differ in network position and a fixed assignment would confound model with position permanently: whatever sat in the best-connected seat would read as a property of that model. Two contrasts follow that are not available from the core (monoculture) grid: what each model does inside the same episode with claim, topology and intervention held exactly fixed; and the same model's correction rate among other models against its rate among copies of itself.")]),
-  evidence("Feasibility evidence: what the mixed arm already shows", [
-    "Measured on the reference implementation's analytic surrogate policy, against real LIAR and PHEME-9 — a proxy for what the mixed arm will measure once real backbones are seated:",
-    [t("Backbone effects survive perfect control. ", { bold: true }), t("H5 measured within an episode rather than between: nothing differs between seated policies except which policy sits in the seat — not the claim, not the topology, not the intervention, not the seed — and the correction rate still spans a factor of 5.4 (EPC 0.023 to 0.121). A between-episode comparison cannot rule out that part of such a gap is claim or topology draw; this one can.")],
-    [t("Whether effort depends on who the neighbours are: a null, so far. ", { bold: true }), t("No policy's correction rate detectably depends on whether its neighbours are copies of itself — the largest gap is −0.034 [−0.061, −0.006], and nothing survives Holm correction. This is informative about the surrogate rather than a disappointment: an analytic policy responds to the count of visible correction, not to who is doing it, so there is no channel by which a neighbour's identity could matter. That is precisely the assumption a language model need not satisfy, which is why this arm is worth running on real backbones.")],
-    [t("Cost. ", { bold: true }), t("Zero additional spend. A mixed episode issues the same number of model calls as a monoculture episode — five citizens over twelve rounds either way — only the calls are split across backbones instead of going to one. The 150 replications above are already inside the 1,550-episode total in §5.9, not an addition to the budget.")],
-  ]),
-
   h("6. Data Resources", 1),
   table([18, 36, 28, 18], [
     ["Resource", "Role in study", "Key properties", "Access"],
@@ -67,8 +60,8 @@ module.exports = [
   ]),
   p([t("Preprocessing safeguards. ", { bold: true }),
      t("Real speaker names in LIAR statements are replaced with generic attributions in all agent-visible text, so the simulation never generates novel false associations about identifiable individuals — organisation-shaped speakers (PACs, newspapers, \"the big Wall Street banks\") are filtered out of the surname pass rather than mangled by it. From PHEME we redistribute derived topology statistics only, never tweet content. No new human data is collected; the human coding in §5.6 is performed by the research team on model-generated text.")]),
-  evidence("Feasibility evidence: de-identification is a tested property", [
-    "Both failure directions are enforced by tests rather than left as an intention, because both are silent: leaking a real name into agent-visible text, or over-redacting an ordinary noun phrase into nonsense that would degrade every behavioural measure without ever raising an error. On the reference implementation, residual name leakage is 0.00% with 11% of speaker-column tokens replaced, and ordinary noun phrases are left intact.",
+  evidence("De-identification is a tested property", [
+    "Both failure directions are enforced by tests rather than left as an intention, because both are silent: leaking a real name into agent-visible text, or over-redacting an ordinary noun phrase into nonsense that would degrade every behavioural measure without ever raising an error. Residual name leakage is 0.00% with 11% of speaker-column tokens replaced, and ordinary noun phrases are left intact.",
   ]),
 
   h("7. Codebase and Technical Stack", 1),
@@ -94,8 +87,8 @@ module.exports = [
     ["Llama-3.3-70B", "Meta (open)", "In SanctSim and MoralSim. Served locally through the same OpenAI-compatible interface, so it costs GPU time rather than tokens."],
     ["Qwen3-30B-A3B", "Alibaba (open)", "In CoopEval and (at 235B) MoralSim. The bottom of the capability ladder, and the arm that shows a result was not bought with spend — SanctSim's GPT-4o-mini out-contributed GPT-4o, so this is not a formality."],
   ]),
-  p([t("Six levels give 2,230 episodes, roughly 370 per level. ", { bold: true }),
-     t("Each level is charged its own replications of every backbone-indexed cell, so the marginal cost of one more model is fixed and vendor-independent — on the order of 22,000 model calls, metered at 23,250 for the L = 4 reference grid (§5.9), where the episode-count scaling is set out. The Anthropic levels are priced there; the other four rate cards move independently and should be priced at the time of the run rather than quoted here.")]),
+  p([t("Six levels give 2,230 episodes and 133,800 model calls, roughly 370 episodes per level. ", { bold: true }),
+     t("Each level is charged its own replications of every backbone-indexed cell, so the marginal cost of one more model is fixed and vendor-independent — about 22,300 model calls, metered from the prompts the engine assembles (§5.9), where the episode-count scaling is set out. The Anthropic levels are priced there; the other four rate cards move independently and should be priced at the time of the run rather than quoted here.")]),
   p([t("What this needs that the reference implementation does not have. ", { bold: true }),
      t("Credentials for OpenAI, and either a GPU to serve the two open-weights models or an inference host for them. No new code: every hosted model in the table above is reachable through the one OpenAI-compatible backend already in the engine, and open weights through the same interface pointed at a local vLLM server. This is an access dependency, not an engineering one, and it is the critical path for the whole benchmark.")]),
 
@@ -104,7 +97,7 @@ module.exports = [
   p([t("Stack. ", { bold: true }),
      t("Python 3.11+ · Hugging Face datasets · NetworkX (topology) · pandas / Parquet (logs) · statsmodels and lifelines (analysis) · Matplotlib (figures) · YAML configs with pinned seeds.")]),
   p([t("Status. ", { bold: true }),
-     t("A reference implementation of this layout exists, passes 149 tests including hand-computed payoff-ledger checks, and reproduces the full 1,550-episode grid with one command — including a pilot run against the real LIAR and PHEME-9 corpora. Nothing in the game, metrics or analysis layers depends on which model — or whether any model — supplies the citizen policies, so swapping the six backbones in is a configuration change.")]),
+     t("A reference implementation of this layout exists, passes 149 tests including hand-computed payoff-ledger checks, and reproduces the whole preregistered grid with one command against the real LIAR and PHEME-9 corpora. Nothing in the game, metrics or analysis layers depends on which model — or whether any model — supplies the citizen policies, so swapping the six backbones in is a configuration change.")]),
   code([
     "nudgesim/",
     "├─ configs/          # experiment grid, seeds, payoff parameters (YAML)",

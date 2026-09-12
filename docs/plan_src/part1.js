@@ -87,13 +87,6 @@ const front = [
     t("endogenous peer correction is the one this line would ask for", { bold: true }),
     t(", because it is second-order cooperation measured as an action the agent pays for. A study that lowered propagation while quietly eroding the society's own willingness to correct would look like a success on the first measure and a failure on the second, and only the second is about cooperation."),
   ]),
-  evidence("Feasibility evidence: two results that generalise beyond this study", [
-    "The reference implementation — run end to end on an analytic surrogate policy in place of LLM backbones, over the full grid on the real LIAR corpus and all 6,425 real PHEME-9 threads — surfaces two results that speak to the programme this line is building, not only to misinformation.",
-    [t("Backbone dominates mechanism. ", { bold: true }),
-     t("Across the grid, which model family the citizens run on accounts for roughly thirty per cent of the variance in peer correction, against single digits for the intervention's timing and tone. If that survives contact with real backbones, the model is not a nuisance parameter to be averaged over — it is the largest effect in the room, and a mechanism benchmark that reports a single backbone is reporting one draw from a wide distribution. §5.3 and §5.11 build the design around measuring it properly, including within a single mixed episode.")],
-    [t("Welfare has to separate accuracy from conformity and sanction cost. ", { bold: true }),
-     t("A naive sum of citizen payoffs ranks every working intervention below doing nothing, because the sanction costs a working intervention generates are exactly what it charges against itself, and conformity alone is maximised by the arm where nobody disagrees. §5.5 reports the veracity component as the primary welfare measure for this reason, with conformity and sanction cost shown alongside it rather than summed in — the standard treatment in experimental public-goods work (Fehr & Gächter, 2002).")],
-  ]),
   p("The contribution claim is therefore stated as: prior work has observed that correction timing and framing matter; NudgeSim formalises the setting as a social dilemma, isolates the causal contribution of timing and tone under matched incentives, and asks the question the descriptive literature cannot — whether an AI intervener builds or erodes a community's own willingness to correct, and whether that willingness is a property of the model or of the company it keeps. MADD and CoSim are cited as motivation and as calibration references, not treated as absent."),
 ];
 
