@@ -6,7 +6,7 @@ Two kinds of result are reported here, and they are not interchangeable.
 established by implementing it. They hold regardless of what runs the engine,
 and they are the part of this document that matters most.
 
-**Part 2 — the design-sensitivity run.** The full preregistered grid (1,080
+**Part 2 — the design-sensitivity run.** The full preregistered grid (1,400
 episodes) executed against a declared analytic data-generating process. These
 numbers are properties of that DGP. They are **not evidence about LLM
 behaviour**.
@@ -21,45 +21,51 @@ records its provenance.
 
 ## Part 1 — Problems in the plan, surfaced by building it
 
-### 1. The design is under-powered — the headline hypothesis by ~9×
+### 1. The design is under-powered — the headline hypothesis by two orders of magnitude
 
 The plan allocates 30 seeded replications per cell. At the effect sizes this
-design produces, that is enough for exactly one of the preregistered primary
-contrasts.
+design produces, that is enough for the intervention contrasts and for nothing
+else.
 
 | Contrast | Cohen's d | n/cell for 80% power | Powered at 30? |
 |---|---:|---:|:--:|
-| Intervention vs control → EPC | +0.80 | 26 | **yes** |
-| Intervention vs control → FPR | −0.71 | 32 | marginal |
-| **H1** early vs late → FPR | −0.56 | 51 | no |
-| **H3** tone → EPC *(headline)* | −0.17 | 572 | no |
-| **H2** tone → FPR | +0.05 | 7,136 | no |
+| Intervention vs control → EPC | +0.83 | 24 | **yes** |
+| Intervention vs control → FPR | -0.76 | 28 | **yes** |
+| **H1** early vs late → FPR | -0.53 | 56 | no |
+| **H3** tone → EPC *(headline)* | -0.08 | 2,671 | no |
+| **H2** tone → FPR | -0.05 | 7,305 | no |
 
-The paper's central claim needs roughly **19× the preregistered sample**; H1,
-described in the plan as the most straightforward hypothesis, needs 1.7×.
+H3, the paper's central claim, needs **two orders of magnitude more** than the
+preregistered 30. H1 needs about twice.
 
-*(Numbers regenerated after the seed defect below was fixed. The earlier
-figures in this table were computed from runs that could not be replayed.)*
+Treat the H3 figure as an order of magnitude and not a target. Across runs of
+the identical design it has landed anywhere from ~570 to ~2,700, because a cell
+of a different size draws a different set of LIAR claims rather than more
+replications of the same ones (see the validation table below, where the
+declared channel gives −0.077 at 30 seeds and −0.087 at 200). The contrast is
+under-powered in the claim dimension as well as the seed dimension, so its point
+estimate carries little information about its size.
 
-This does not say the effects are absent. It says **the grid as specified cannot
-see them** — much cheaper to learn now than in Week 14.
+This does not say the effect is absent. It says **the grid as specified cannot
+see it** — much cheaper to learn now than in Week 14.
 
-*Recommendation.* Raise `core_seeds` to ~300 (the core grid becomes 6,000
-episodes; cost scales with episodes, not cells, so this stays inside the plan's
-own budget), or move H2 and H3 to the exploratory set. Decide **before** the grid
-runs.
+*Recommendation.* Move H2 and H3 to the exploratory set before the grid runs.
+Buying H3 outright is not a matter of raising `core_seeds` a little: at these
+effect sizes it needs a grid one to two orders of magnitude larger, which is a
+different study. What the design does support at 30 replications is the
+intervention contrast, and that is the claim to build the paper on.
 
-**The pipeline is validated in both directions.** Five runs, identical code,
+**The pipeline is validated in both directions.** Six runs, identical code,
 varying only the declared DGP and the sample size:
 
 | Run | Tone→EPC channel | seeds/cell | Cohen's d | n/cell for 80% power |
 |---|---|---:|---:|---:|
-| `real_main` | declared | 30 | −0.166 | 572 |
-| `real_strong` | inflated ×2.9 | 30 | −0.249 | 254 |
-| `real_null` | set to zero | 30 | −0.021 | 35,321 |
-| `hp_declared` | declared | 200 | −0.061 | 4,168 |
-| `hp_strong` | inflated ×2.9 | 200 | −0.203 | 384 |
-| `hp_null` | set to zero | 200 | +0.037 | 11,412 |
+| `main` | declared | 30 | -0.077 | 2,671 |
+| `strong_dgp` | inflated ×2.9 | 30 | -0.280 | 201 |
+| `null_dgp` | set to zero | 30 | -0.001 | 44,428,071 |
+| `highpower` | declared | 200 | -0.087 | 2,062 |
+| `strong_highpower` | inflated ×2.9 | 200 | -0.206 | 369 |
+| `null_highpower` | set to zero | 200 | +0.055 | 5,132 |
 
 Read at matched sample size, the ordering is correct in both blocks: inflating
 the channel enlarges the effect, zeroing it leaves nothing. That is sensitivity
@@ -337,7 +343,7 @@ Recorded because each one silently produced plausible-looking results:
 
 ## Part 2 — The design-sensitivity run
 
-`runs/real_main`: 1,400 episodes, real LIAR claims and real PHEME topologies, surrogate topology, declared
+`runs/main`: 1,400 episodes, real LIAR claims, real PHEME topologies, declared
 DGP, surrogate backbones. **Properties of the declared DGP, not results about
 language models.**
 
@@ -392,7 +398,7 @@ untouched by this and still has to be run.
 
 ## The revised plan
 
-[`Project_Plan_NudgeSim_v2.3.docx`](Project_Plan_NudgeSim_v2.3.docx) is the
+[`Project_Plan_NudgeSim_v2.5.docx`](Project_Plan_NudgeSim_v2.5.docx) is the
 project plan with all five problems fixed in place. §0 of that document carries
 a revision table mapping each change to the evidence above. The substantive
 edits are in §5.2 (intervener placement and reach), §5.3 (veracity-sensitive
@@ -400,12 +406,13 @@ intervener), §5.5 (welfare and durability measures), §5.9 (two-tier sampling
 protocol), §8 (power statement and conditional contrasts), §9 (a Week-8 power
 gate) and §12 (two new risks).
 
-[`Project_Plan_NudgeSim_v2.4.docx`](Project_Plan_NudgeSim_v2.4.docx) adds four
-more changes, each traceable to something measured rather than assumed: §5.9
+The same document's v2.4 and v2.5 revisions add five more changes, each
+traceable to something measured rather than assumed: §5.9
 (seeds actually pinned, and the focused arm replaced by a measured power
 statement), §5.10 (a communication-design decision that had never been made),
-§7 (named model backbones with a selection rule), §8 (factor ATEs, a human
-baseline row, and a norm-robustness arm), and §12 (the budget, metered).
+§7 (a six-level cross-vendor model roster with a selection rule), §8 (factor
+ATEs, a human baseline row, and a norm-robustness arm), and §12 (the budget,
+metered).
 
 The headline change to the protocol: the grid is 1,400 episodes, not the 2,780
 of v2.1. The focused arm at 150 seeds was sized against a pilot estimate of 259

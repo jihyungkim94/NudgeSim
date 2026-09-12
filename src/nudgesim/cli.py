@@ -399,6 +399,15 @@ def cmd_cost(args: argparse.Namespace) -> int:
             "note": "adding a model adds its own full set of replications",
         },
         "output_tokens": scenarios,
+        # What one more backbone level costs, in tokens rather than dollars.
+        # The roster spans four vendors on rate cards that move independently,
+        # and only the Anthropic prices in the catalogue are verified.
+        "marginal_model_tokens": {
+            "calls": calls_per_model,
+            "input": round(prof.mean_input_tokens * calls_per_model),
+            "output_no_reasoning": scenarios["exemplar_output"] * calls_per_model,
+            "output_with_reasoning": scenarios["thinking_output"] * calls_per_model,
+        },
         "per_model_usd": per_model,
         "recommended_portfolio": {
             "arms": [

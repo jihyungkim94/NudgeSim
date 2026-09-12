@@ -9,14 +9,14 @@ engine, the agent society, the timing × tone intervention design, the calibrati
 gate, the preregistered analysis, and a one-command reproduction.
 
 > **Read this first.** The runs shipped in `runs/` were produced with the
-> **analytic surrogate policy**, not with LLM backbones. Claims come from the
-> **real LIAR corpus**; topologies are surrogate, because PHEME must be fetched
-> by hand (see below). These runs are a *design-sensitivity study* of the
-> preregistered protocol — what it can and cannot detect — and are **not
-> evidence about LLM behaviour**. Every artefact carries a provenance string
-> saying so. See [docs/FINDINGS.md](docs/FINDINGS.md) for what the study did
-> establish, including five problems in the plan as written and six silent bugs
-> the implementation surfaced.
+> **analytic surrogate policy**, not with LLM backbones. Both corpora are real:
+> claims from **LIAR**, topologies from **PHEME-9**. These runs are a
+> *design-sensitivity study* of the preregistered protocol — what it can and
+> cannot detect — and are **not evidence about LLM behaviour**. Every artefact
+> carries a provenance string saying so. See
+> [docs/FINDINGS.md](docs/FINDINGS.md) for what the study did establish,
+> including five problems in the plan as written and seven silent bugs the
+> implementation surfaced.
 
 ---
 
@@ -30,7 +30,23 @@ PYTHON=.venv/bin/python ./reproduce.sh --full   # + null-DGP and high-power cont
 
 Outputs land in `runs/main/`: `results.parquet` (one row per episode),
 `rounds.parquet` (per-round rates), `episodes.jsonl` (full logs),
-`analysis/analysis.json`, `analysis/cell_means.csv`, and `figures/`.
+`analysis/analysis.json`, `analysis/cell_means.csv`, and `figures/`. Only the
+small reviewable artefacts are committed; the bulk logs regenerate in seconds.
+
+## The paper
+
+`paper/` holds the manuscript. Every table in it is generated from the run
+artefacts, so no number is typed by hand:
+
+```bash
+PYTHON=.venv/bin/python ./reproduce.sh --full --liar ... --pheme ...
+.venv/bin/python paper/build_tables.py    # tables/*.tex from runs/
+.venv/bin/python paper/check.py           # structural check on the source
+```
+
+No LLM run has been executed yet, so the sections reporting model behaviour are
+marked `[PENDING LLM RUN]` and left empty rather than estimated. See
+[paper/README.md](paper/README.md).
 
 ### Getting the corpora
 
@@ -149,7 +165,7 @@ src/nudgesim/
   cli.py         check | calibrate | run | analyze | reproduce
 analysis/        preregistered models, power analysis, figures
 configs/         payoff, design, grid, backbone and DGP configuration
-tests/           126 tests; the payoff ledger is checked against hand-computed episodes
+tests/           145 tests; the payoff ledger is checked against hand-computed episodes
 docs/            design map, findings, preregistration, ethics, data cards
 ```
 

@@ -1,0 +1,38 @@
+[
+  {
+    "label": "Reply tree, rooted \\emph{(as commonly specified)}",
+    "sibling_window": 0,
+    "no_citizen_visibility": 0.8855721393034826,
+    "mean_reach": 1.0816666666666668,
+    "epc_control": 0.04513888888888888,
+    "epc_treated": 0.08340277777777777,
+    "ate": 0.03826388888888889,
+    "ci_low": 0.025798611111111105,
+    "ci_high": 0.05024305555555557,
+    "cohens_d": 0.5329613952235451
+  },
+  {
+    "label": "Bounded attention, $w=1$ \\emph{(ours)}",
+    "sibling_window": 1,
+    "no_citizen_visibility": 0.0,
+    "mean_reach": 2.1933333333333334,
+    "epc_control": 0.030694444444444437,
+    "epc_treated": 0.11020833333333331,
+    "ate": 0.07951388888888887,
+    "ci_low": 0.06437500000000002,
+    "ci_high": 0.0939939236111111,
+    "cohens_d": 0.7909891936316356
+  },
+  {
+    "label": "All siblings visible",
+    "sibling_window": 99,
+    "no_citizen_visibility": 0.0,
+    "mean_reach": 4.8116666666666665,
+    "epc_control": 0.007638888888888889,
+    "epc_treated": 0.10309027777777778,
+    "ate": 0.09545138888888889,
+    "ci_low": 0.07958072916666667,
+    "ci_high": 0.11211892361111112,
+    "cohens_d": 0.6167307194891019
+  }
+]

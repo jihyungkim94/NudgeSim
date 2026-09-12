@@ -102,12 +102,12 @@ Our contributions:
   cascade and treating reply edges as visibility edges leaves 88.6\% of
   neighbourhoods with no citizen able to see any other citizen. We measure three
   translations of the same corpus on the same seeds: the intervention's measured
-  effect on peer correction runs $+0.038$, $+0.081$ and $+0.095$ depending only
+  effect on peer correction runs $+0.038$, $+0.080$ and $+0.095$ depending only
   on which is chosen (\S\ref{sec:rq1}).
 
 \item \textbf{Total payoff is not a welfare measure under costly sanctioning.}
-  In \textsc{NudgeSim} the intervention cuts propagation and nearly quadruples
-  peer correction, and $\sum\pi$ ranks it $122$ points below doing nothing.
+  In \textsc{NudgeSim} the intervention cuts propagation and quadruples peer
+  correction, and $\sum\pi$ ranks it $125$ points below doing nothing.
   Removing sanction costs does not repair it, because the conformity term is
   maximised by the arm in which nobody disagrees. Only the veracity term tracks
   the good being provided (\S\ref{sec:rq2}).
@@ -338,7 +338,7 @@ their headline effect to it, as here.
 \input{tables/welfare}
 \caption{Control versus treated arms on the primary outcomes and on three
 candidate welfare measures. The intervention cuts propagation and nearly
-quadruples peer correction, and total payoff ranks it $122$ points below doing
+quadruples peer correction, and total payoff ranks it $125$ points below doing
 nothing.}
 \label{tab:welfare}
 \end{table}
@@ -463,12 +463,14 @@ powered at the 30 replications a conventional design allocates.}
 \label{tab:power}
 \end{table}
 
-Table~\ref{tab:validation} also carries a caution. The declared effect is not
-stable across claim draws---$-0.166$ at 30 replications per cell and $-0.061$ at
-200---because a larger cell draws a different set of \textsc{Liar} claims rather
-than more replications of the same ones. The tone contrast is under-powered in
-the claim dimension as well as the seed dimension, and no single point estimate
-should be read as its effect size.
+Table~\ref{tab:validation} also carries a caution. The declared tone effect
+needs roughly two thousand replications per cell for 80\% power, so its point
+estimate at 30 or even 200 carries almost no information about its size: what
+the table establishes is that the pipeline separates a present effect from an
+absent one, not what the present effect is. A further source of movement is the
+claim pool---a cell of a different size draws a different set of \textsc{Liar}
+claims rather than more replications of the same ones---so the tone contrast is
+under-powered in the claim dimension as well as the seed dimension.
 
 Table~\ref{tab:power} is the reason the tone hypothesis is declared exploratory
 before the grid runs rather than reinterpreted afterwards. It is also a general
@@ -504,24 +506,90 @@ agent and history.}
 \label{tab:cost}
 \end{table}
 
-\paragraph{Model roster.}
-The backbone factor has four levels: a frontier model with extended thinking
-enabled, the \emph{same weights} with it disabled, a mid-tier model and a small
-one. The paired frontier rows are the design's reason for existing:
-\citet{piedrahita2025sanctsim} report their largest split between reasoning and
-traditional models, but had to draw that contrast across different model
-families, which confounds reasoning mode with everything else that differs
-between them. Holding the weights fixed does not.
+\paragraph{What the line benchmarks.}
+Every study in this line evaluates across vendors, and the rosters overlap
+(Table~\ref{tab:rosters}). \textsc{Gpt-4o} appears in all four and is the
+de-facto comparability anchor; open-weights models appear in all four; three of
+the four include an Anthropic model. A single-vendor roster would make
+\textsc{NudgeSim}'s model-dependence results incomparable with the papers it is
+positioned against, so ours spans four vendors.
 
-\paragraph{Cost.} Table~\ref{tab:cost} reports what that costs. Reasoning tokens
-bill as output, so the thinking arm dominates: scheduling it for the main grid
-and one high-power replication rather than for every calibration, validation and
-re-run takes the programme from \$16{,}038 to \$1{,}866. That scheduling
-decision is worth more than every caching lever combined. Cross-vendor breadth
-comparable to \citet{backmann2025moralsim} or \citet{tewolde2026coopeval} is an
-access question rather than an engineering one: a backbone is one line of
-configuration, and the game, metrics and analysis layers are indifferent to
-which model, or whether any model, supplies the citizen policies.
+\begin{table}[t]
+\centering\small
+\begin{tabular}{llp{0.42\linewidth}}
+\toprule
+Study & $n$ & Models \\
+\midrule
+\textsc{GovSim} \citep{piatti2024govsim} & 15 &
+  GPT-3.5, GPT-4, GPT-4-turbo, GPT-4o; Claude-3 Haiku/Sonnet/Opus;
+  Llama-2 7B/13B/70B, Llama-3 8B/70B; Mistral-7B, Mixtral-8x7B;
+  Qwen-72B/110B \\
+\textsc{SanctSim} \citep{piedrahita2025sanctsim} & 9 &
+  DeepSeek-V3, GPT-4o, GPT-4o-mini, Llama-3.3-70B;
+  o1-mini, o1-preview, o3-mini (low/med/high) \\
+\textsc{MoralSim} \citep{backmann2025moralsim} & 9 &
+  DeepSeek-R1, o3-mini, Qwen-3-235B-A22B; Claude-3.7-Sonnet, DeepSeek-V3,
+  Gemini-2.5-Flash, GPT-4o-mini, GPT-4o, Llama-3.3-70B \\
+\textsc{CoopEval} \citep{tewolde2026coopeval} & 6 &
+  Claude Sonnet 4.5, GPT-5.2, Gemini 3 Flash (reasoning \emph{and} base),
+  GPT-4o, Qwen3-30B-A3B \\
+\midrule
+\textbf{\textsc{NudgeSim}} & \textbf{6} &
+  \textbf{GPT-4o}; a current OpenAI reasoning model; \textbf{Claude Opus 5}
+  with extended thinking \emph{and} without; \textbf{Llama-3.3-70B};
+  \textbf{Qwen3-30B-A3B} \\
+\bottomrule
+\end{tabular}
+\caption{Model rosters across the line. GPT-4o is the only model common to all
+four prior studies. Boldface marks models \textsc{NudgeSim} shares with at least
+one of them.}
+\label{tab:rosters}
+\end{table}
+
+\paragraph{Model roster.}
+The backbone factor has six levels chosen to serve three purposes at once.
+\emph{Comparability}: GPT-4o is in all four prior studies, and Llama-3.3-70B and
+Qwen3-30B each appear in two, so a model-dependence result here can be read
+against theirs. \emph{Capability spread}: the roster runs from a 30B
+open-weights model to a frontier one, which is what makes H5---whether backbone
+choice moves the outcome more than intervention design does---measurable rather
+than rhetorical. \emph{Reasoning}: two paired contrasts, one across models
+within OpenAI and one across modes within fixed Anthropic weights.
+
+The same-weights pairing follows \citet{tewolde2026coopeval}, who run Gemini 3
+Flash with and without reasoning; \citet{backmann2025moralsim} note that
+Claude-3.7-Sonnet and Gemini-2.5-Flash offer both modes but take the
+non-reasoning variant for cost. It matters because
+\citet{piedrahita2025sanctsim} report their largest split between reasoning and
+traditional models while drawing that contrast \emph{across model families},
+which confounds reasoning mode with everything else that differs between them.
+Running it on a frontier model rather than a small one is the extension here,
+and \S\ref{sec:cost} is why nobody had.
+
+\paragraph{Open weights are not a budget compromise.} Llama-3.3-70B and
+Qwen3-30B are served locally through the same OpenAI-compatible interface as the
+hosted models, so they cost GPU time rather than tokens. They also answer a
+question a hosted-only roster cannot: whether a result is bought with spend.
+\citet{piedrahita2025sanctsim} find GPT-4o-mini out-contributing GPT-4o, so this
+is not a formality.
+
+\paragraph{Cost.} Each backbone level is charged its own replications of every
+cell, so the grid grows linearly in models and the marginal cost of one more is
+fixed and vendor-independent: \textbf{13.1M input and 1.43M output tokens}, or
+43.4M output tokens if that level runs with reasoning enabled at 2{,}000 tokens
+per call. Six levels give 2{,}080 episodes. We report the token budget rather
+than a single dollar figure because six models span four rate cards that move
+independently; Table~\ref{tab:cost} prices the Anthropic levels, where reasoning
+tokens bill as output and the thinking arm dominates. Scheduling that arm for
+the main grid and one high-power replication rather than for every calibration,
+validation and re-run takes its programme cost from \$16{,}038 to \$1{,}866,
+which is worth more than every caching lever combined.
+
+Adding a vendor is a configuration change rather than an engineering one: the
+environment reaches every hosted model in Table~\ref{tab:rosters} through one
+OpenAI-compatible interface, and the game, metrics and analysis layers are
+indifferent to which model---or whether any model---supplies the citizen
+policies.
 
 %======================================================================
 \section{Limitations and Future Work}

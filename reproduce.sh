@@ -29,25 +29,29 @@ if [[ -n "${LIAR_DIR:-}" || " ${DATA_ARGS[*]-} " == *"--liar"* ]]; then :; else
   echo "         run 'nudgesim fetch-data' first for real LIAR claims."
 fi
 
-echo "== 0/5 tests (the payoff ledger gates everything downstream)"
+echo "== 0/6 tests (the payoff ledger gates everything downstream)"
 $PY -m pytest tests/ -q
 
-echo "== 1/5 manipulation checks and design references"
+echo "== 1/6 manipulation checks and design references"
 $PY -m nudgesim.cli "${DATA_ARGS[@]}" check --out "$OUT/checks"
 
-echo "== 2/5 calibration gate (plan section 5.7) -- hard Go/No-Go"
+echo "== 2/6 calibration gate (plan section 5.7) -- hard Go/No-Go"
 $PY -m nudgesim.cli "${DATA_ARGS[@]}" calibrate --out "$OUT/calibration"
 
-echo "== 3/5 main grid: 1,400 episodes"
+echo "== 3/6 main grid: 1,400 episodes"
 $PY -m nudgesim.cli "${DATA_ARGS[@]}" $LLM run --out "$OUT/main" --run-id main-declared
 
-echo "== 4/5 preregistered analysis"
+echo "== 4/6 preregistered analysis"
 $PY -m nudgesim.cli analyze --run "$OUT/main" --out "$OUT/main/analysis"
 $PY -m analysis.figures "$OUT/main"
 
+echo "== 5/6 metered cost of running the grid on language models"
+$PY -m nudgesim.cli "${DATA_ARGS[@]}" cost --out "$OUT/cost/cost.json" >/dev/null
+
 if [[ $FULL -eq 1 ]]; then
-  echo "== 5/5 controls: null DGP and high-power confirmation"
-  for spec in "null:null_dgp:30" "declared:highpower:200" "null:null_highpower:200" "strong:strong_highpower:200"; do
+  echo "== 6/6 controls: the validation triad and high-power confirmation"
+  for spec in "strong:strong_dgp:30" "null:null_dgp:30" \
+              "declared:highpower:200" "strong:strong_highpower:200" "null:null_highpower:200"; do
     IFS=: read -r dgp name seeds <<<"$spec"
     $PY -m nudgesim.cli "${DATA_ARGS[@]}" --dgp "$dgp" run \
         --out "$OUT/$name" --run-id "$name" --arms core --core-seeds "$seeds"
@@ -79,8 +83,9 @@ for dgp in ("declared", "no-novelty"):
         print(f"  {dgp:12s} GO {go}/{len(rows)}  mean propagation margin {mean:+.4f}")
 PYGATE
 else
-  echo "== 5/5 skipped (pass --full for the null-DGP and high-power controls)"
+  echo "== 6/6 skipped (pass --full for the validation triad and high-power controls)"
 fi
 
 echo
 echo "done. results: $OUT/main/results.parquet · $OUT/main/analysis/analysis.json"
+echo "paper tables: .venv/bin/python paper/build_tables.py"

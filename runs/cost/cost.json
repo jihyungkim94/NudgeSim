@@ -1,0 +1,286 @@
+{
+  "profile": {
+    "tokenizer": "tiktoken/cl100k_base",
+    "episodes_metered": 40,
+    "calls": 2400,
+    "calls_per_episode": 60.0,
+    "mean_input_tokens": 617.0,
+    "max_input_tokens": 862,
+    "system_share": 0.509,
+    "duplicate_rate": 0.0,
+    "truncated_episodes": 0
+  },
+  "grid": {
+    "episodes_total_default": 1400,
+    "models_in_factor_f3": 4,
+    "episodes_per_model": 350,
+    "calls_per_model": 21000,
+    "note": "adding a model adds its own full set of replications"
+  },
+  "output_tokens": {
+    "exemplar_output": 68,
+    "ceiling_output": 400,
+    "thinking_output": 2068
+  },
+  "marginal_model_tokens": {
+    "calls": 21000,
+    "input": 12957735,
+    "output_no_reasoning": 1428000,
+    "output_with_reasoning": 43428000
+  },
+  "per_model_usd": {
+    "claude-opus-5": {
+      "tier": "frontier",
+      "exemplar_output": {
+        "model": "claude-opus-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 1428000,
+        "usd_list": 100.49,
+        "usd_batch": 50.24,
+        "usd_prompt_cache": 70.83,
+        "usd_response_cache": 100.49,
+        "usd_all_levers": 35.42
+      },
+      "ceiling_output": {
+        "model": "claude-opus-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 8400000,
+        "usd_list": 274.79,
+        "usd_batch": 137.39,
+        "usd_prompt_cache": 245.13,
+        "usd_response_cache": 274.79,
+        "usd_all_levers": 122.57
+      },
+      "thinking_output": {
+        "model": "claude-opus-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 43428000,
+        "usd_list": 1150.49,
+        "usd_batch": 575.24,
+        "usd_prompt_cache": 1120.83,
+        "usd_response_cache": 1150.49,
+        "usd_all_levers": 560.42
+      }
+    },
+    "claude-sonnet-5": {
+      "tier": "mid",
+      "exemplar_output": {
+        "model": "claude-sonnet-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 1428000,
+        "usd_list": 40.2,
+        "usd_batch": 20.1,
+        "usd_prompt_cache": 28.33,
+        "usd_response_cache": 40.2,
+        "usd_all_levers": 14.17
+      },
+      "ceiling_output": {
+        "model": "claude-sonnet-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 8400000,
+        "usd_list": 109.92,
+        "usd_batch": 54.96,
+        "usd_prompt_cache": 98.05,
+        "usd_response_cache": 109.92,
+        "usd_all_levers": 49.03
+      },
+      "thinking_output": {
+        "model": "claude-sonnet-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 43428000,
+        "usd_list": 460.2,
+        "usd_batch": 230.1,
+        "usd_prompt_cache": 448.33,
+        "usd_response_cache": 460.2,
+        "usd_all_levers": 224.17
+      }
+    },
+    "claude-sonnet-4-6": {
+      "tier": "mid",
+      "exemplar_output": {
+        "model": "claude-sonnet-4-6",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 1428000,
+        "usd_list": 60.29,
+        "usd_batch": 30.15,
+        "usd_prompt_cache": 42.5,
+        "usd_response_cache": 60.29,
+        "usd_all_levers": 21.25
+      },
+      "ceiling_output": {
+        "model": "claude-sonnet-4-6",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 8400000,
+        "usd_list": 164.87,
+        "usd_batch": 82.44,
+        "usd_prompt_cache": 147.08,
+        "usd_response_cache": 164.87,
+        "usd_all_levers": 73.54
+      },
+      "thinking_output": {
+        "model": "claude-sonnet-4-6",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 43428000,
+        "usd_list": 690.29,
+        "usd_batch": 345.15,
+        "usd_prompt_cache": 672.5,
+        "usd_response_cache": 690.29,
+        "usd_all_levers": 336.25
+      }
+    },
+    "claude-haiku-4-5": {
+      "tier": "small",
+      "exemplar_output": {
+        "model": "claude-haiku-4-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 1428000,
+        "usd_list": 20.1,
+        "usd_batch": 10.05,
+        "usd_prompt_cache": 14.17,
+        "usd_response_cache": 20.1,
+        "usd_all_levers": 7.08
+      },
+      "ceiling_output": {
+        "model": "claude-haiku-4-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 8400000,
+        "usd_list": 54.96,
+        "usd_batch": 27.48,
+        "usd_prompt_cache": 49.03,
+        "usd_response_cache": 54.96,
+        "usd_all_levers": 24.51
+      },
+      "thinking_output": {
+        "model": "claude-haiku-4-5",
+        "calls": 21000,
+        "input_tokens": 12957735,
+        "output_tokens": 43428000,
+        "usd_list": 230.1,
+        "usd_batch": 115.05,
+        "usd_prompt_cache": 224.17,
+        "usd_response_cache": 230.1,
+        "usd_all_levers": 112.08
+      }
+    }
+  },
+  "recommended_portfolio": {
+    "arms": [
+      {
+        "model": "claude-opus-5",
+        "output_scenario": "thinking_output",
+        "grid_equivalents": 2.0
+      },
+      {
+        "model": "claude-opus-5",
+        "output_scenario": "exemplar_output",
+        "grid_equivalents": 13.0
+      },
+      {
+        "model": "claude-sonnet-5",
+        "output_scenario": "exemplar_output",
+        "grid_equivalents": 13.0
+      },
+      {
+        "model": "claude-haiku-4-5",
+        "output_scenario": "exemplar_output",
+        "grid_equivalents": 13.0
+      }
+    ],
+    "usd_per_grid_list": 1311.28,
+    "usd_per_grid_all_levers": 617.09,
+    "usd_programme_all_levers": 1857.55
+  },
+  "portfolios_usd": {
+    "all_frontier": {
+      "exemplar_output": {
+        "models": 4,
+        "usd_list": 401.96,
+        "usd_all_levers": 141.68
+      },
+      "ceiling_output": {
+        "models": 4,
+        "usd_list": 1099.16,
+        "usd_all_levers": 490.28
+      },
+      "thinking_output": {
+        "models": 4,
+        "usd_list": 4601.96,
+        "usd_all_levers": 2241.68
+      }
+    },
+    "mixed_tiers": {
+      "exemplar_output": {
+        "models": 4,
+        "usd_list": 221.08,
+        "usd_all_levers": 77.92
+      },
+      "ceiling_output": {
+        "models": 4,
+        "usd_list": 604.54,
+        "usd_all_levers": 269.65
+      },
+      "thinking_output": {
+        "models": 4,
+        "usd_list": 2531.08,
+        "usd_all_levers": 1232.92
+      }
+    },
+    "all_small": {
+      "exemplar_output": {
+        "models": 4,
+        "usd_list": 80.4,
+        "usd_all_levers": 28.32
+      },
+      "ceiling_output": {
+        "models": 4,
+        "usd_list": 219.84,
+        "usd_all_levers": 98.04
+      },
+      "thinking_output": {
+        "models": 4,
+        "usd_list": 920.4,
+        "usd_all_levers": 448.32
+      }
+    }
+  },
+  "programme": {
+    "grid_equivalents": 13.0,
+    "inventory": {
+      "calibration gate": 0.1,
+      "pilot": 0.2,
+      "main grid": 1.0,
+      "validation: effect inflated": 1.0,
+      "validation: effect zeroed": 1.0,
+      "high-power rerun at 200 seeds": 6.7,
+      "reruns after design or code fixes": 3.0
+    },
+    "usd": {
+      "all_frontier": {
+        "exemplar_output": 1841.84,
+        "ceiling_output": 6373.64,
+        "thinking_output": 29141.84
+      },
+      "mixed_tiers": {
+        "exemplar_output": 1012.96,
+        "ceiling_output": 3505.45,
+        "thinking_output": 16027.96
+      },
+      "all_small": {
+        "exemplar_output": 368.16,
+        "ceiling_output": 1274.52,
+        "thinking_output": 5828.16
+      }
+    }
+  }
+}
