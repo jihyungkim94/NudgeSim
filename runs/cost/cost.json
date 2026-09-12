@@ -1,12 +1,12 @@
 {
   "profile": {
-    "tokenizer": "tiktoken/cl100k_base",
+    "tokenizer": "chars-per-token fallback",
     "episodes_metered": 40,
     "calls": 2400,
     "calls_per_episode": 60.0,
-    "mean_input_tokens": 616.1,
-    "max_input_tokens": 867,
-    "system_share": 0.509,
+    "mean_input_tokens": 612.5,
+    "max_input_tokens": 877,
+    "system_share": 0.501,
     "duplicate_rate": 0.0,
     "truncated_episodes": 0
   },
@@ -18,15 +18,15 @@
     "note": "adding a model adds its own full set of replications"
   },
   "output_tokens": {
-    "exemplar_output": 68,
+    "exemplar_output": 67,
     "ceiling_output": 400,
-    "thinking_output": 2068
+    "thinking_output": 2067
   },
   "marginal_model_tokens": {
     "calls": 23250,
-    "input": 14323628,
-    "output_no_reasoning": 1581000,
-    "output_with_reasoning": 48081000
+    "input": 14239850,
+    "output_no_reasoning": 1557750,
+    "output_with_reasoning": 48057750
   },
   "per_model_usd": {
     "claude-opus-5": {
@@ -34,35 +34,35 @@
       "exemplar_output": {
         "model": "claude-opus-5",
         "calls": 23250,
-        "input_tokens": 14323628,
-        "output_tokens": 1581000,
-        "usd_list": 111.14,
-        "usd_batch": 55.57,
-        "usd_prompt_cache": 78.31,
-        "usd_response_cache": 111.14,
-        "usd_all_levers": 39.16
+        "input_tokens": 14239850,
+        "output_tokens": 1557750,
+        "usd_list": 110.14,
+        "usd_batch": 55.07,
+        "usd_prompt_cache": 78.04,
+        "usd_response_cache": 110.14,
+        "usd_all_levers": 39.02
       },
       "ceiling_output": {
         "model": "claude-opus-5",
         "calls": 23250,
-        "input_tokens": 14323628,
+        "input_tokens": 14239850,
         "output_tokens": 9300000,
-        "usd_list": 304.12,
-        "usd_batch": 152.06,
-        "usd_prompt_cache": 271.29,
-        "usd_response_cache": 304.12,
-        "usd_all_levers": 135.64
+        "usd_list": 303.7,
+        "usd_batch": 151.85,
+        "usd_prompt_cache": 271.6,
+        "usd_response_cache": 303.7,
+        "usd_all_levers": 135.8
       },
       "thinking_output": {
         "model": "claude-opus-5",
         "calls": 23250,
-        "input_tokens": 14323628,
-        "output_tokens": 48081000,
-        "usd_list": 1273.64,
-        "usd_batch": 636.82,
-        "usd_prompt_cache": 1240.81,
-        "usd_response_cache": 1273.64,
-        "usd_all_levers": 620.41
+        "input_tokens": 14239850,
+        "output_tokens": 48057750,
+        "usd_list": 1272.64,
+        "usd_batch": 636.32,
+        "usd_prompt_cache": 1240.54,
+        "usd_response_cache": 1272.64,
+        "usd_all_levers": 620.27
       }
     },
     "claude-sonnet-5": {
@@ -70,35 +70,35 @@
       "exemplar_output": {
         "model": "claude-sonnet-5",
         "calls": 23250,
-        "input_tokens": 14323628,
-        "output_tokens": 1581000,
-        "usd_list": 44.46,
-        "usd_batch": 22.23,
-        "usd_prompt_cache": 31.32,
-        "usd_response_cache": 44.46,
-        "usd_all_levers": 15.66
+        "input_tokens": 14239850,
+        "output_tokens": 1557750,
+        "usd_list": 44.06,
+        "usd_batch": 22.03,
+        "usd_prompt_cache": 31.22,
+        "usd_response_cache": 44.06,
+        "usd_all_levers": 15.61
       },
       "ceiling_output": {
         "model": "claude-sonnet-5",
         "calls": 23250,
-        "input_tokens": 14323628,
+        "input_tokens": 14239850,
         "output_tokens": 9300000,
-        "usd_list": 121.65,
-        "usd_batch": 60.82,
-        "usd_prompt_cache": 108.51,
-        "usd_response_cache": 121.65,
-        "usd_all_levers": 54.26
+        "usd_list": 121.48,
+        "usd_batch": 60.74,
+        "usd_prompt_cache": 108.64,
+        "usd_response_cache": 121.48,
+        "usd_all_levers": 54.32
       },
       "thinking_output": {
         "model": "claude-sonnet-5",
         "calls": 23250,
-        "input_tokens": 14323628,
-        "output_tokens": 48081000,
-        "usd_list": 509.46,
-        "usd_batch": 254.73,
-        "usd_prompt_cache": 496.32,
-        "usd_response_cache": 509.46,
-        "usd_all_levers": 248.16
+        "input_tokens": 14239850,
+        "output_tokens": 48057750,
+        "usd_list": 509.06,
+        "usd_batch": 254.53,
+        "usd_prompt_cache": 496.22,
+        "usd_response_cache": 509.06,
+        "usd_all_levers": 248.11
       }
     },
     "claude-sonnet-4-6": {
@@ -106,35 +106,35 @@
       "exemplar_output": {
         "model": "claude-sonnet-4-6",
         "calls": 23250,
-        "input_tokens": 14323628,
-        "output_tokens": 1581000,
-        "usd_list": 66.69,
-        "usd_batch": 33.34,
-        "usd_prompt_cache": 46.99,
-        "usd_response_cache": 66.69,
-        "usd_all_levers": 23.49
+        "input_tokens": 14239850,
+        "output_tokens": 1557750,
+        "usd_list": 66.09,
+        "usd_batch": 33.04,
+        "usd_prompt_cache": 46.83,
+        "usd_response_cache": 66.09,
+        "usd_all_levers": 23.41
       },
       "ceiling_output": {
         "model": "claude-sonnet-4-6",
         "calls": 23250,
-        "input_tokens": 14323628,
+        "input_tokens": 14239850,
         "output_tokens": 9300000,
-        "usd_list": 182.47,
-        "usd_batch": 91.24,
-        "usd_prompt_cache": 162.77,
-        "usd_response_cache": 182.47,
-        "usd_all_levers": 81.39
+        "usd_list": 182.22,
+        "usd_batch": 91.11,
+        "usd_prompt_cache": 162.96,
+        "usd_response_cache": 182.22,
+        "usd_all_levers": 81.48
       },
       "thinking_output": {
         "model": "claude-sonnet-4-6",
         "calls": 23250,
-        "input_tokens": 14323628,
-        "output_tokens": 48081000,
-        "usd_list": 764.19,
-        "usd_batch": 382.09,
-        "usd_prompt_cache": 744.49,
-        "usd_response_cache": 764.19,
-        "usd_all_levers": 372.24
+        "input_tokens": 14239850,
+        "output_tokens": 48057750,
+        "usd_list": 763.59,
+        "usd_batch": 381.79,
+        "usd_prompt_cache": 744.33,
+        "usd_response_cache": 763.59,
+        "usd_all_levers": 372.16
       }
     },
     "claude-haiku-4-5": {
@@ -142,35 +142,35 @@
       "exemplar_output": {
         "model": "claude-haiku-4-5",
         "calls": 23250,
-        "input_tokens": 14323628,
-        "output_tokens": 1581000,
-        "usd_list": 22.23,
-        "usd_batch": 11.11,
-        "usd_prompt_cache": 15.66,
-        "usd_response_cache": 22.23,
-        "usd_all_levers": 7.83
+        "input_tokens": 14239850,
+        "output_tokens": 1557750,
+        "usd_list": 22.03,
+        "usd_batch": 11.01,
+        "usd_prompt_cache": 15.61,
+        "usd_response_cache": 22.03,
+        "usd_all_levers": 7.8
       },
       "ceiling_output": {
         "model": "claude-haiku-4-5",
         "calls": 23250,
-        "input_tokens": 14323628,
+        "input_tokens": 14239850,
         "output_tokens": 9300000,
-        "usd_list": 60.82,
-        "usd_batch": 30.41,
-        "usd_prompt_cache": 54.26,
-        "usd_response_cache": 60.82,
-        "usd_all_levers": 27.13
+        "usd_list": 60.74,
+        "usd_batch": 30.37,
+        "usd_prompt_cache": 54.32,
+        "usd_response_cache": 60.74,
+        "usd_all_levers": 27.16
       },
       "thinking_output": {
         "model": "claude-haiku-4-5",
         "calls": 23250,
-        "input_tokens": 14323628,
-        "output_tokens": 48081000,
-        "usd_list": 254.73,
-        "usd_batch": 127.36,
-        "usd_prompt_cache": 248.16,
-        "usd_response_cache": 254.73,
-        "usd_all_levers": 124.08
+        "input_tokens": 14239850,
+        "output_tokens": 48057750,
+        "usd_list": 254.53,
+        "usd_batch": 127.26,
+        "usd_prompt_cache": 248.11,
+        "usd_response_cache": 254.53,
+        "usd_all_levers": 124.05
       }
     }
   },
@@ -197,60 +197,60 @@
         "grid_equivalents": 13.0
       }
     ],
-    "usd_per_grid_list": 1451.47,
-    "usd_per_grid_all_levers": 683.06,
-    "usd_programme_all_levers": 2055.27
+    "usd_per_grid_list": 1448.87,
+    "usd_per_grid_all_levers": 682.7,
+    "usd_programme_all_levers": 2052.13
   },
   "portfolios_usd": {
     "all_frontier": {
       "exemplar_output": {
         "models": 4,
-        "usd_list": 444.56,
-        "usd_all_levers": 156.64
+        "usd_list": 440.56,
+        "usd_all_levers": 156.08
       },
       "ceiling_output": {
         "models": 4,
-        "usd_list": 1216.48,
-        "usd_all_levers": 542.56
+        "usd_list": 1214.8,
+        "usd_all_levers": 543.2
       },
       "thinking_output": {
         "models": 4,
-        "usd_list": 5094.56,
-        "usd_all_levers": 2481.64
+        "usd_list": 5090.56,
+        "usd_all_levers": 2481.08
       }
     },
     "mixed_tiers": {
       "exemplar_output": {
         "models": 4,
-        "usd_list": 244.52,
-        "usd_all_levers": 86.14
+        "usd_list": 242.32,
+        "usd_all_levers": 85.84
       },
       "ceiling_output": {
         "models": 4,
-        "usd_list": 669.06,
-        "usd_all_levers": 298.42
+        "usd_list": 668.14,
+        "usd_all_levers": 298.76
       },
       "thinking_output": {
         "models": 4,
-        "usd_list": 2802.02,
-        "usd_all_levers": 1364.89
+        "usd_list": 2799.82,
+        "usd_all_levers": 1364.59
       }
     },
     "all_small": {
       "exemplar_output": {
         "models": 4,
-        "usd_list": 88.92,
-        "usd_all_levers": 31.32
+        "usd_list": 88.12,
+        "usd_all_levers": 31.2
       },
       "ceiling_output": {
         "models": 4,
-        "usd_list": 243.28,
-        "usd_all_levers": 108.52
+        "usd_list": 242.96,
+        "usd_all_levers": 108.64
       },
       "thinking_output": {
         "models": 4,
-        "usd_list": 1018.92,
-        "usd_all_levers": 496.32
+        "usd_list": 1018.12,
+        "usd_all_levers": 496.2
       }
     }
   },
@@ -267,19 +267,19 @@
     },
     "usd": {
       "all_frontier": {
-        "exemplar_output": 2036.32,
-        "ceiling_output": 7053.28,
-        "thinking_output": 32261.32
+        "exemplar_output": 2029.04,
+        "ceiling_output": 7061.6,
+        "thinking_output": 32254.04
       },
       "mixed_tiers": {
-        "exemplar_output": 1119.82,
-        "ceiling_output": 3879.46,
-        "thinking_output": 17743.57
+        "exemplar_output": 1115.92,
+        "ceiling_output": 3883.88,
+        "thinking_output": 17739.67
       },
       "all_small": {
-        "exemplar_output": 407.16,
-        "ceiling_output": 1410.76,
-        "thinking_output": 6452.16
+        "exemplar_output": 405.6,
+        "ceiling_output": 1412.32,
+        "thinking_output": 6450.6
       }
     }
   }

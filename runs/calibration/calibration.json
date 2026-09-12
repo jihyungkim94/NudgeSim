@@ -24,9 +24,9 @@
     "virality_ratio": true
   },
   "asymmetry": {
-    "false_propagation_rate": 0.7825,
-    "true_propagation_rate": 0.713889,
-    "propagation_margin": 0.068611,
+    "false_propagation_rate": 0.778333,
+    "true_propagation_rate": 0.713056,
+    "propagation_margin": 0.065278,
     "false_cascade_size": 5.6,
     "true_cascade_size": 5.566667,
     "cascade_size_margin": 0.033333
