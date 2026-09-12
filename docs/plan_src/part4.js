@@ -13,7 +13,7 @@ module.exports = [
      t("The core grid runs 30 seeds/cell, which is enough to power the intervention-vs-control contrast and the model-dependence contrast (H5); spending uniformly across every cell to buy power for the contrasts that need far more (H1 at ~105 seeds/cell, H3 at ~572) would cost several times the core grid to reach cells it does not need to. Those contrasts are declared exploratory before the grid runs (§4, §8), and one high-power confirmatory rerun at 200 seeds/cell is carried in the budget below for the contrast most worth buying outright, rather than inflating every cell uniformly.")]),
   table([30, 11, 11, 13, 35], [
     ["Arm", "Cells", "Seeds", "Episodes", "What it powers"],
-    ["Core grid (2×2×6 + 6 controls)", "20", "30", "600", "Intervention vs control on FPR and EPC; H5 model dependence; all descriptive cell means"],
+    ["Core grid (2×2×L + L controls, L = 4 here)", "20", "30", "600", "Intervention vs control on FPR and EPC; H5 model dependence; all descriptive cell means"],
     ["Placebo arm (specificity)", "20", "10", "200", "RQ5, pooled and conditional on the intervener having fired"],
     ["Ablation 1 — payoff visibility", "20", "3", "60", "Whether the game structure drives behaviour at all"],
     ["Ablation 2 — incentive ratio β/γ ∈ {0.5, 1, 3}", "60", "3", "180", "Platform-design sensitivity"],
@@ -21,8 +21,10 @@ module.exports = [
     ["Perturbation arm", "40", "8", "320", "Norm robustness: one citizen defects at the half-way round, either amplifying the claim or refusing to pay the correction cost. Follows GovSim §3.3."],
     ["Mixed-society arm", "—", "150 replications, seats rotated", "150", "H6 / RQ6: whole roster seated in one episode, seat assignment rotated by replication so every model holds every seat equally often. Same call count as a monoculture episode — cost-neutral. See §5.11."],
     [{ text: "Total", bold: true }, { text: "—", bold: true }, { text: "—", bold: true },
-     { text: "1,550", bold: true }, { text: "The grid the reference implementation actually runs", bold: true }],
+     { text: "1,550", bold: true }, { text: "The grid the reference implementation actually runs, at L = 4 backbone levels", bold: true }],
   ]),
+  p([t("Episode counts scale with the number of backbone levels. ", { bold: true }),
+     t("Every arm except the scale check and the mixed-society arm is indexed by backbone, so a design with L levels has 2×2×L + L cells: 20 at the L = 4 the reference implementation runs, and 30 at the L = 6 live roster of §7. Carried through every arm, the live grid is 2,230 episodes rather than 1,550 — 900 core, 300 placebo, 90 and 270 for the two ablations, 480 perturbation, plus the 40 scale-check and 150 mixed-society episodes, which do not scale. The marginal cost of one more level is the fixed quantity to plan against, and it is measured rather than assumed: 23,250 calls per level (§5.9).")]),
   evidence("Feasibility evidence: the budget is metered, not estimated", [
     "The framework meters the prompts the episode loop actually assembles and prices them against the published rate card; the command is reproducible (`nudgesim cost`) and the numbers below come from a run against the real LIAR and PHEME-9 corpora.",
     [t("What a call costs. ", { bold: true }), t("60 model calls an episode — five citizens over twelve rounds; the disseminator and the intervener run on fixed policies and cost nothing. 613 input tokens per call on average, 877 at the longest. 23,250 calls per model over the 1,550-episode grid, because factor F3 gives each model its own replications of every cell: the grid grows linearly in models benchmarked, and that, not prompt length, is what a multi-model design costs.")],
@@ -92,8 +94,8 @@ module.exports = [
     ["Llama-3.3-70B", "Meta (open)", "In SanctSim and MoralSim. Served locally through the same OpenAI-compatible interface, so it costs GPU time rather than tokens."],
     ["Qwen3-30B-A3B", "Alibaba (open)", "In CoopEval and (at 235B) MoralSim. The bottom of the capability ladder, and the arm that shows a result was not bought with spend — SanctSim's GPT-4o-mini out-contributed GPT-4o, so this is not a formality."],
   ]),
-  p([t("Six levels give 1,550 episodes at 23,250 calls per model. ", { bold: true }),
-     t("Each level is charged its own replications of every cell, so the marginal cost of one more model is fixed and vendor-independent — see §5.9 for the metered figures. The Anthropic levels are priced there; the other four rate cards move independently and should be priced at the time of the run rather than quoted here.")]),
+  p([t("Six levels give 2,230 episodes, roughly 370 per level. ", { bold: true }),
+     t("Each level is charged its own replications of every backbone-indexed cell, so the marginal cost of one more model is fixed and vendor-independent — on the order of 22,000 model calls, metered at 23,250 for the L = 4 reference grid (§5.9), where the episode-count scaling is set out. The Anthropic levels are priced there; the other four rate cards move independently and should be priced at the time of the run rather than quoted here.")]),
   p([t("What this needs that the reference implementation does not have. ", { bold: true }),
      t("Credentials for OpenAI, and either a GPU to serve the two open-weights models or an inference host for them. No new code: every hosted model in the table above is reachable through the one OpenAI-compatible backend already in the engine, and open weights through the same interface pointed at a local vLLM server. This is an access dependency, not an engineering one, and it is the critical path for the whole benchmark.")]),
 
