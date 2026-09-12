@@ -438,33 +438,26 @@ untouched by this and still has to be run.
 
 ## The revised plan
 
-[`Project_Plan_NudgeSim_v2.6.docx`](Project_Plan_NudgeSim_v2.6.docx) is the
-project plan with all five problems fixed in place. §0 of that document carries
-a revision table mapping each change to the evidence above. The substantive
-edits are in §5.2 (intervener placement and reach), §5.3 (veracity-sensitive
-intervener), §5.5 (welfare and durability measures), §5.9 (two-tier sampling
-protocol), §8 (power statement and conditional contrasts), §9 (a Week-8 power
-gate) and §12 (two new risks).
+[`Project_Plan_NudgeSim_V1.docx`](Project_Plan_NudgeSim_V1.docx) is the
+project plan with all six problems above fixed in place, written as the
+current design rather than as a version-by-version changelog — it is what a
+reader evaluating the research sees, and this document is the lab notebook
+behind it. Each problem above maps to a section there: §5.2 (intervener
+placement, reach, and bounded-attention visibility), §5.3 (a veracity-sensitive
+intervener and the mixed-society arm), §5.5 (welfare and durability measures),
+§5.9 (two-tier sampling and reproducible seeding), §5.10 (the communication
+channel split), §5.11 (the mixed-society arm in full), §7 (a six-level
+cross-vendor model roster), §8 (power statement, factor ATEs, a human baseline
+row, and a norm-robustness arm), and §12 (budget and reproducibility risk
+mitigations).
 
-The same document's v2.4 and v2.5 revisions add five more changes, each
-traceable to something measured rather than assumed: §5.9
-(seeds actually pinned, and the focused arm replaced by a measured power
-statement), §5.10 (a communication-design decision that had never been made),
-§7 (a six-level cross-vendor model roster with a selection rule), §8 (factor
-ATEs, a human baseline row, and a norm-robustness arm), and §12 (the budget,
-metered).
-
-v2.6 adds a sixth change, for problem 6 above: §5.3 and the new §5.11 add a
-mixed-society arm, because F3 as specified is a monoculture and cannot answer
-the free-riding half of what it was built to measure. §4 gains RQ6/H6.
-
-The headline change to the protocol: the grid is 1,550 episodes (1,400 before
-the mixed-society arm), not the 2,780 of v2.1. The focused arm at 150 seeds was
-sized against a pilot estimate of 259 seeds per cell for H3; measured with
-reproducible seeds, that contrast needs 572 — so the focused arm would have
-been under-powered by a factor of four while costing five times the core grid.
-It is replaced by a declared power statement, a perturbation arm the plan did
-not previously have, and one high-power rerun carried in the budget.
+The headline number in the protocol: the grid the plan now describes is 1,550
+episodes (600 core + 200 placebo + 60 + 180 ablation + 40 scale-check + 320
+perturbation + 150 mixed-society), against 2,780 in the very first sketch of
+the design and 1,400 before the mixed-society arm was added. The mismatch
+between that first sketch and what a flat 30-seeds-per-cell protocol can
+actually power is what problem 1 above is about; the fix is the two-tier
+protocol in plan §5.9, not a uniformly larger grid.
 
 
 ---

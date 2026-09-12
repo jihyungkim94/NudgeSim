@@ -29,7 +29,7 @@ const doc = new d.Document({
         children: [new d.Paragraph({
           alignment: d.AlignmentType.CENTER,
           children: [new d.TextRun({
-            children: ["NudgeSim Project Plan · v2.5 · September 2026 · page ", d.PageNumber.CURRENT, " of ", d.PageNumber.TOTAL_PAGES],
+            children: ["NudgeSim Project Plan · V1 · September 2026 · page ", d.PageNumber.CURRENT, " of ", d.PageNumber.TOTAL_PAGES],
             size: 16, color: H.MUTED,
           })],
         })],
@@ -40,6 +40,6 @@ const doc = new d.Document({
 });
 
 d.Packer.toBuffer(doc).then((buf) => {
-  fs.writeFileSync(process.argv[2] || "Project_Plan_NudgeSim_v2.5.docx", buf);
+  fs.writeFileSync(process.argv[2] || "Project_Plan_NudgeSim_V1.docx", buf);
   console.log("written:", process.argv[2], buf.length, "bytes");
 });
