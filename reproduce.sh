@@ -88,4 +88,4 @@ fi
 
 echo
 echo "done. results: $OUT/main/results.parquet · $OUT/main/analysis/analysis.json"
-echo "paper tables: .venv/bin/python paper/build_tables.py"
+echo "figures:      $OUT/main/figures/"

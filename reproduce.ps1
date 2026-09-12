@@ -86,4 +86,4 @@ if ($Full) {
 
 Write-Host ""
 Write-Host "done. results: $Out/main/results.parquet - $Out/main/analysis/analysis.json"
-Write-Host "paper tables: $Python paper\build_tables.py"
+Write-Host "figures:      $Out\main\figures\"

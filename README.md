@@ -3,297 +3,158 @@
 ![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 ![Tests](https://img.shields.io/badge/tests-149%20passing-brightgreen.svg)
-![Status](https://img.shields.io/badge/model%20benchmark-pending%20run-orange.svg)
+![Model benchmark](https://img.shields.io/badge/model%20benchmark-not%20yet%20run-orange.svg)
 
-![NudgeSim: does an AI corrector build the norm, or replace it?](imgs/nudgesim_question.png)
+![Does an AI corrector build the norm, or replace it?](imgs/nudgesim_question.png)
 
-A payoff-instrumented testbed for running societies of LLM agents inside a
-public-goods dilemma, and measuring whether an embedded AI intervener
-**catalyses or crowds out** the society's own willingness to pay for correction.
+## What happens when an AI corrector joins a society that won't correct itself?
 
-Seven agents act on a false claim over twelve rounds. Verifying is privately
-costly while a cleaner feed benefits everyone, so sharing unverified content is
-free-riding and publicly correcting somebody else is costly peer sanctioning —
-the second-order free-rider problem. The headline outcome is not what an agent
-says it believes; it is what it pays for.
+Accurate information is a public good: verifying costs you, a cleaner feed
+benefits everyone. So sharing unverified content is free-riding, and correcting
+somebody else is costly peer sanctioning — nobody wants to pay for it.
 
----
+NudgeSim drops an AI intervener into exactly that dilemma and measures whether
+it **catalyses or crowds out** the society's own willingness to pay. Seven
+agents, one false claim from **LIAR**, twelve rounds, on network topologies
+taken from real rumour cascades in **PHEME-9**. The headline outcome is not what
+an agent says it believes; it is what it pays for.
 
 ## 💡 Key Discoveries
 
-Three results from building the environment. None of them require a language
-model, and all three apply to any study in this line.
+**Reply trees are not visibility graphs, and the difference is the effect
+size.** Treating reply edges as visibility edges leaves 88.6% of neighbourhoods
+with no citizen able to see any other — deleting the mechanism the study
+measures. Across three translations of the same corpus on the same seeds, the
+intervention effect runs +0.041, +0.080 and +0.095.
 
-**1. Reply trees are not visibility graphs, and the difference is the effect
-size.** Sampling a seven-node neighbourhood from a real PHEME cascade and
-treating reply edges as visibility edges leaves **88.6% of neighbourhoods with
-no citizen able to see any other citizen** — the mechanism the study exists to
-measure is structurally absent from almost all of its data. Across three
-translations of the same corpus on the same seeds, the measured intervention
-effect runs +0.041, +0.080 and +0.095. A preprocessing choice papers in this
-area do not report making moves the headline number by more than a factor of
-two, and the calibration gate passes *comfortably* under the worst of them.
+**Summing a payoff function is not a welfare measure under costly sanctioning.**
+The intervention cuts propagation and more than triples peer correction, and
+total payoff still ranks it below doing nothing — the sanction costs it charges
+are exactly what a working intervention generates.
 
-**2. Summing a payoff function is not a welfare measure under costly
-sanctioning.** The intervention cuts propagation and more than triples peer
-correction, and total payoff still ranks it far below doing nothing — because
-the sanction costs it charges are exactly what a working intervention
-generates. Removing sanction costs does not repair it either: the conformity
-term then dominates, and conformity is maximised by the arm in which nobody
-disagrees. Only the veracity term tracks the good being provided.
+**A monoculture backbone factor cannot answer its own question.** One model per
+episode cannot measure whether one model free-rides on another's correction,
+because there is no other model present. A mixed-society arm seats the whole
+roster in one episode and rotates which model holds which seat.
 
-**3. A monoculture backbone factor cannot answer its own question.** Seating one
-model per episode — the design every study in this line uses — measures whether
-model choice moves the aggregate, and nothing else. It cannot measure whether
-one model free-rides on another's correction, because in a society of identical
-agents there is no other model present to free-ride on. NudgeSim adds a
-**mixed-society arm** that seats the whole roster in one episode and rotates
-which model holds which seat.
-
----
-
-## 🔬 What the simulation is
-
-![NudgeSim pipeline: corpora, society, design, outcomes](imgs/nudgesim_pipeline.png)
-
-| Agent | Role | Policy |
-|---|---|---|
-| `A1`, `A2` | left-leaning citizens | payoff-maximising; a congruence prior raises the pull of congruent claims |
-| `B1`, `B2` | right-leaning citizens | mirror of A |
-| `C` | neutral conformist | no ideological prior; follows the local signal |
-| `Disseminator` | bad actor | fixed policy, re-frames and reposts, cannot be corrected, not scored |
-| `DevilsAdvocate` | AI intervener | stipulated to absorb κ; judges veracity first and may decline to act |
-
-Each round every citizen picks one action on the focal claim:
-
-```
-π_i,t = β·C_i,t              conformity / engagement reward   (immediate)
-      + γ·V_i                veracity reward                  (deferred to t = T)
-      − κ·1[a = CHALLENGE]   verification + social friction
-      − δ·D_i,t              reputation damage when its endorsement is challenged
-
-defaults β = 1, γ = 6, κ = 2, δ = 3, T = 12
-```
-
-With γ deferred and κ positive, the myopic best response is to conform and never
-pay κ — so the Devil's Advocate is the one agent for whom paying κ is stipulated
-rather than chosen. The question is whether its presence makes citizens start
-paying κ *themselves*.
-
-**Design:** timing (early, round 2 · late, round 6) × tone (empathetic nudge ·
-aggressive debunking) × backbone, against a no-intervener control, a matched
-true-claim placebo arm, two ablations, a perturbation arm and the mixed-society
-arm — 1,550 episodes at the four-policy reference configuration.
-
-**Primary outcomes,** both read straight off the action log with no LLM judge
-anywhere on the critical path:
-
-- **FPR** — share of citizen actions that SHARE or ENDORSE the false claim.
-- **EPC** — share that CHALLENGE it, i.e. citizens voluntarily absorbing κ. This
-  is the headline: second-order cooperation.
-
----
-
-## 🚀 Running it on real models
-
-> **Not yet run.** The model benchmark needs API credentials for the hosted
-> levels and a GPU or inference host for the open-weights ones, and neither is
-> in place — that, and nothing else, is why there are no model results here. The
-> path itself is implemented and verified end to end (below), the roster is
-> declared in [`configs/backbones.yaml`](configs/backbones.yaml), and the grid
-> is priced in advance by `nudgesim cost`.
-
-Citizens run on any mix of hosted and open-weights backbones through one
-OpenAI-compatible interface:
+## 🛠️ Installation
 
 ```bash
-cp .env.example .env        # then fill in the keys you have
-nudgesim --liar data/raw/liar --pheme data/raw/pheme \
-  --models openai:gpt-4o,anthropic:claude-opus-5 \
-  run --out runs/llm
+git clone https://github.com/jihyungkim94/NudgeSim.git && cd NudgeSim
+python -m venv .venv && .venv/bin/pip install -e ".[dev,llm]"
+```
 
-# open weights behind vLLM, or any OpenAI-compatible endpoint
+## 🔑 API Configuration
+
+> **The model benchmark has not been run.** It needs API credentials for the
+> hosted backbones and a GPU or inference host for the open-weights ones, and
+> neither is in place yet. That is the only thing standing between this
+> repository and the model results — the LLM path itself is implemented and
+> verified end to end.
+
+```bash
+cp .env.example .env        # ANTHROPIC_API_KEY, OPENAI_API_KEY, OPENAI_BASE_URL
+```
+
+The roster is declared in [`configs/backbones.yaml`](configs/backbones.yaml) and
+priced in advance by `nudgesim cost`: 60 calls an episode, ~613 input tokens a
+call, 23,250 calls per backbone over the grid.
+
+**No key?** `scripts/mock_llm_server.py` is a local OpenAI-compatible endpoint
+that deliberately returns malformed replies — prose instead of JSON, markdown
+fences, wrong-case action words — so prompt assembly, transport, concurrency,
+parsing, repair, caching and cost accounting can all be exercised without one.
+Against it the pipeline repairs ~11% malformed replies without a crash.
+
+## 🚀 Quick Start
+
+```bash
+# the committed runs: analytic surrogate policy, no network calls, ~25 s
+PYTHON=.venv/bin/python ./reproduce.sh              # Windows: .\reproduce.ps1
+
+# real corpora
+nudgesim fetch-data                                 # LIAR, verified on download
+python scripts/extract_pheme.py ~/Downloads/<figshare-archive>
+
+# language models in the seats
+nudgesim --liar data/raw/liar --pheme data/raw/pheme \
+  --models openai:gpt-4o,anthropic:claude-opus-5 run --out runs/llm
+
+# open weights through the same interface
 ./scripts/serve_vllm.sh Qwen/Qwen3-30B-A3B
 nudgesim --models openai:Qwen/Qwen3-30B-A3B \
   --backend-url http://localhost:8000/v1 run --out runs/vllm
 ```
 
-A run with `--models` is recorded as `backbone_kind: llm`; without it, as
-`surrogate`. Adding a vendor is a configuration change, not an engineering one.
+## ⚙️ The design
 
-`nudgesim cost` meters the prompts the engine actually assembles and prices them
-against the published rate cards: 60 calls an episode, ~613 input tokens a call,
-23,250 calls per backbone over the grid. Response caching is worth nothing in
-this workload — no prompt ever recurs — while prompt caching covers half of each
-prompt, and scheduling the extended-thinking arm is worth an order of magnitude
-more than every caching lever combined.
+![Corpora, society, design, outcomes](imgs/nudgesim_pipeline.png)
 
-## 🧪 No key? Verify the plumbing first
+Five citizens with explicit per-round payoffs, one disseminator that cannot be
+corrected, and one Devil's Advocate stipulated to absorb the correction cost κ:
 
-`scripts/mock_llm_server.py` is a local OpenAI-compatible endpoint that
-deliberately misbehaves the way real models do — prose instead of JSON, markdown
-fences, wrong-case action words — so prompt assembly, transport, concurrency,
-parsing, repair, caching and cost accounting can all be exercised without a key:
+```
+π_i,t = β·C_i,t − κ·1[a = CHALLENGE] − δ·D_i,t + γ·V_i
+        conformity   correction cost   reputation    veracity (deferred to T)
 
-```bash
-python scripts/mock_llm_server.py --port 8079 &
-OPENAI_API_KEY=not-needed nudgesim --models openai:mock-a \
-  --backend-url http://127.0.0.1:8079/v1 \
-  run --out runs/smoke --arms core --core-seeds 5
+defaults β = 1, γ = 6, κ = 2, δ = 3, T = 12
 ```
 
-Against that server the pipeline repairs ~11% malformed replies without a single
-crash, and the intervener's veracity gate declines to act on a majority of
-episodes rather than challenging whatever it is shown — which is what makes the
-specificity arm able to fail rather than pass by construction.
+With γ deferred and κ positive, the myopic best response is to conform and never
+pay κ. The question is whether the intervener's presence makes citizens start
+paying it *themselves*.
 
----
+Timing (early · late) × tone (empathetic nudge · aggressive debunking) ×
+backbone, against a no-intervener control, a true-claim placebo arm, two
+ablations, a perturbation arm and the mixed-society arm — 1,550 episodes.
 
-## 📊 Status of the numbers in `runs/`
+Two outcomes, both read off the action log with no model judge on the critical
+path: **FPR**, how far the false claim spreads, and **EPC**, how often citizens
+pay κ themselves.
+
+## 📊 Output & Analysis
 
 ![Measured on the analytic surrogate over real LIAR and PHEME](imgs/nudgesim_measured.png)
 
-The model benchmark has not been run yet, so the runs committed here were
-produced with the **analytic surrogate policy** rather than LLM backbones. Both
-corpora are real — claims from **LIAR**, topologies from **PHEME-9** — and these
-runs are a *design-sensitivity study* of the preregistered protocol: what it can
-and cannot detect. They are **not evidence about LLM behaviour**. Every artefact
-carries a provenance string saying so, and the analysis refuses to describe a
-surrogate run as a model result. The paper's model sections are marked
-`[PENDING LLM RUN]` and left empty rather than estimated.
+Runs land in `runs/main/`: `results.parquet` (one row per episode),
+`rounds.parquet`, `episodes.jsonl`, `analysis/`, and `figures/`.
 
----
-
-## ⚙️ Quick start
+The committed runs use the **analytic surrogate policy**, not LLM backbones.
+Both corpora are real, and the runs are a design-sensitivity study of the
+protocol — what it can and cannot detect. They are **not evidence about LLM
+behaviour**: every artefact carries a provenance string, a run with `--models`
+is tagged `backbone_kind: llm` and one without as `surrogate`, and the analysis
+refuses to describe a surrogate run as a model result.
 
 ```bash
-python -m venv .venv && .venv/bin/pip install -e ".[dev]"
-PYTHON=.venv/bin/python ./reproduce.sh          # 1,550 episodes, ~25 s
-PYTHON=.venv/bin/python ./reproduce.sh --full   # + the validation triad and high-power controls
+nudgesim check | calibrate | run | analyze | cost | reproduce
 ```
 
-On Windows, `reproduce.ps1` is the same steps with the same run names:
-
-```powershell
-python -m venv .venv; .venv\Scripts\pip install -e ".[dev]"
-.\reproduce.ps1
-.\reproduce.ps1 -Full -Liar data\raw\liar -Pheme data\raw\pheme
-```
-
-Outputs land in `runs/main/`: `results.parquet` (one row per episode),
-`rounds.parquet` (per-round rates), `episodes.jsonl` (full logs),
-`analysis/analysis.json`, `analysis/cell_means.csv`, and `figures/`. Only the
-small reviewable artefacts are committed; the bulk logs regenerate in seconds.
-
-## 📦 Getting the corpora
-
-```bash
-nudgesim fetch-data          # downloads and verifies LIAR; prints PHEME steps
-python scripts/extract_pheme.py ~/Downloads/<the-figshare-file>
-```
-
-Neither corpus is redistributed here.
-
-- **LIAR** is fetched automatically and checked against the published release:
-  12,836 rows and the exact six-way label distribution. A mirror that does not
-  reproduce those fails loudly rather than quietly changing results.
-- **PHEME-9** is a manual download (figshare DOI `10.6084/m9.figshare.6392078`).
-  `scripts/extract_pheme.py` pulls just the reply trees out of whichever archive
-  figshare gave you — a few MB rather than the full multi-GB unpack. Only each
-  thread's reply tree is read; tweet text is never loaded, and node ids are
-  stripped during motif extraction, so only derived topology reaches any
-  artefact.
-
-The claim pool and the topology source are independent, so LIAR + surrogate
-topology is a valid, clearly-labelled intermediate configuration.
-
----
-
-## 🧩 What the pipeline covers
-
-This is an inference-and-analysis pipeline rather than a training one: the
-models are pretrained and reached over an API, so there is no architecture to
-design, no training loop and no checkpoint to save. The engineering lives
-between the prompt and the statistic.
-
-| Stage | In this repository |
-|---|---|
-| Corpus preprocessing | LIAR de-identification, tested in both directions; PHEME reply trees → visibility motifs |
-| Scenario and payoff spec | YAML configs, frozen before the grid runs |
-| Agents and personas | persona suites, plus an analytic surrogate that stands in for a model offline |
-| LLM interface | one OpenAI-compatible backend and one Anthropic backend; open weights through the same interface |
-| Structured-output parsing | parse **and repair** malformed replies, with the repair rate logged per episode |
-| Prompt version control | a frozen suite, with a `prompt_fingerprint` on every artefact |
-| Caching | disk cache, and a measurement of which caching lever is actually worth anything here |
-| Cost metering | `nudgesim cost`: tokens per call, duplicate rate, per-model and portfolio pricing |
-| Reproducible seeding | digest-derived seeds, pinned by a regression test and a run-the-grid-twice test |
-| Degeneracy guards | repetition, stance drift and termination guards, logged rather than suppressed |
-| Provenance labelling | `backbone_kind` and corpus provenance on every artefact |
-| Unit tests | 149, including the payoff ledger against hand-computed episodes |
-| Metrics | read off the action log; no model judge anywhere on the critical path |
-| Statistical inference | mixed models, bootstrap CIs, Holm correction, Dunnett, survival, power |
-| Analysis validation | the pipeline must recover a declared effect, an inflated one, and a null |
-| Preregistration | a frozen plan with a confirmatory/exploratory split, fixed before the grid runs |
-| Visualisation | figures regenerated from run artefacts; every paper table generated, none typed |
-| Human baseline | a published human row carried beside the model rows |
-
----
-
-## 📁 Repository layout
+## 📁 Project Structure
 
 ```
 src/nudgesim/
-  game/          action space, payoff ledger, equilibrium benchmark  (UNIT-TESTED)
+  game/          action space, payoff ledger, equilibrium benchmark (UNIT-TESTED)
   agents/        personas, LLM policy, analytic surrogate, fixed policies
   backends/      provider-agnostic LLM interface + disk cache
   env/           asyncio episode loop, termination and drift guards
   intervention/  timing scheduler, tone templating, manipulation checks
-  metrics/       FPR/EPC/welfare/half-life, trace taxonomy, reactance
+  metrics/       FPR/EPC, welfare, durability, trace taxonomy
   data/          LIAR claim pool, PHEME motifs, surrogate generators
-  oasis/         N = 50 scale-check adapter
-  calibration.py face-validity Go/No-Go gate
   cost.py        prompt metering and budget forecasting
   runner.py      grid expansion, seeds, JSONL → Parquet
-  cli.py         check | calibrate | run | analyze | cost | reproduce
 analysis/        preregistered models, power analysis, figures
-configs/         payoff, design, grid, backbone and DGP configuration
-scripts/         PHEME extractor, mock LLM server, figure generation
-tests/           149 tests (144 without the optional [llm] extra, which skips
-                 the LLM-path module); the payoff ledger is checked against
-                 hand-computed episodes
+configs/         payoff, design, grid and backbone configuration
+scripts/         PHEME extractor, mock LLM server, vLLM launcher
+tests/           149 tests; the payoff ledger is checked by hand-computed episodes
 docs/            design map, findings, preregistration, ethics, data cards
-paper/           LaTeX manuscript; every table generated from run artefacts
 ```
 
-## 🖥️ CLI
-
-```bash
-nudgesim fetch-data  # download + verify LIAR; instructions for PHEME
-nudgesim check       # tone manipulation checks + design reference values
-nudgesim calibrate   # face-validity Go/No-Go gate
-nudgesim run         # the preregistered grid
-nudgesim analyze     # mixed models, Dunnett, survival, power
-nudgesim cost        # meter the prompts and price the grid
-nudgesim reproduce   # all of the above
-```
-
-Useful flags: `--dgp {declared,strong,null,no-novelty}` selects the surrogate's
-declared data-generating process (used for the sensitivity, false-positive and
-gate-teeth controls); `--arms`, `--core-seeds` size the grid; `--liar`/`--pheme`
-point at real corpora; `--models`/`--backend-url` put language models in the
-seats.
-
-## 📚 Documentation
-
-| File | What it covers |
-|---|---|
-| [docs/DESIGN.md](docs/DESIGN.md) | Plan section → module map, and every design decision the plan left open |
-| [docs/FINDINGS.md](docs/FINDINGS.md) | Six problems in the design the implementation surfaced, and seven silent bugs |
-| [docs/PREREGISTRATION.md](docs/PREREGISTRATION.md) | Frozen analysis plan, primary/secondary split, stopping rules |
-| [docs/CALIBRATION.md](docs/CALIBRATION.md) | The Go/No-Go gate, what it tests, and evidence that it has teeth |
-| [docs/DATA_CARDS.md](docs/DATA_CARDS.md) | LIAR and PHEME provenance, de-identification, surrogate generators |
-| [docs/ETHICS.md](docs/ETHICS.md) | Simulation-only scope, no anthropomorphic inference, dual use, licensing |
-| [docs/Project_Plan_NudgeSim_V1.docx](docs/Project_Plan_NudgeSim_V1.docx) | The full research plan, generated from `docs/plan_src/` |
+Full write-ups live in [`docs/`](docs/): [DESIGN](docs/DESIGN.md),
+[FINDINGS](docs/FINDINGS.md), [PREREGISTRATION](docs/PREREGISTRATION.md),
+[CALIBRATION](docs/CALIBRATION.md), [DATA_CARDS](docs/DATA_CARDS.md),
+[ETHICS](docs/ETHICS.md), and the research plan
+[`Project_Plan_NudgeSim_V1.docx`](docs/Project_Plan_NudgeSim_V1.docx).
 
 ## 📄 Citation
 
@@ -303,7 +164,6 @@ seats.
             Dilemma of Counter-Misinformation in LLM Agent Societies},
   author = {Kim, Jihyung},
   year   = {2026},
-  note   = {Framework v1.0},
   url    = {https://github.com/jihyungkim94/NudgeSim}
 }
 ```
