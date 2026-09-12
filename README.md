@@ -173,7 +173,7 @@ src/nudgesim/
   cli.py         check | calibrate | run | analyze | reproduce
 analysis/        preregistered models, power analysis, figures
 configs/         payoff, design, grid, backbone and DGP configuration
-tests/           145 tests; the payoff ledger is checked against hand-computed episodes
+tests/           144 tests; the payoff ledger is checked against hand-computed episodes
 docs/            design map, findings, preregistration, ethics, data cards
 ```
 

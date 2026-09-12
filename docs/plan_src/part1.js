@@ -30,7 +30,7 @@ const front = [
     ["Research area", "Multi-agent LLM safety · social dilemmas and cooperation · counter-misinformation intervention design"],
     ["Duration", "4 months (16 weeks) from project start, with a named follow-on phase"],
     ["In-scope deliverable", "Open framework v1.0 + arXiv preprint + workshop paper; main-track submission is the designated immediate follow-on, not an in-scope promise"],
-    ["Status", "A reference implementation of the full design exists, passes 149 tests including hand-computed payoff-ledger checks, and reproduces the full grid — including a pilot run against the real LIAR and PHEME-9 corpora — with one command. The 16-week plan (§9) begins from that engine rather than from scratch."],
+    ["Status", "A reference implementation of the full design exists, passes 144 tests including hand-computed payoff-ledger checks, and reproduces the full grid — including a pilot run against the real LIAR and PHEME-9 corpora — with one command. The 16-week plan (§9) begins from that engine rather than from scratch."],
     [{ text: "Date / version", bold: true }, { text: "September 2026 · V1 (living document — comments welcome)", bold: true }],
   ]),
 
