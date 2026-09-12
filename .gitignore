@@ -8,23 +8,24 @@ data/raw/
 *.ipynb_checkpoints
 
 # Run outputs: keep the small, reviewable artefacts (manifests, analysis JSON,
-# cell-mean tables, figures) and ignore the bulk logs, which any run regenerates
-# in seconds via ./reproduce.sh.
+# the calibration verdict, the cost profile and the visibility sweep) and ignore
+# the bulk logs, which ./reproduce.sh regenerates in seconds. The kept files are
+# exactly what paper/build_tables.py reads, so the paper builds from a clone.
 runs/**
 !runs/.gitkeep
-!runs/main/
-!runs/main/manifest.json
-!runs/main/analysis/
-!runs/main/analysis/**
-!runs/main/figures/
-!runs/main/figures/**
-!runs/calibration/
-!runs/calibration/calibration.json
-!runs/checks/
-!runs/checks/checks.json
-!runs/highpower/
-!runs/highpower/analysis/
-!runs/highpower/analysis/analysis.json
-!runs/null_highpower/
-!runs/null_highpower/analysis/
-!runs/null_highpower/analysis/analysis.json
+!runs/*/
+!runs/*/manifest.json
+!runs/*/calibration.json
+# The gate sweep is twelve near-identical seeds; its verdict lives in
+# docs/CALIBRATION.md, so the per-seed files are not worth carrying.
+runs/gate_*/
+!runs/*/checks.json
+!runs/*/sweep.json
+!runs/*/cost.json
+!runs/*/analysis/
+!runs/*/analysis/analysis.json
+!runs/*/analysis/*.csv
+!runs/*/figures/
+!runs/*/figures/**
+node_modules/
+package-lock.json

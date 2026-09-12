@@ -26,14 +26,14 @@ const front = [
     ["Research area", "Multi-agent LLM safety · social dilemmas and cooperation · counter-misinformation intervention design"],
     ["Duration", "4 months (16 weeks) from project start, with a named follow-on phase"],
     ["In-scope deliverable", "Open framework v1.0 + arXiv preprint + workshop paper; main-track submission is the designated immediate follow-on, not an in-scope promise"],
-    [{ text: "Date / version", bold: true }, { text: "September 2026 · v2.4 — revised against a working reference implementation run on the real LIAR and PHEME-9 corpora, with the LLM path metered and priced (living document — comments welcome)", bold: true, bg: H.NEW_BG }],
+    [{ text: "Date / version", bold: true }, { text: "September 2026 · v2.5 — revised against a working reference implementation run on the real LIAR and PHEME-9 corpora, with the LLM path metered and priced and the model roster set against the reference line (living document — comments welcome)", bold: true, bg: H.NEW_BG }],
   ]),
 
-  h("0. What changed in v2.4, and why", 1),
+  h("0. What changed in v2.5, and why", 1),
   p([
     t("The design was implemented end to end and run over the full preregistered grid — 1,080 episodes on the real LIAR corpus and all 6,425 real PHEME-9 threads — using an analytic surrogate policy in place of LLM backbones. The purpose was not to obtain results (a surrogate cannot produce results about language models) but to find out whether the protocol, as written, can answer the questions it asks. "),
     t("It cannot, in five specific ways.", { bold: true }),
-    t(" Each is fixed below; each fix is traceable to evidence in the reference implementation. v2.1 fixed the first four, found against real LIAR; v2.2 adds the fifth and a correction to the second, both of which only surfaced once the real PHEME release was in hand. v2.3 states the relationship to the GovSim / SanctSim / MoralSim / CoopEval line. v2.4 adds four more: one reproducibility defect that invalidated every run made before it was found, a budget that had been asserted rather than measured, a communication-design choice that had never been made, and three reporting patterns borrowed from that line."),
+    t(" Each is fixed below; each fix is traceable to evidence in the reference implementation. v2.1 fixed the first four, found against real LIAR; v2.2 adds the fifth and a correction to the second, both of which only surfaced once the real PHEME release was in hand. v2.3 states the relationship to the GovSim / SanctSim / MoralSim / CoopEval line. v2.4 adds four more: one reproducibility defect that invalidated every run made before it was found, a budget that had been asserted rather than measured, a communication-design choice that had never been made, and three reporting patterns borrowed from that line. v2.5 replaces the single-vendor model roster, which would have made the headline model-dependence result incomparable with the studies it is positioned against."),
   ]),
   p([
     t("This is the cheapest possible moment to discover these. Three of the four would have surfaced only in Week 14, during analysis, with the compute budget already spent.", { italics: true, color: H.MUTED }),
@@ -89,6 +89,10 @@ const front = [
      { text: "The analysis reported models and p-values but not effects in the units the outcomes are measured in, had nothing human to read the model numbers against, and never tested whether a norm it found would survive a defector.", bg: H.NEW_BG },
      { text: "Three patterns adopted from the line: per-factor ATEs with bootstrap 95% CIs (MoralSim), a published human row (SanctSim Table 1), and a mid-episode defector (GovSim \u00a73.3).", bg: H.NEW_BG },
      { text: "Intervention \u2192 EPC = +0.081 [+0.067, +0.094]. Control-arm sanction take-up 0.167 against 0.929 in Gurerk et al.; 0.076 challenges per endorsement against 1.66. Peers do not change their correction rate against either defector.", bg: H.NEW_BG }],
+    [{ text: "7 (new in v2.5)", bg: H.NEW_BG },
+     { text: "All four backbone levels came from one vendor. H5 claims backbone choice moves the outcome more than intervention design does; measured on a roster no prior study shares, that claim cannot be read against any of them.", bg: H.NEW_BG },
+     { text: "Six levels across four vendors, chosen for overlap with the reference line: GPT-4o, a current OpenAI reasoning model, Claude Opus 5 with and without extended thinking, Llama-3.3-70B and Qwen3-30B-A3B.", bg: H.NEW_BG },
+     { text: "GPT-4o is the only model common to GovSim, SanctSim, MoralSim and CoopEval; open-weights models appear in all four. Marginal cost of a level is fixed at 13.1M input and 1.43M output tokens, so the roster grows the grid to 2,080 episodes without changing per-model cost.", bg: H.NEW_BG }],
   ]),
 
   p([t("Nothing in the contribution claim (§2), the theoretical framing (§3), or the ethics position (§11) changes. The revisions are to measurement and sample size — that is, to whether the study can see what it is looking for.",

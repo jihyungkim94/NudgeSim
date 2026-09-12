@@ -1,0 +1,56 @@
+{
+  "run_id": "highpower",
+  "nudgesim_version": "1.0.0",
+  "git_commit": "26f9795",
+  "python": "3.11.15",
+  "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
+  "started_at": 1789180152.6909153,
+  "prompt_suite": "v1.0.0-frozen",
+  "prompt_fingerprint": "54680aa0a1bf18ce",
+  "claim_provenance": "LIAR (Wang, 2017), UCSB release, de-identified",
+  "motif_provenance": "PHEME-9 (Kochkina et al., 2018), derived topology only",
+  "scale_check_backend": "nudgesim-engine-at-N50 (OASIS not installed; not an OASIS result)",
+  "backbone_kind": "surrogate",
+  "dgp_label": "declared-crowding (H3 effect present at declared size)",
+  "declared_dgp_parameters": {
+    "omega_demo_peer": 0.7,
+    "omega_demo_external": 0.15,
+    "omega_crowd_base": 0.25,
+    "omega_crowd_tone": 0.85,
+    "salience_decay": 0.8,
+    "min_salience": 0.0,
+    "novelty_engagement": 0.45
+  },
+  "payoff_defaults": {
+    "beta": 1.0,
+    "gamma": 6.0,
+    "kappa": 2.0,
+    "delta": 3.0,
+    "horizon": 12
+  },
+  "grid": {
+    "core_seeds": 200,
+    "placebo_seeds": 10,
+    "ablation_payoff_seeds": 3,
+    "ablation_ratio_seeds": 3,
+    "scale_seeds": 10,
+    "backbones": [
+      "surrogate-cautious",
+      "surrogate-conformist",
+      "surrogate-defiant",
+      "surrogate-cost-averse"
+    ],
+    "ablation_ratios": [
+      0.5,
+      1.0,
+      3.0
+    ],
+    "min_intervener_reach": 1,
+    "trigger_mode": "fixed",
+    "expected_episodes": {
+      "core": 4000,
+      "total": 4000
+    }
+  },
+  "n_episodes_written": 4000
+}

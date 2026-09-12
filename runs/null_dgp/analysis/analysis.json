@@ -1,0 +1,1920 @@
+{
+  "manifest": {
+    "run_id": "null_dgp",
+    "nudgesim_version": "1.0.0",
+    "git_commit": "26f9795",
+    "python": "3.11.15",
+    "platform": "Linux-6.18.44-fc-v24-x86_64-with-glibc2.39",
+    "started_at": 1789180047.1642659,
+    "prompt_suite": "v1.0.0-frozen",
+    "prompt_fingerprint": "54680aa0a1bf18ce",
+    "claim_provenance": "LIAR (Wang, 2017), UCSB release, de-identified",
+    "motif_provenance": "PHEME-9 (Kochkina et al., 2018), derived topology only",
+    "scale_check_backend": "nudgesim-engine-at-N50 (OASIS not installed; not an OASIS result)",
+    "backbone_kind": "surrogate",
+    "dgp_label": "null-tone-crowding (H3 effect set to zero; false-positive check)",
+    "declared_dgp_parameters": {
+      "omega_demo_peer": 0.7,
+      "omega_demo_external": 0.15,
+      "omega_crowd_base": 0.25,
+      "omega_crowd_tone": 0.0,
+      "salience_decay": 0.8,
+      "min_salience": 0.0,
+      "novelty_engagement": 0.45
+    },
+    "payoff_defaults": {
+      "beta": 1.0,
+      "gamma": 6.0,
+      "kappa": 2.0,
+      "delta": 3.0,
+      "horizon": 12
+    },
+    "grid": {
+      "core_seeds": 30,
+      "placebo_seeds": 10,
+      "ablation_payoff_seeds": 3,
+      "ablation_ratio_seeds": 3,
+      "scale_seeds": 10,
+      "backbones": [
+        "surrogate-cautious",
+        "surrogate-conformist",
+        "surrogate-defiant",
+        "surrogate-cost-averse"
+      ],
+      "ablation_ratios": [
+        0.5,
+        1.0,
+        3.0
+      ],
+      "min_intervener_reach": 1,
+      "trigger_mode": "fixed",
+      "expected_episodes": {
+        "core": 600,
+        "total": 600
+      }
+    },
+    "n_episodes_written": 600
+  },
+  "analysis_set": {
+    "n_total_episodes": 600,
+    "n_core_episodes": 600,
+    "n_excluded_terminated_early": 0,
+    "alpha": 0.05
+  },
+  "engine_health": {
+    "n_episodes": 600,
+    "terminated_early_rate": 0.0,
+    "mean_repetition_rate": 0.0014028659087505905,
+    "mean_persona_break_rate": 0.0,
+    "mean_repair_rate": 0.0,
+    "mean_wall_time_s": 0.10997252068995295
+  },
+  "primary": {
+    "cumulative_fpr": {
+      "mixed_model": {
+        "formula": "cumulative_fpr ~ C(timing) * C(tone) * C(backbone) + intervener_reach",
+        "n_obs": 480,
+        "converged": true,
+        "coefficients": {
+          "Intercept": {
+            "estimate": 0.7530361584443495,
+            "p_value": 2.338339208736501e-90
+          },
+          "C(timing)[T.late]": {
+            "estimate": 0.1472222222221947,
+            "p_value": 1.0218689244384804e-06
+          },
+          "C(tone)[T.empathetic_nudge]": {
+            "estimate": -0.0030325596810145423,
+            "p_value": 0.897961127261997
+          },
+          "C(backbone)[T.surrogate-conformist]": {
+            "estimate": 0.14765579926140793,
+            "p_value": 9.604475306560615e-07
+          },
+          "C(backbone)[T.surrogate-cost-averse]": {
+            "estimate": 0.19308937630062298,
+            "p_value": 1.5684556466703907e-10
+          },
+          "C(backbone)[T.surrogate-defiant]": {
+            "estimate": 0.09610141882068311,
+            "p_value": 4.812761993368522e-05
+          },
+          "C(timing)[T.late]:C(tone)[T.empathetic_nudge]": {
+            "estimate": -0.020761519204607497,
+            "p_value": 0.5874761007839804
+          },
+          "C(timing)[T.late]:C(backbone)[T.surrogate-conformist]": {
+            "estimate": -0.07601630110781046,
+            "p_value": 0.0745035670126212
+          },
+          "C(timing)[T.late]:C(backbone)[T.surrogate-cost-averse]": {
+            "estimate": -0.06676147666990816,
+            "p_value": 0.11726200058723564
+          },
+          "C(timing)[T.late]:C(backbone)[T.surrogate-defiant]": {
+            "estimate": -0.06307968401023997,
+            "p_value": 0.10058033903628497
+          },
+          "C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-conformist]": {
+            "estimate": 0.001582681533956175,
+            "p_value": 0.967023053355433
+          },
+          "C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-cost-averse]": {
+            "estimate": 0.02880490375618443,
+            "p_value": 0.45179160386783723
+          },
+          "C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-defiant]": {
+            "estimate": 0.02224273938318049,
+            "p_value": 0.6032306621509387
+          },
+          "C(timing)[T.late]:C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-conformist]": {
+            "estimate": 0.02168301030917197,
+            "p_value": 0.7052570025852603
+          },
+          "C(timing)[T.late]:C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-cost-averse]": {
+            "estimate": -0.0009051474620652988,
+            "p_value": 0.9873891516013863
+          },
+          "C(timing)[T.late]:C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-defiant]": {
+            "estimate": 0.01917997025081981,
+            "p_value": 0.7510207736442436
+          },
+          "intervener_reach": {
+            "estimate": -0.11016301107837392,
+            "p_value": 4.0895117814574433e-16
+          }
+        }
+      },
+      "partial_eta_squared": {
+        "C(timing)": 0.10154,
+        "C(tone)": 0.000648,
+        "C(backbone)": 0.221425,
+        "C(timing):C(tone)": 3.5e-05,
+        "C(timing):C(backbone)": 0.019663,
+        "C(tone):C(backbone)": 0.00374,
+        "C(timing):C(tone):C(backbone)": 0.002434
+      },
+      "dunnett_vs_own_model_control": [
+        {
+          "backbone": "surrogate-cautious",
+          "cell": "early|empathetic_nudge",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7666666666666668,
+          "treat_mean": 0.4977777777777777,
+          "diff": -0.2688888888888891,
+          "ci_low": -0.3350000000000001,
+          "ci_high": -0.20333333333333325,
+          "cohens_d": -2.0102130950428028,
+          "dunnett_statistic": -6.727836465335865,
+          "p_value": 1.3165211143473243e-09,
+          "p_holm": 2.106433782955719e-08,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-cautious",
+          "cell": "early|aggressive_debunking",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7666666666666668,
+          "treat_mean": 0.5033333333333332,
+          "diff": -0.26333333333333364,
+          "ci_low": -0.34555555555555567,
+          "ci_high": -0.18444444444444452,
+          "cohens_d": -1.5818949438173293,
+          "dunnett_statistic": -6.588831579688431,
+          "p_value": 3.97537791574365e-09,
+          "p_holm": 5.963066873615475e-08,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-cautious",
+          "cell": "late|empathetic_nudge",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7666666666666668,
+          "treat_mean": 0.6377777777777779,
+          "diff": -0.12888888888888894,
+          "ci_low": -0.1961111111111109,
+          "ci_high": -0.061097222222222435,
+          "cohens_d": -0.9306092857940614,
+          "dunnett_statistic": -3.2249133470204954,
+          "p_value": 0.005796743903631829,
+          "p_holm": 0.05217069513268646,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-cautious",
+          "cell": "late|aggressive_debunking",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7666666666666668,
+          "treat_mean": 0.6505555555555556,
+          "diff": -0.11611111111111128,
+          "ci_low": -0.17556944444444478,
+          "ci_high": -0.05500000000000016,
+          "cohens_d": -0.9437552958749207,
+          "dunnett_statistic": -2.9052021100313974,
+          "p_value": 0.015287799483829745,
+          "p_holm": 0.1139894291255974,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-conformist",
+          "cell": "early|empathetic_nudge",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7727777777777779,
+          "treat_mean": 0.6605555555555556,
+          "diff": -0.11222222222222233,
+          "ci_low": -0.162791666666667,
+          "ci_high": -0.0594444444444443,
+          "cohens_d": -1.0440930569253932,
+          "dunnett_statistic": -4.24621336766916,
+          "p_value": 0.0001397249356557273,
+          "p_holm": 0.001816424163524455,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-conformist",
+          "cell": "early|aggressive_debunking",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7727777777777779,
+          "treat_mean": 0.6583333333333333,
+          "diff": -0.11444444444444457,
+          "ci_low": -0.17055555555555546,
+          "ci_high": -0.05944444444444441,
+          "cohens_d": -1.0098513505243223,
+          "dunnett_statistic": -4.330296800692311,
+          "p_value": 0.00010221810216781702,
+          "p_holm": 0.0014310534303494382,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-conformist",
+          "cell": "late|empathetic_nudge",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7727777777777779,
+          "treat_mean": 0.7216666666666669,
+          "diff": -0.051111111111110996,
+          "ci_low": -0.09833333333333327,
+          "ci_high": -0.002222222222222123,
+          "cohens_d": -0.522116969274051,
+          "dunnett_statistic": -1.9339189595324822,
+          "p_value": 0.1691316741643445,
+          "p_holm": 0.8456583708217225,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-conformist",
+          "cell": "late|aggressive_debunking",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7727777777777779,
+          "treat_mean": 0.7405555555555557,
+          "diff": -0.03222222222222215,
+          "ci_low": -0.07556944444444469,
+          "ci_high": 0.012222222222222134,
+          "cohens_d": -0.355796924051106,
+          "dunnett_statistic": -1.2192097788356953,
+          "p_value": 0.5556643932576975,
+          "p_holm": 1.0,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-cost-averse",
+          "cell": "early|empathetic_nudge",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.8072222222222224,
+          "treat_mean": 0.7405555555555555,
+          "diff": -0.06666666666666687,
+          "ci_low": -0.10944444444444446,
+          "ci_high": -0.022222222222222032,
+          "cohens_d": -0.7329750745473391,
+          "dunnett_statistic": -2.9299141267102216,
+          "p_value": 0.014248678640699675,
+          "p_holm": 0.1139894291255974,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-cost-averse",
+          "cell": "early|aggressive_debunking",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.8072222222222224,
+          "treat_mean": 0.711111111111111,
+          "diff": -0.09611111111111137,
+          "ci_low": -0.13888888888888895,
+          "ci_high": -0.053333333333333455,
+          "cohens_d": -1.0925837820596693,
+          "dunnett_statistic": -4.223959532673901,
+          "p_value": 0.00016493274278872594,
+          "p_holm": 0.0019791929134647113,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-cost-averse",
+          "cell": "late|empathetic_nudge",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.8072222222222224,
+          "treat_mean": 0.7883333333333334,
+          "diff": -0.018888888888888955,
+          "ci_low": -0.052791666666667014,
+          "ci_high": 0.015555555555555545,
+          "cohens_d": -0.26704948908652815,
+          "dunnett_statistic": -0.8301423359012299,
+          "p_value": 0.8223125493821676,
+          "p_holm": 1.0,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-cost-averse",
+          "cell": "late|aggressive_debunking",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.8072222222222224,
+          "treat_mean": 0.7805555555555556,
+          "diff": -0.02666666666666684,
+          "ci_low": -0.060555555555555474,
+          "ci_high": 0.007222222222222355,
+          "cohens_d": -0.38467242809188146,
+          "dunnett_statistic": -1.1719656506840925,
+          "p_value": 0.5891853188152629,
+          "p_holm": 1.0,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-defiant",
+          "cell": "early|empathetic_nudge",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7527777777777779,
+          "treat_mean": 0.6333333333333333,
+          "diff": -0.11944444444444458,
+          "ci_low": -0.1872222222222223,
+          "ci_high": -0.050555555555555576,
+          "cohens_d": -0.8690924340171076,
+          "dunnett_statistic": -3.6012182628516616,
+          "p_value": 0.0016604788976133378,
+          "p_holm": 0.016604788976133378,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-defiant",
+          "cell": "early|aggressive_debunking",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7527777777777779,
+          "treat_mean": 0.6283333333333333,
+          "diff": -0.12444444444444458,
+          "ci_low": -0.18722222222222207,
+          "ci_high": -0.06222222222222229,
+          "cohens_d": -0.9949051884869112,
+          "dunnett_statistic": -3.7519669343198703,
+          "p_value": 0.000965917418043305,
+          "p_holm": 0.010625091598476355,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-defiant",
+          "cell": "late|empathetic_nudge",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7527777777777779,
+          "treat_mean": 0.7122222222222221,
+          "diff": -0.04055555555555579,
+          "ci_low": -0.09611111111111115,
+          "ci_high": 0.01833333333333309,
+          "cohens_d": -0.34879438933195867,
+          "dunnett_statistic": -1.222739224131035,
+          "p_value": 0.5531893458867718,
+          "p_holm": 1.0,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-defiant",
+          "cell": "late|aggressive_debunking",
+          "outcome": "cumulative_fpr",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.7527777777777779,
+          "treat_mean": 0.6688888888888889,
+          "diff": -0.08388888888888901,
+          "ci_low": -0.14222222222222225,
+          "ci_high": -0.022777777777777564,
+          "cohens_d": -0.697349831618391,
+          "dunnett_statistic": -2.529227710188842,
+          "p_value": 0.042882851621591334,
+          "p_holm": 0.257297109729548,
+          "significant_holm": false
+        }
+      ],
+      "factor_ates": {
+        "pooled": [
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "all models",
+            "n_treat": 480,
+            "n_control": 120,
+            "mean_treat": 0.6708680555555555,
+            "mean_control": 0.7748611111111111,
+            "ate": -0.1039930555555556,
+            "ci_low": -0.12524305555555548,
+            "ci_high": -0.08128385416666684,
+            "cohens_d": -0.7427067219508896,
+            "p_value": 1.1164256638161263e-17,
+            "p_holm": 3.349276991448379e-17,
+            "significant": true
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "all models",
+            "n_treat": 240,
+            "n_control": 240,
+            "mean_treat": 0.7125694444444444,
+            "mean_control": 0.6291666666666667,
+            "ate": 0.08340277777777771,
+            "ci_low": 0.05756944444444445,
+            "ci_high": 0.108126736111111,
+            "cohens_d": 0.5849961642468683,
+            "p_value": 3.53984940500339e-10,
+            "p_holm": 7.07969881000678e-10,
+            "significant": true
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "all models",
+            "n_treat": 240,
+            "n_control": 240,
+            "mean_treat": 0.6677083333333333,
+            "mean_control": 0.6740277777777777,
+            "ate": -0.006319444444444322,
+            "ci_low": -0.03340451388888889,
+            "ci_high": 0.019376736111111008,
+            "cohens_d": -0.042540123540647456,
+            "p_value": 0.6409011312345334,
+            "p_holm": 0.6409011312345334,
+            "significant": false
+          }
+        ],
+        "per_backbone": [
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "surrogate-cautious",
+            "n_treat": 120,
+            "n_control": 30,
+            "mean_treat": 0.5723611111111111,
+            "mean_control": 0.7666666666666668,
+            "ate": -0.19430555555555573,
+            "ci_low": -0.24416666666666653,
+            "ci_high": -0.14250000000000007,
+            "cohens_d": -1.1620769999076748,
+            "p_value": 1.0322342348144979e-10
+          },
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "surrogate-conformist",
+            "n_treat": 120,
+            "n_control": 30,
+            "mean_treat": 0.6952777777777777,
+            "mean_control": 0.7727777777777779,
+            "ate": -0.07750000000000024,
+            "ci_low": -0.11556250000000018,
+            "ci_high": -0.03846874999999997,
+            "cohens_d": -0.723994690225105,
+            "p_value": 0.0004883298732928361
+          },
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "surrogate-cost-averse",
+            "n_treat": 120,
+            "n_control": 30,
+            "mean_treat": 0.7551388888888888,
+            "mean_control": 0.8072222222222224,
+            "ate": -0.05208333333333359,
+            "ci_low": -0.07972222222222225,
+            "ci_high": -0.023885416666666572,
+            "cohens_d": -0.5654265882470713,
+            "p_value": 0.0005509564690387422
+          },
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "surrogate-defiant",
+            "n_treat": 120,
+            "n_control": 30,
+            "mean_treat": 0.6606944444444445,
+            "mean_control": 0.7527777777777779,
+            "ate": -0.0920833333333334,
+            "ci_low": -0.13763888888888876,
+            "ci_high": -0.044576388888888964,
+            "cohens_d": -0.7009553183412904,
+            "p_value": 0.0003877469791888503
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "surrogate-cautious",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.6441666666666667,
+            "mean_control": 0.5005555555555555,
+            "ate": 0.14361111111111113,
+            "ci_low": 0.08694444444444449,
+            "ci_high": 0.20195138888888894,
+            "cohens_d": 0.8761729738549124,
+            "p_value": 4.314770689216522e-06
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "surrogate-conformist",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.7311111111111112,
+            "mean_control": 0.6594444444444444,
+            "ate": 0.07166666666666677,
+            "ci_low": 0.03472222222222232,
+            "ci_high": 0.10722222222222233,
+            "cohens_d": 0.6956216438595009,
+            "p_value": 0.0002115950184771251
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "surrogate-cost-averse",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.7844444444444445,
+            "mean_control": 0.7258333333333334,
+            "ate": 0.05861111111111106,
+            "ci_low": 0.025277777777777732,
+            "ci_high": 0.09111805555555548,
+            "cohens_d": 0.6236306767628188,
+            "p_value": 0.0008422945222928733
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "surrogate-defiant",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.6905555555555556,
+            "mean_control": 0.6308333333333334,
+            "ate": 0.05972222222222223,
+            "ci_low": 0.012215277777777802,
+            "ci_high": 0.10583333333333322,
+            "cohens_d": 0.4511877059400643,
+            "p_value": 0.014316720327903607
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "surrogate-cautious",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.5769444444444444,
+            "mean_control": 0.5677777777777778,
+            "ate": 0.009166666666666545,
+            "ci_low": -0.05195138888888901,
+            "ci_high": 0.07166666666666677,
+            "cohens_d": 0.05111971256722749,
+            "p_value": 0.7786033627789856
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "surrogate-conformist",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.6994444444444443,
+            "mean_control": 0.691111111111111,
+            "ate": 0.008333333333333304,
+            "ci_low": -0.031111111111111204,
+            "ci_high": 0.046388888888888924,
+            "cohens_d": 0.07633086384809772,
+            "p_value": 0.6746953090479603
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "surrogate-cost-averse",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.7458333333333333,
+            "mean_control": 0.7644444444444446,
+            "ate": -0.018611111111111245,
+            "ci_low": -0.0536180555555556,
+            "ci_high": 0.016388888888888897,
+            "cohens_d": -0.18966905741085033,
+            "p_value": 0.2979199363122169
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "surrogate-defiant",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.648611111111111,
+            "mean_control": 0.6727777777777779,
+            "ate": -0.02416666666666689,
+            "ci_low": -0.07055555555555582,
+            "ci_high": 0.023888888888888633,
+            "cohens_d": -0.17869880277275987,
+            "p_value": 0.326633437427046
+          }
+        ]
+      }
+    },
+    "cumulative_epc": {
+      "mixed_model": {
+        "formula": "cumulative_epc ~ C(timing) * C(tone) * C(backbone) + intervener_reach",
+        "n_obs": 480,
+        "converged": true,
+        "coefficients": {
+          "Intercept": {
+            "estimate": 0.11791364765402843,
+            "p_value": 3.9550616122370014e-05
+          },
+          "C(timing)[T.late]": {
+            "estimate": -0.09611111111110633,
+            "p_value": 3.254208337910883e-05
+          },
+          "C(tone)[T.empathetic_nudge]": {
+            "estimate": -0.011189487786804704,
+            "p_value": 0.5560998184482695
+          },
+          "C(backbone)[T.surrogate-conformist]": {
+            "estimate": -0.10252033604210707,
+            "p_value": 9.423750106748165e-06
+          },
+          "C(backbone)[T.surrogate-cost-averse]": {
+            "estimate": -0.20115178319533028,
+            "p_value": 3.9485509165997854e-18
+          },
+          "C(backbone)[T.surrogate-defiant]": {
+            "estimate": -0.03736039270060887,
+            "p_value": 0.049049220423852104
+          },
+          "C(timing)[T.late]:C(tone)[T.empathetic_nudge]": {
+            "estimate": 0.031020094834748452,
+            "p_value": 0.29983244294220157
+          },
+          "C(timing)[T.late]:C(backbone)[T.surrogate-conformist]": {
+            "estimate": 0.029275051492382173,
+            "p_value": 0.37108671836738494
+          },
+          "C(timing)[T.late]:C(backbone)[T.surrogate-cost-averse]": {
+            "estimate": 0.07572494850760711,
+            "p_value": 0.02068848176076209
+          },
+          "C(timing)[T.late]:C(backbone)[T.surrogate-defiant]": {
+            "estimate": 0.019067731451499408,
+            "p_value": 0.5252276255083642
+          },
+          "C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-conformist]": {
+            "estimate": 0.020207097543525752,
+            "p_value": 0.4995738931103245
+          },
+          "C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-cost-averse]": {
+            "estimate": 0.005207097543525791,
+            "p_value": 0.8618813753822934
+          },
+          "C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-defiant]": {
+            "estimate": -0.0031574582634725456,
+            "p_value": 0.9234562078889247
+          },
+          "C(timing)[T.late]:C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-conformist]": {
+            "estimate": -0.024570197819522716,
+            "p_value": 0.5798032430251256
+          },
+          "C(timing)[T.late]:C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-cost-averse]": {
+            "estimate": -0.02824231705696983,
+            "p_value": 0.524084481924067
+          },
+          "C(timing)[T.late]:C(tone)[T.empathetic_nudge]:C(backbone)[T.surrogate-defiant]": {
+            "estimate": -0.03410543604297463,
+            "p_value": 0.462509855690446
+          },
+          "intervener_reach": {
+            "estimate": 0.05386162603498547,
+            "p_value": 2.2198103941833514e-07
+          }
+        }
+      },
+      "partial_eta_squared": {
+        "C(timing)": 0.087866,
+        "C(tone)": 0.0,
+        "C(backbone)": 0.328558,
+        "C(timing):C(tone)": 2.4e-05,
+        "C(timing):C(backbone)": 0.020965,
+        "C(tone):C(backbone)": 0.003998,
+        "C(timing):C(tone):C(backbone)": 0.00286
+      },
+      "dunnett_vs_own_model_control": [
+        {
+          "backbone": "surrogate-cautious",
+          "cell": "early|empathetic_nudge",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.03833333333333333,
+          "treat_mean": 0.23666666666666666,
+          "diff": 0.19833333333333333,
+          "ci_low": 0.14387499999999998,
+          "ci_high": 0.2538888888888889,
+          "cohens_d": 1.7471976225320864,
+          "dunnett_statistic": 6.4140071984409035,
+          "p_value": 1.3178008018144283e-08,
+          "p_holm": 1.9767012027216424e-07,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-cautious",
+          "cell": "early|aggressive_debunking",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.03833333333333333,
+          "treat_mean": 0.24000000000000002,
+          "diff": 0.2016666666666667,
+          "ci_low": 0.1411111111111111,
+          "ci_high": 0.2622222222222223,
+          "cohens_d": 1.6000006315382713,
+          "dunnett_statistic": 6.521805638750835,
+          "p_value": 3.779980328744159e-09,
+          "p_holm": 6.047968525990655e-08,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-cautious",
+          "cell": "late|empathetic_nudge",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.03833333333333333,
+          "treat_mean": 0.15833333333333335,
+          "diff": 0.12000000000000002,
+          "ci_low": 0.07555555555555554,
+          "ci_high": 0.16555555555555554,
+          "cohens_d": 1.277857277007291,
+          "dunnett_statistic": 3.880743851157522,
+          "p_value": 0.0006145857839685576,
+          "p_holm": 0.005531272055717018,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-cautious",
+          "cell": "late|aggressive_debunking",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.03833333333333333,
+          "treat_mean": 0.14388888888888884,
+          "diff": 0.10555555555555551,
+          "ci_low": 0.06333333333333332,
+          "ci_high": 0.14777777777777776,
+          "cohens_d": 1.2134231542223133,
+          "dunnett_statistic": 3.413617276481152,
+          "p_value": 0.0031195420957995657,
+          "p_holm": 0.024956336766396525,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-conformist",
+          "cell": "early|empathetic_nudge",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.02888888888888889,
+          "treat_mean": 0.1411111111111111,
+          "diff": 0.11222222222222221,
+          "ci_low": 0.0761111111111111,
+          "ci_high": 0.14888888888888888,
+          "cohens_d": 1.5141733598400384,
+          "dunnett_statistic": 5.562686854127278,
+          "p_value": 4.5379224189456835e-07,
+          "p_holm": 6.353091386523957e-06,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-conformist",
+          "cell": "early|aggressive_debunking",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.02888888888888889,
+          "treat_mean": 0.1338888888888889,
+          "diff": 0.105,
+          "ci_low": 0.0627777777777778,
+          "ci_high": 0.1488888888888889,
+          "cohens_d": 1.2127358742545533,
+          "dunnett_statistic": 5.204692155594334,
+          "p_value": 2.8106530580718214e-06,
+          "p_holm": 3.653848975493368e-05,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-conformist",
+          "cell": "late|empathetic_nudge",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.02888888888888889,
+          "treat_mean": 0.0861111111111111,
+          "diff": 0.0572222222222222,
+          "ci_low": 0.027777777777777783,
+          "ci_high": 0.08555555555555552,
+          "cohens_d": 0.9410967821836143,
+          "dunnett_statistic": 2.8364195345302448,
+          "p_value": 0.018594938844676334,
+          "p_holm": 0.09297469422338167,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-conformist",
+          "cell": "late|aggressive_debunking",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.02888888888888889,
+          "treat_mean": 0.06166666666666666,
+          "diff": 0.03277777777777777,
+          "ci_low": 0.007777777777777779,
+          "ci_high": 0.057222222222222216,
+          "cohens_d": 0.6532237490749747,
+          "dunnett_statistic": 1.6247451702648974,
+          "p_value": 0.3020808280393015,
+          "p_holm": 0.7501217257578741,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-cost-averse",
+          "cell": "early|empathetic_nudge",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.002777777777777778,
+          "treat_mean": 0.023888888888888894,
+          "diff": 0.021111111111111115,
+          "ci_low": 0.010000000000000002,
+          "ci_high": 0.03222222222222222,
+          "cohens_d": 0.9543659397420058,
+          "dunnett_statistic": 3.1825581645255503,
+          "p_value": 0.006608677783177086,
+          "p_holm": 0.0462607444822396,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-cost-averse",
+          "cell": "early|aggressive_debunking",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.002777777777777778,
+          "treat_mean": 0.03166666666666666,
+          "diff": 0.028888888888888884,
+          "ci_low": 0.015555555555555555,
+          "ci_high": 0.04333333333333334,
+          "cohens_d": 1.0209461807970122,
+          "dunnett_statistic": 4.355079593561278,
+          "p_value": 9.649279120671483e-05,
+          "p_holm": 0.0009649279120671483,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-cost-averse",
+          "cell": "late|empathetic_nudge",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.002777777777777778,
+          "treat_mean": 0.011666666666666665,
+          "diff": 0.008888888888888887,
+          "ci_low": 0.002777777777777777,
+          "ci_high": 0.015555555555555553,
+          "cohens_d": 0.6828667235004225,
+          "dunnett_statistic": 1.3400244903265472,
+          "p_value": 0.4725297239177172,
+          "p_holm": 0.7501217257578741,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-cost-averse",
+          "cell": "late|aggressive_debunking",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.002777777777777778,
+          "treat_mean": 0.016666666666666666,
+          "diff": 0.013888888888888888,
+          "ci_low": 0.004444444444444445,
+          "ci_high": 0.023333333333333338,
+          "cohens_d": 0.7085081032700841,
+          "dunnett_statistic": 2.0937882661352303,
+          "p_value": 0.12085051222075105,
+          "p_holm": 0.4834020488830042,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-defiant",
+          "cell": "early|empathetic_nudge",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.05888888888888889,
+          "treat_mean": 0.18111111111111108,
+          "diff": 0.12222222222222219,
+          "ci_low": 0.06666666666666668,
+          "ci_high": 0.17777777777777773,
+          "cohens_d": 1.103150627708742,
+          "dunnett_statistic": 4.821150308713104,
+          "p_value": 1.311701913186969e-05,
+          "p_holm": 0.00015740422958243627,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-defiant",
+          "cell": "early|aggressive_debunking",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.05888888888888889,
+          "treat_mean": 0.18055555555555555,
+          "diff": 0.12166666666666666,
+          "ci_low": 0.07499999999999998,
+          "ci_high": 0.16555555555555554,
+          "cohens_d": 1.3156212017370486,
+          "dunnett_statistic": 4.799235989128046,
+          "p_value": 1.652821909425839e-05,
+          "p_holm": 0.00018181041003684228,
+          "significant_holm": true
+        },
+        {
+          "backbone": "surrogate-defiant",
+          "cell": "late|empathetic_nudge",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.05888888888888889,
+          "treat_mean": 0.10277777777777777,
+          "diff": 0.04388888888888888,
+          "ci_low": 0.003333333333333313,
+          "ci_high": 0.08111111111111109,
+          "cohens_d": 0.5524871828872211,
+          "dunnett_statistic": 1.7312312472197056,
+          "p_value": 0.2500405752526247,
+          "p_holm": 0.7501217257578741,
+          "significant_holm": false
+        },
+        {
+          "backbone": "surrogate-defiant",
+          "cell": "late|aggressive_debunking",
+          "outcome": "cumulative_epc",
+          "n_treat": 30,
+          "n_control": 30,
+          "control_mean": 0.05888888888888889,
+          "treat_mean": 0.13277777777777777,
+          "diff": 0.07388888888888888,
+          "ci_low": 0.027763888888888866,
+          "ci_high": 0.11888888888888884,
+          "cohens_d": 0.809571119706137,
+          "dunnett_statistic": 2.9146045048129223,
+          "p_value": 0.014818495533607035,
+          "p_holm": 0.08891097320164221,
+          "significant_holm": false
+        }
+      ],
+      "factor_ates": {
+        "pooled": [
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "all models",
+            "n_treat": 480,
+            "n_control": 120,
+            "mean_treat": 0.1176736111111111,
+            "mean_control": 0.03222222222222222,
+            "ate": 0.08545138888888888,
+            "ci_low": 0.06947916666666668,
+            "ci_high": 0.09968836805555556,
+            "cohens_d": 0.7898707198723386,
+            "p_value": 7.048569220233322e-24,
+            "p_holm": 2.1145707660699968e-23,
+            "significant": true
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "all models",
+            "n_treat": 240,
+            "n_control": 240,
+            "mean_treat": 0.0892361111111111,
+            "mean_control": 0.1461111111111111,
+            "ate": -0.05687500000000001,
+            "ci_low": -0.07687673611111114,
+            "ci_high": -0.036944444444444446,
+            "cohens_d": -0.5020382052690934,
+            "p_value": 6.320003863757024e-08,
+            "p_holm": 1.2640007727514048e-07,
+            "significant": true
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "all models",
+            "n_treat": 240,
+            "n_control": 240,
+            "mean_treat": 0.11763888888888886,
+            "mean_control": 0.11770833333333333,
+            "ate": -6.944444444446918e-05,
+            "ci_low": -0.02055729166666667,
+            "ci_high": 0.02111111111111111,
+            "cohens_d": -0.000594414749630077,
+            "p_value": 0.9947991738574405,
+            "p_holm": 0.9947991738574405,
+            "significant": false
+          }
+        ],
+        "per_backbone": [
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "surrogate-cautious",
+            "n_treat": 120,
+            "n_control": 30,
+            "mean_treat": 0.1947222222222222,
+            "mean_control": 0.03833333333333333,
+            "ate": 0.15638888888888888,
+            "ci_low": 0.11888888888888892,
+            "ci_high": 0.19069444444444442,
+            "cohens_d": 1.245114310046551,
+            "p_value": 4.2153532907008446e-13
+          },
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "surrogate-conformist",
+            "n_treat": 120,
+            "n_control": 30,
+            "mean_treat": 0.10569444444444447,
+            "mean_control": 0.02888888888888889,
+            "ate": 0.07680555555555557,
+            "ci_low": 0.05388888888888891,
+            "ci_high": 0.09930555555555556,
+            "cohens_d": 0.9221292347919957,
+            "p_value": 7.287165061685371e-09
+          },
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "surrogate-cost-averse",
+            "n_treat": 120,
+            "n_control": 30,
+            "mean_treat": 0.020972222222222222,
+            "mean_control": 0.002777777777777778,
+            "ate": 0.018194444444444444,
+            "ci_low": 0.011805555555555555,
+            "ci_high": 0.024447916666666618,
+            "cohens_d": 0.6877085348456569,
+            "p_value": 7.57591038052448e-08
+          },
+          {
+            "factor": "intervention",
+            "level": "any intervention",
+            "reference": "no intervention",
+            "stratum": "surrogate-defiant",
+            "n_treat": 120,
+            "n_control": 30,
+            "mean_treat": 0.14930555555555552,
+            "mean_control": 0.05888888888888889,
+            "ate": 0.09041666666666663,
+            "ci_low": 0.05346874999999998,
+            "ci_high": 0.12277777777777776,
+            "cohens_d": 0.8845746013745326,
+            "p_value": 5.963702622532032e-06
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "surrogate-cautious",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.15111111111111114,
+            "mean_control": 0.23833333333333334,
+            "ate": -0.0872222222222222,
+            "ci_low": -0.13305555555555562,
+            "ci_high": -0.043888888888888894,
+            "cohens_d": -0.6784293512037182,
+            "p_value": 0.0003012987361982965
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "surrogate-conformist",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.07388888888888888,
+            "mean_control": 0.1375,
+            "ate": -0.06361111111111113,
+            "ci_low": -0.09361805555555557,
+            "ci_high": -0.03416666666666668,
+            "cohens_d": -0.7543928709684752,
+            "p_value": 6.873436145463922e-05
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "surrogate-cost-averse",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.014166666666666668,
+            "mean_control": 0.02777777777777778,
+            "ate": -0.013611111111111112,
+            "ci_low": -0.023333333333333338,
+            "ci_high": -0.00361111111111111,
+            "cohens_d": -0.4787641317251778,
+            "p_value": 0.009666663195575626
+          },
+          {
+            "factor": "timing",
+            "level": "late entry",
+            "reference": "early entry",
+            "stratum": "surrogate-defiant",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.11777777777777777,
+            "mean_control": 0.18083333333333335,
+            "ate": -0.06305555555555557,
+            "ci_low": -0.0980625,
+            "ci_high": -0.026944444444444438,
+            "cohens_d": -0.618909432018828,
+            "p_value": 0.0009054712200666283
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "surrogate-cautious",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.19194444444444445,
+            "mean_control": 0.19749999999999998,
+            "ate": -0.005555555555555536,
+            "ci_low": -0.05416666666666664,
+            "ci_high": 0.04222222222222222,
+            "cohens_d": -0.04086731440416744,
+            "p_value": 0.8221572914139434
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "surrogate-conformist",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.09777777777777777,
+            "mean_control": 0.1136111111111111,
+            "ate": -0.015833333333333324,
+            "ci_low": -0.046944444444444455,
+            "ci_high": 0.015833333333333352,
+            "cohens_d": -0.17606254200712396,
+            "p_value": 0.3337886365513383
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "surrogate-cost-averse",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.024166666666666666,
+            "mean_control": 0.01777777777777778,
+            "ate": 0.006388888888888885,
+            "ci_low": -0.0038888888888888896,
+            "ci_high": 0.016666666666666663,
+            "cohens_d": 0.21972697462532917,
+            "p_value": 0.2284725392538742
+          },
+          {
+            "factor": "tone",
+            "level": "aggressive debunking",
+            "reference": "empathetic nudge",
+            "stratum": "surrogate-defiant",
+            "n_treat": 60,
+            "n_control": 60,
+            "mean_treat": 0.15666666666666668,
+            "mean_control": 0.14194444444444448,
+            "ate": 0.014722222222222192,
+            "ci_low": -0.02305555555555558,
+            "ci_high": 0.05055555555555556,
+            "cohens_d": 0.1382022857925296,
+            "p_value": 0.44770954092694404
+          }
+        ]
+      }
+    }
+  },
+  "human_baseline": [
+    {
+      "measure": "sanction_adoption",
+      "human_value": 0.929,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "share choosing the sanctioning institution, final periods",
+      "comparability": "ordering_only",
+      "note": "both measure take-up of costly enforcement when it is optional",
+      "group": "human",
+      "value": 0.929,
+      "verdict": ""
+    },
+    {
+      "measure": "sanction_adoption",
+      "human_value": 0.929,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "share choosing the sanctioning institution, final periods",
+      "comparability": "ordering_only",
+      "note": "both measure take-up of costly enforcement when it is optional",
+      "group": "surrogate-cautious",
+      "value": 0.18,
+      "verdict": "below human"
+    },
+    {
+      "measure": "sanction_adoption",
+      "human_value": 0.929,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "share choosing the sanctioning institution, final periods",
+      "comparability": "ordering_only",
+      "note": "both measure take-up of costly enforcement when it is optional",
+      "group": "surrogate-conformist",
+      "value": 0.18,
+      "verdict": "below human"
+    },
+    {
+      "measure": "sanction_adoption",
+      "human_value": 0.929,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "share choosing the sanctioning institution, final periods",
+      "comparability": "ordering_only",
+      "note": "both measure take-up of costly enforcement when it is optional",
+      "group": "surrogate-cost-averse",
+      "value": 0.02666666666666667,
+      "verdict": "below human"
+    },
+    {
+      "measure": "sanction_adoption",
+      "human_value": 0.929,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "share choosing the sanctioning institution, final periods",
+      "comparability": "ordering_only",
+      "note": "both measure take-up of costly enforcement when it is optional",
+      "group": "surrogate-defiant",
+      "value": 0.26666666666666666,
+      "verdict": "below human"
+    },
+    {
+      "measure": "sanction_adoption",
+      "human_value": 0.929,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "share choosing the sanctioning institution, final periods",
+      "comparability": "ordering_only",
+      "note": "both measure take-up of costly enforcement when it is optional",
+      "group": "all models",
+      "value": 0.16333333333333333,
+      "verdict": "below human"
+    },
+    {
+      "measure": "punish_reward_ratio",
+      "human_value": 1.66,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "ratio of punishments to rewards",
+      "comparability": "ordering_only",
+      "note": "SanctSim's finding is that LLMs invert this -- they reward rather than punish. Whether the same inversion appears here is the test.",
+      "group": "human",
+      "value": 1.66,
+      "verdict": ""
+    },
+    {
+      "measure": "punish_reward_ratio",
+      "human_value": 1.66,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "ratio of punishments to rewards",
+      "comparability": "ordering_only",
+      "note": "SanctSim's finding is that LLMs invert this -- they reward rather than punish. Whether the same inversion appears here is the test.",
+      "group": "surrogate-cautious",
+      "value": 0.09623430962343096,
+      "verdict": "below human"
+    },
+    {
+      "measure": "punish_reward_ratio",
+      "human_value": 1.66,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "ratio of punishments to rewards",
+      "comparability": "ordering_only",
+      "note": "SanctSim's finding is that LLMs invert this -- they reward rather than punish. Whether the same inversion appears here is the test.",
+      "group": "surrogate-conformist",
+      "value": 0.07772795216741404,
+      "verdict": "below human"
+    },
+    {
+      "measure": "punish_reward_ratio",
+      "human_value": 1.66,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "ratio of punishments to rewards",
+      "comparability": "ordering_only",
+      "note": "SanctSim's finding is that LLMs invert this -- they reward rather than punish. Whether the same inversion appears here is the test.",
+      "group": "surrogate-cost-averse",
+      "value": 0.006963788300835654,
+      "verdict": "below human"
+    },
+    {
+      "measure": "punish_reward_ratio",
+      "human_value": 1.66,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "ratio of punishments to rewards",
+      "comparability": "ordering_only",
+      "note": "SanctSim's finding is that LLMs invert this -- they reward rather than punish. Whether the same inversion appears here is the test.",
+      "group": "surrogate-defiant",
+      "value": 0.15451895043731778,
+      "verdict": "below human"
+    },
+    {
+      "measure": "punish_reward_ratio",
+      "human_value": 1.66,
+      "source": "Gurerk, Irlenbusch & Rockenbach (2006), via SanctSim Table 1",
+      "source_measure": "ratio of punishments to rewards",
+      "comparability": "ordering_only",
+      "note": "SanctSim's finding is that LLMs invert this -- they reward rather than punish. Whether the same inversion appears here is the test.",
+      "group": "all models",
+      "value": 0.08315412186379928,
+      "verdict": "below human"
+    }
+  ],
+  "h1_timing": {
+    "early_mean": 0.6291666666666667,
+    "late_mean": 0.7125694444444444,
+    "diff_early_minus_late": -0.08340277777777771,
+    "ci_low": -0.11013888888888901,
+    "ci_high": -0.05833159722222226,
+    "cohens_d": -0.5849961642468683,
+    "p_value_one_sided_early_lower": 1.6442099683698242e-09,
+    "supported": true
+  },
+  "h2_durability": {
+    "kaplan_meier": {
+      "aggressive_debunking": {
+        "median_half_life": Infinity,
+        "n": 240,
+        "n_observed": 14
+      },
+      "empathetic_nudge": {
+        "median_half_life": Infinity,
+        "n": 240,
+        "n_observed": 7
+      }
+    },
+    "logrank_empathetic_vs_aggressive": {
+      "test_statistic": 2.4885985104363577,
+      "p_value": 0.11467379899883691
+    },
+    "mean_half_life": {
+      "aggressive_debunking": {
+        "mean": 8.85,
+        "ci_low": 8.583333333333334,
+        "ci_high": 9.104166666666666,
+        "censoring_rate": 0.9416666666666667
+      },
+      "empathetic_nudge": {
+        "mean": 8.9375,
+        "ci_low": 8.675,
+        "ci_high": 9.191666666666666,
+        "censoring_rate": 0.9708333333333333
+      }
+    }
+  },
+  "h3_headline": {
+    "per_backbone": [
+      {
+        "backbone": "surrogate-cautious",
+        "empathetic_cumulative_fpr": {
+          "diff_vs_control": -0.198888888888889,
+          "ci_low": -0.25611111111111107,
+          "ci_high": -0.14083333333333337,
+          "cohens_d": -1.2946114520462644,
+          "p_value": 1.8643488953391608e-07
+        },
+        "empathetic_cumulative_epc": {
+          "diff_vs_control": 0.15916666666666665,
+          "ci_low": 0.11638888888888896,
+          "ci_high": 0.20111111111111113,
+          "cohens_d": 1.3738246096223043,
+          "p_value": 8.195893168161939e-09
+        },
+        "aggressive_cumulative_fpr": {
+          "diff_vs_control": -0.18972222222222246,
+          "ci_low": -0.25167361111111125,
+          "ci_high": -0.12944444444444458,
+          "cohens_d": -1.139257746411225,
+          "p_value": 1.5081287245091759e-06
+        },
+        "aggressive_cumulative_epc": {
+          "diff_vs_control": 0.15361111111111111,
+          "ci_low": 0.1088888888888889,
+          "ci_high": 0.19667361111111106,
+          "cohens_d": 1.2499331128543427,
+          "p_value": 3.812020150525873e-09
+        },
+        "tone_effect_on_epc_aggressive_minus_empathetic": {
+          "diff": -0.005555555555555536,
+          "ci_low": -0.05416666666666664,
+          "ci_high": 0.04222222222222222,
+          "p_value": 0.6570522509663979,
+          "cohens_d": -0.04086731440416744,
+          "p_holm": 1.0,
+          "significant_holm": false
+        },
+        "dissociation_holds": false
+      },
+      {
+        "backbone": "surrogate-conformist",
+        "empathetic_cumulative_fpr": {
+          "diff_vs_control": -0.08166666666666689,
+          "ci_low": -0.12472222222222229,
+          "ci_high": -0.036388888888888915,
+          "cohens_d": -0.774331399896233,
+          "p_value": 0.00039248060301411315
+        },
+        "empathetic_cumulative_epc": {
+          "diff_vs_control": 0.0847222222222222,
+          "ci_low": 0.05722222222222225,
+          "ci_high": 0.11222916666666659,
+          "cohens_d": 1.1165805917875016,
+          "p_value": 1.7776396324402125e-06
+        },
+        "aggressive_cumulative_fpr": {
+          "diff_vs_control": -0.07333333333333358,
+          "ci_low": -0.11777777777777765,
+          "ci_high": -0.02777777777777768,
+          "cohens_d": -0.6812063943109093,
+          "p_value": 0.0018948138059368825
+        },
+        "aggressive_cumulative_epc": {
+          "diff_vs_control": 0.06888888888888887,
+          "ci_low": 0.04054861111111109,
+          "ci_high": 0.09722222222222224,
+          "cohens_d": 0.8431552332707177,
+          "p_value": 3.034293609403894e-06
+        },
+        "tone_effect_on_epc_aggressive_minus_empathetic": {
+          "diff": -0.015833333333333324,
+          "ci_low": -0.046944444444444455,
+          "ci_high": 0.015833333333333352,
+          "p_value": 0.16708595373681678,
+          "cohens_d": -0.17606254200712396,
+          "p_holm": 0.6683438149472671,
+          "significant_holm": false
+        },
+        "dissociation_holds": false
+      },
+      {
+        "backbone": "surrogate-cost-averse",
+        "empathetic_cumulative_fpr": {
+          "diff_vs_control": -0.0427777777777778,
+          "ci_low": -0.07500000000000007,
+          "ci_high": -0.01027777777777783,
+          "cohens_d": -0.4848302994984726,
+          "p_value": 0.06141740284523457
+        },
+        "empathetic_cumulative_epc": {
+          "diff_vs_control": 0.015000000000000003,
+          "ci_low": 0.008055555555555555,
+          "ci_high": 0.021944444444444447,
+          "cohens_d": 0.7288423088439342,
+          "p_value": 0.0003700118224631257
+        },
+        "aggressive_cumulative_fpr": {
+          "diff_vs_control": -0.06138888888888905,
+          "ci_low": -0.09444444444444433,
+          "ci_high": -0.02777777777777801,
+          "cohens_d": -0.6974455779336259,
+          "p_value": 0.003527798477937871
+        },
+        "aggressive_cumulative_epc": {
+          "diff_vs_control": 0.021388888888888888,
+          "ci_low": 0.0125,
+          "ci_high": 0.030555555555555555,
+          "cohens_d": 0.7656581479781983,
+          "p_value": 0.00039966257251750477
+        },
+        "tone_effect_on_epc_aggressive_minus_empathetic": {
+          "diff": 0.006388888888888885,
+          "ci_low": -0.0038888888888888896,
+          "ci_high": 0.016666666666666663,
+          "p_value": 0.6122299202674609,
+          "cohens_d": 0.21972697462532917,
+          "p_holm": 1.0,
+          "significant_holm": false
+        },
+        "dissociation_holds": false
+      },
+      {
+        "backbone": "surrogate-defiant",
+        "empathetic_cumulative_fpr": {
+          "diff_vs_control": -0.07999999999999996,
+          "ci_low": -0.13027777777777771,
+          "ci_high": -0.027215277777777807,
+          "cohens_d": -0.5987057093293202,
+          "p_value": 0.005791451704772989
+        },
+        "empathetic_cumulative_epc": {
+          "diff_vs_control": 0.08305555555555559,
+          "ci_low": 0.042500000000000024,
+          "ci_high": 0.12194444444444445,
+          "cohens_d": 0.7966899712097346,
+          "p_value": 8.897688418415717e-05
+        },
+        "aggressive_cumulative_fpr": {
+          "diff_vs_control": -0.10416666666666685,
+          "ci_low": -0.15278472222222256,
+          "ci_high": -0.051944444444444564,
+          "cohens_d": -0.834964808261848,
+          "p_value": 0.00016898840983888688
+        },
+        "aggressive_cumulative_epc": {
+          "diff_vs_control": 0.09777777777777778,
+          "ci_low": 0.0561111111111111,
+          "ci_high": 0.13444444444444442,
+          "cohens_d": 1.025703623758165,
+          "p_value": 7.673237445643792e-06
+        },
+        "tone_effect_on_epc_aggressive_minus_empathetic": {
+          "diff": 0.014722222222222192,
+          "ci_low": -0.02305555555555558,
+          "ci_high": 0.05055555555555556,
+          "p_value": 0.3078895966590952,
+          "cohens_d": 0.1382022857925296,
+          "p_holm": 0.9236687899772856,
+          "significant_holm": false
+        },
+        "dissociation_holds": false
+      }
+    ],
+    "pooled": {
+      "empathetic_cumulative_fpr": {
+        "diff_vs_control": -0.10083333333333344,
+        "ci_low": -0.1259027777777777,
+        "ci_high": -0.07562499999999994,
+        "cohens_d": -0.7493334304654358
+      },
+      "empathetic_cumulative_epc": {
+        "diff_vs_control": 0.08548611111111111,
+        "ci_low": 0.06743055555555556,
+        "ci_high": 0.10381944444444444,
+        "cohens_d": 0.8388843210550135
+      },
+      "aggressive_cumulative_fpr": {
+        "diff_vs_control": -0.10715277777777776,
+        "ci_low": -0.13277951388888898,
+        "ci_high": -0.08173611111111101,
+        "cohens_d": -0.7991745405387987
+      },
+      "aggressive_cumulative_epc": {
+        "diff_vs_control": 0.08541666666666664,
+        "ci_low": 0.06722222222222224,
+        "ci_high": 0.10382118055555555,
+        "cohens_d": 0.8320720601783241
+      }
+    },
+    "n_backbones_with_dissociation": 0
+  },
+  "h5_model_dependence": {
+    "cumulative_fpr": {
+      "total_variance": 0.021963,
+      "between_backbone": 0.004385,
+      "share_backbone": 0.199669,
+      "between_timing": 0.001743,
+      "share_timing": 0.079345,
+      "between_tone": 1e-05,
+      "share_tone": 0.000456,
+      "backbone_dominates_timing": true,
+      "backbone_dominates_tone": true
+    },
+    "cumulative_epc": {
+      "total_variance": 0.013578,
+      "between_backbone": 0.004117,
+      "share_backbone": 0.303183,
+      "between_timing": 0.00081,
+      "share_timing": 0.059685,
+      "between_tone": 0.0,
+      "share_tone": 0.0,
+      "backbone_dominates_timing": true,
+      "backbone_dominates_tone": true
+    },
+    "three_way_interaction": {
+      "C(timing):C(tone):C(backbone)": {
+        "F": 0.44360114431461845,
+        "p_value": 0.7219440619393747
+      }
+    }
+  },
+  "rq5_specificity_placebo": {
+    "error": "no placebo episodes"
+  },
+  "robustness": {
+    "by_claim_severity": {
+      "barely-true": {
+        "cumulative_fpr": 0.6690833333333334,
+        "cumulative_epc": 0.10616666666666667
+      },
+      "false": {
+        "cumulative_fpr": 0.6830000000000002,
+        "cumulative_epc": 0.10641666666666667
+      },
+      "pants-fire": {
+        "cumulative_fpr": 0.7229166666666665,
+        "cumulative_epc": 0.08916666666666667
+      }
+    },
+    "intervener_reach_moderation": {
+      "2": {
+        "cumulative_fpr": 0.69196735395189,
+        "cumulative_epc": 0.10674398625429554,
+        "n": 388
+      },
+      "3": {
+        "cumulative_fpr": 0.5833333333333334,
+        "cumulative_epc": 0.16263736263736264,
+        "n": 91
+      },
+      "4": {
+        "cumulative_fpr": 0.45,
+        "cumulative_epc": 0.26666666666666666,
+        "n": 1
+      }
+    },
+    "reach_vs_epc_spearman": {
+      "rho": 0.1739681291839922,
+      "p_value": 0.00012774662008595904
+    }
+  },
+  "norm_robustness": {
+    "n_perturbed_episodes": 0,
+    "note": "perturbation arm not run"
+  },
+  "design_sensitivity": {
+    "alpha": 0.05,
+    "note": "Per-cell n in the shipped grid is 30. A contrast whose 80%-power requirement exceeds that is not testable as preregistered, whatever its true sign.",
+    "contrasts": {
+      "H1_timing_on_FPR_early_vs_late": {
+        "cohens_d": -0.585,
+        "n_a": 240,
+        "n_b": 240,
+        "required_n_per_cell_80pct": 46.9,
+        "adequately_powered_at_30": false,
+        "power_curve": [
+          {
+            "n_per_cell": 15,
+            "power": 0.2975
+          },
+          {
+            "n_per_cell": 30,
+            "power": 0.5555
+          },
+          {
+            "n_per_cell": 60,
+            "power": 0.86
+          },
+          {
+            "n_per_cell": 120,
+            "power": 0.9885
+          },
+          {
+            "n_per_cell": 240,
+            "power": 1.0
+          },
+          {
+            "n_per_cell": 480,
+            "power": 1.0
+          }
+        ]
+      },
+      "H2_tone_on_FPR_aggressive_vs_empathetic": {
+        "cohens_d": -0.0425,
+        "n_a": 240,
+        "n_b": 240,
+        "required_n_per_cell_80pct": 8675.4,
+        "adequately_powered_at_30": false,
+        "power_curve": [
+          {
+            "n_per_cell": 15,
+            "power": 0.0465
+          },
+          {
+            "n_per_cell": 30,
+            "power": 0.054
+          },
+          {
+            "n_per_cell": 60,
+            "power": 0.06
+          },
+          {
+            "n_per_cell": 120,
+            "power": 0.064
+          },
+          {
+            "n_per_cell": 240,
+            "power": 0.068
+          },
+          {
+            "n_per_cell": 480,
+            "power": 0.0945
+          }
+        ]
+      },
+      "H3_tone_on_EPC_aggressive_vs_empathetic": {
+        "cohens_d": -0.0006,
+        "n_a": 240,
+        "n_b": 240,
+        "required_n_per_cell_80pct": 44428071.4,
+        "adequately_powered_at_30": false,
+        "power_curve": [
+          {
+            "n_per_cell": 15,
+            "power": 0.044
+          },
+          {
+            "n_per_cell": 30,
+            "power": 0.045
+          },
+          {
+            "n_per_cell": 60,
+            "power": 0.0435
+          },
+          {
+            "n_per_cell": 120,
+            "power": 0.053
+          },
+          {
+            "n_per_cell": 240,
+            "power": 0.0545
+          },
+          {
+            "n_per_cell": 480,
+            "power": 0.044
+          }
+        ]
+      },
+      "intervention_on_EPC_treated_vs_control": {
+        "cohens_d": 0.7899,
+        "n_a": 480,
+        "n_b": 120,
+        "required_n_per_cell_80pct": 26.2,
+        "adequately_powered_at_30": true,
+        "power_curve": [
+          {
+            "n_per_cell": 15,
+            "power": 0.755
+          },
+          {
+            "n_per_cell": 30,
+            "power": 0.972
+          },
+          {
+            "n_per_cell": 60,
+            "power": 0.9995
+          },
+          {
+            "n_per_cell": 120,
+            "power": 1.0
+          },
+          {
+            "n_per_cell": 240,
+            "power": 1.0
+          },
+          {
+            "n_per_cell": 480,
+            "power": 1.0
+          }
+        ]
+      },
+      "intervention_on_FPR_treated_vs_control": {
+        "cohens_d": -0.7427,
+        "n_a": 480,
+        "n_b": 120,
+        "required_n_per_cell_80pct": 29.4,
+        "adequately_powered_at_30": true,
+        "power_curve": [
+          {
+            "n_per_cell": 15,
+            "power": 0.581
+          },
+          {
+            "n_per_cell": 30,
+            "power": 0.872
+          },
+          {
+            "n_per_cell": 60,
+            "power": 0.9935
+          },
+          {
+            "n_per_cell": 120,
+            "power": 1.0
+          },
+          {
+            "n_per_cell": 240,
+            "power": 1.0
+          },
+          {
+            "n_per_cell": 480,
+            "power": 1.0
+          }
+        ]
+      }
+    },
+    "h3_per_backbone": {
+      "surrogate-cautious": {
+        "cohens_d": -0.0409,
+        "required_n_per_cell_80pct": 9400.0,
+        "power_at_30": 0.0605
+      },
+      "surrogate-conformist": {
+        "cohens_d": -0.1761,
+        "required_n_per_cell_80pct": 507.4,
+        "power_at_30": 0.165
+      },
+      "surrogate-cost-averse": {
+        "cohens_d": 0.2197,
+        "required_n_per_cell_80pct": 326.1,
+        "power_at_30": 0.0635
+      },
+      "surrogate-defiant": {
+        "cohens_d": 0.1382,
+        "required_n_per_cell_80pct": 822.8,
+        "power_at_30": 0.097
+      }
+    }
+  },
+  "headline": {
+    "dgp_label": "null-tone-crowding (H3 effect set to zero; false-positive check)",
+    "backbone_kind": "surrogate",
+    "claim_provenance": "LIAR (Wang, 2017), UCSB release, de-identified",
+    "h1_early_beats_late": true,
+    "h1_effect": -0.0834,
+    "h3_n_backbones_with_dissociation": 0,
+    "h3_tone_effect_on_epc_pooled": -0.0001,
+    "h5_backbone_dominates_timing_on_epc": true,
+    "rq5_indiscriminate_skepticism": null,
+    "norm_robustness_verdict": null,
+    "h3_adequately_powered_at_30_seeds": false,
+    "h3_required_n_per_cell_for_80pct_power": 44428071.4
+  }
+}

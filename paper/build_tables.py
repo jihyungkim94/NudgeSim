@@ -3,10 +3,10 @@
 
     .venv/bin/python paper/build_tables.py
 
-Reads runs/real_main, runs/real_strong, runs/real_null, runs/hp_* and
-runs/cost/cost.json; runs the visibility sweep itself, caching it, because that
-result is the paper's headline and is not produced by the standard grid.
-Writes one .tex fragment per table into paper/tables/.
+Reads the run directories ./reproduce.sh --full produces, and runs the
+visibility sweep itself, caching it, because that result is the paper's headline
+and is not produced by the standard grid. Writes one .tex fragment per table
+into paper/tables/.
 """
 
 from __future__ import annotations
@@ -126,7 +126,7 @@ def table_visibility() -> None:
 
 
 def table_welfare() -> None:
-    core = _core("real_main")
+    core = _core("main")
     g = core.groupby("treated")[
         ["welfare_total", "welfare_ex_sanctions", "accuracy_component",
          "conformity_component", "cumulative_fpr", "cumulative_epc"]
@@ -155,7 +155,7 @@ def table_welfare() -> None:
 
 
 def table_power() -> None:
-    contrasts = _analysis("real_main")["design_sensitivity"]["contrasts"]
+    contrasts = _analysis("main")["design_sensitivity"]["contrasts"]
     pretty = {
         "intervention_on_EPC_treated_vs_control": "Intervention $\\to$ EPC",
         "intervention_on_FPR_treated_vs_control": "Intervention $\\to$ FPR",
@@ -179,9 +179,10 @@ def table_power() -> None:
 
 def table_validation() -> None:
     runs = [
-        ("Declared", "real_main", 30), ("Inflated $\\times 2.9$", "real_strong", 30),
-        ("Set to zero", "real_null", 30), ("Declared", "hp_declared", 200),
-        ("Inflated $\\times 2.9$", "hp_strong", 200), ("Set to zero", "hp_null", 200),
+        ("Declared", "main", 30), ("Inflated $\\times 2.9$", "strong_dgp", 30),
+        ("Set to zero", "null_dgp", 30), ("Declared", "highpower", 200),
+        ("Inflated $\\times 2.9$", "strong_highpower", 200),
+        ("Set to zero", "null_highpower", 200),
     ]
     lines = [
         r"\begin{tabular}{lrrr}", r"\toprule",
@@ -201,7 +202,7 @@ def table_validation() -> None:
 
 
 def table_ate() -> None:
-    report = _analysis("real_main")["primary"]
+    report = _analysis("main")["primary"]
     lines = [
         r"\begin{tabular}{llrr}", r"\toprule",
         r"Outcome & Factor & ATE [95\% CI] & Cohen's $d$ \\", r"\midrule",
@@ -222,7 +223,7 @@ def table_ate() -> None:
 
 
 def table_human() -> None:
-    rows = _analysis("real_main")["human_baseline"]
+    rows = _analysis("main")["human_baseline"]
     pretty = {
         "sanction_adoption": "Take-up of costly enforcement",
         "punish_reward_ratio": "Sanctions per affirmation",

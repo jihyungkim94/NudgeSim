@@ -1,0 +1,45 @@
+{
+  "gate": "face-validity calibration (plan section 5.7)",
+  "verdict": "GO",
+  "n_false_episodes": 60,
+  "n_true_episodes": 60,
+  "simulated_shape": {
+    "depth_ratio": 0.218056,
+    "breadth_ratio": 0.781944,
+    "virality_ratio": 0.304417
+  },
+  "reference_shape": {
+    "depth_ratio": 0.232463,
+    "breadth_ratio": 0.6538,
+    "virality_ratio": 0.215903
+  },
+  "shape_deltas": {
+    "depth_ratio": -0.014408,
+    "breadth_ratio": 0.128144,
+    "virality_ratio": 0.088514
+  },
+  "shape_passes": {
+    "depth_ratio": true,
+    "breadth_ratio": true,
+    "virality_ratio": true
+  },
+  "asymmetry": {
+    "false_propagation_rate": 0.783333,
+    "true_propagation_rate": 0.711667,
+    "propagation_margin": 0.071667,
+    "false_cascade_size": 5.566667,
+    "true_cascade_size": 5.566667,
+    "cascade_size_margin": 0.0
+  },
+  "asymmetry_passes": true,
+  "tolerance": {
+    "depth_ratio_tol": 0.35,
+    "breadth_ratio_tol": 0.35,
+    "virality_ratio_tol": 0.4,
+    "min_asymmetry_margin": 0.02
+  },
+  "notes": [],
+  "dgp_label": "declared-crowding (H3 effect present at declared size)",
+  "claim_provenance": "LIAR (Wang, 2017), UCSB release, de-identified",
+  "motif_provenance": "PHEME-9 (Kochkina et al., 2018), derived topology only"
+}
